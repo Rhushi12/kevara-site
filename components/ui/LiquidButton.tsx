@@ -11,6 +11,7 @@ interface LiquidButtonProps {
     className?: string;
     variant?: "primary" | "secondary";
     type?: "button" | "submit" | "reset";
+    disabled?: boolean;
 }
 
 export default function LiquidButton({
@@ -20,6 +21,7 @@ export default function LiquidButton({
     className,
     variant = "primary",
     type = "button",
+    disabled = false,
 }: LiquidButtonProps) {
     const baseStyles =
         "relative overflow-hidden inline-flex items-center justify-center px-12 py-4 text-[13px] font-bold tracking-[0.2em] uppercase transition-colors duration-300 group rounded-sm";
@@ -36,7 +38,7 @@ export default function LiquidButton({
         </>
     );
 
-    if (href) {
+    if (href && !disabled) {
         return (
             <Link href={href} className={cn(baseStyles, variants[variant], className)}>
                 {content}
@@ -48,7 +50,8 @@ export default function LiquidButton({
         <button
             type={type}
             onClick={onClick}
-            className={cn(baseStyles, variants[variant], className)}
+            disabled={disabled}
+            className={cn(baseStyles, variants[variant], className, disabled && "opacity-50 cursor-not-allowed pointer-events-none")}
         >
             {content}
         </button>

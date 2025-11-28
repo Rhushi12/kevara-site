@@ -232,5 +232,134 @@ export const MOCK_SHOPIFY_PRODUCTS = [
         ]
       }
     }
+  },
+  {
+    node: {
+      id: "gid://shopify/Product/7",
+      title: "Evry 7027 Jumpsuit",
+      handle: "evry-7027-jumpsuit",
+      priceRange: {
+        minVariantPrice: {
+          amount: "89.00",
+          currencyCode: "USD"
+        }
+      },
+      images: {
+        edges: [
+          {
+            node: {
+              url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop",
+              altText: "Evry 7027 Jumpsuit Front"
+            }
+          },
+          {
+            node: {
+              url: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=1000&auto=format&fit=crop",
+              altText: "Evry 7027 Jumpsuit Detail"
+            }
+          },
+          {
+            node: {
+              url: "https://images.unsplash.com/photo-1485230946086-1d99d529a132?q=80&w=1000&auto=format&fit=crop",
+              altText: "Evry 7027 Jumpsuit Back"
+            }
+          },
+          {
+            node: {
+              url: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=1000&auto=format&fit=crop",
+              altText: "Evry 7027 Jumpsuit Lifestyle"
+            }
+          }
+        ]
+      },
+      variants: {
+        edges: [
+          {
+            node: {
+              id: "gid://shopify/ProductVariant/7a",
+              title: "XS / Olive"
+            }
+          },
+          {
+            node: {
+              id: "gid://shopify/ProductVariant/7b",
+              title: "S / Olive"
+            }
+          },
+          {
+            node: {
+              id: "gid://shopify/ProductVariant/7c",
+              title: "M / Olive"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    node: {
+      id: "gid://shopify/Product/8",
+      title: "Knit Beige Cardigan",
+      handle: "knit-beige-cardigan",
+      priceRange: {
+        minVariantPrice: {
+          amount: "120.00",
+          currencyCode: "USD"
+        }
+      },
+      images: {
+        edges: [
+          {
+            node: {
+              url: "https://images.unsplash.com/photo-1624421242603-6056e4939b85?q=80&w=1000&auto=format&fit=crop",
+              altText: "Knit Beige Cardigan"
+            }
+          }
+        ]
+      },
+      variants: {
+        edges: [
+          {
+            node: {
+              id: "gid://shopify/ProductVariant/8",
+              title: "M / Beige"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    node: {
+      id: "gid://shopify/Product/9",
+      title: "Black Slim Fit Jeans",
+      handle: "black-slim-jeans",
+      priceRange: {
+        minVariantPrice: {
+          amount: "89.00",
+          currencyCode: "USD"
+        }
+      },
+      images: {
+        edges: [
+          {
+            node: {
+              url: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=1000&auto=format&fit=crop",
+              altText: "Black Slim Fit Jeans"
+            }
+          }
+        ]
+      },
+      variants: {
+        edges: [
+          {
+            node: {
+              id: "gid://shopify/ProductVariant/9",
+              title: "28 / Black"
+            }
+          }
+        ]
+      }
+    }
   }
 ];

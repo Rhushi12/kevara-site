@@ -1,6 +1,7 @@
 "use client";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { ShoppingBag } from "lucide-react";
 import Image from "next/image";
@@ -41,7 +42,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
     const { openQuickView } = useQuickViewStore();
-    const { title, priceRange, images, variants } = product.node;
+    const { title, handle, priceRange, images, variants } = product.node;
     const price = priceRange.minVariantPrice.amount;
     const currency = priceRange.minVariantPrice.currencyCode;
     const imageUrl = images.edges[0]?.node.url;
@@ -73,26 +74,28 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="group/card relative flex flex-col h-full">
             {/* Image Container */}
             <div className="relative w-full overflow-hidden bg-gray-100 aspect-[3/4] rounded-lg">
-                {imageUrl && (
-                    <Image
-                        src={imageUrl}
-                        alt={altText}
-                        fill
-                        className="object-cover transition-transform duration-700 group-hover/card:scale-105"
-                        sizes="(max-width: 768px) 50vw, 25vw"
-                    />
-                )}
+                <Link href={`/products/${handle}`} className="block w-full h-full">
+                    {imageUrl && (
+                        <Image
+                            src={imageUrl}
+                            alt={altText}
+                            fill
+                            className="object-cover transition-transform duration-700 group-hover/card:scale-105"
+                            sizes="(max-width: 768px) 50vw, 25vw"
+                        />
+                    )}
 
-                {/* Secondary Image (Hover) */}
-                {secondImageUrl && (
-                    <Image
-                        src={secondImageUrl}
-                        alt={altText}
-                        fill
-                        className="object-cover absolute inset-0 opacity-0 transition-opacity duration-500 group-hover/card:opacity-100"
-                        sizes="(max-width: 768px) 50vw, 25vw"
-                    />
-                )}
+                    {/* Secondary Image (Hover) */}
+                    {secondImageUrl && (
+                        <Image
+                            src={secondImageUrl}
+                            alt={altText}
+                            fill
+                            className="object-cover absolute inset-0 opacity-0 transition-opacity duration-500 group-hover/card:opacity-100"
+                            sizes="(max-width: 768px) 50vw, 25vw"
+                        />
+                    )}
+                </Link>
 
                 {/* Quick Add Button - Slide up on hover */}
                 {/* Desktop: Quick View Button - Slide up on hover */}
@@ -129,9 +132,11 @@ export default function ProductCard({ product }: ProductCardProps) {
 
             {/* Product Info */}
             <div className="mt-4 space-y-2">
-                <h3 className="text-lg font-lora text-gray-900 group-hover/card:text-slate-900 transition-colors">
-                    {title}
-                </h3>
+                <Link href={`/products/${handle}`}>
+                    <h3 className="text-lg font-lora text-gray-900 group-hover/card:text-slate-900 transition-colors">
+                        {title}
+                    </h3>
+                </Link>
 
                 {/* Color Swatches */}
                 <div className="flex gap-2">

@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   description: "High-end fashion for the modern era.",
 };
 
+import { AuthProvider } from "@/context/AuthContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,9 +31,11 @@ export default function RootLayout({
       <body
         className={`${figtree.variable} ${lora.variable} font-figtree antialiased bg-[#FDFBF7] text-slate-900`}
       >
-        {children}
-        <QuickViewPanel />
-        <MobileBottomBar />
+        <AuthProvider>
+          {children}
+          <QuickViewPanel />
+          <MobileBottomBar />
+        </AuthProvider>
       </body>
     </html>
   );

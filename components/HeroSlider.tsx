@@ -7,7 +7,11 @@ import Image from "next/image";
 import { HERO_SLIDES } from "@/lib/heroData";
 import LiquidButton from "@/components/ui/LiquidButton";
 
-export default function HeroSlider() {
+interface HeroSliderProps {
+    slides?: typeof HERO_SLIDES;
+}
+
+export default function HeroSlider({ slides = HERO_SLIDES }: HeroSliderProps) {
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isLoaded, setIsLoaded] = useState(false);
 
@@ -21,10 +25,10 @@ export default function HeroSlider() {
 
     // Cycle to next slide
     const nextSlide = () => {
-        setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+        setCurrentSlide((prev) => (prev + 1) % slides.length);
     };
 
-    const activeSlide = HERO_SLIDES[currentSlide];
+    const activeSlide = slides[currentSlide];
 
     const slideVariants: Variants = {
         initial: {
@@ -128,7 +132,7 @@ export default function HeroSlider() {
             {/* Progress Indicators - Sharp & Thin */}
             {isLoaded && (
                 <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-40 flex gap-4">
-                    {HERO_SLIDES.map((slide, index) => (
+                    {slides.map((slide, index) => (
                         <div
                             key={slide.id}
                             className="h-[2px] w-16 bg-white/30 rounded-none overflow-hidden"

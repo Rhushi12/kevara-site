@@ -1,116 +1,137 @@
 "use client";
 
-import { Facebook, Instagram, Twitter } from "lucide-react";
+import { Facebook, Instagram, Twitter, Truck, Headphones, Lock, Send } from "lucide-react";
 import Link from "next/link";
 import LiquidButton from "@/components/ui/LiquidButton";
 
 export default function Footer() {
     return (
-        <footer className="bg-deep-teal text-white pt-16 pb-8">
-            <div className="container mx-auto px-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-                    {/* Brand Column */}
+        <footer className="bg-[#006D77] text-white">
+            {/* Top Service Bar */}
+            <div className="border-b border-white/10">
+                <div className="container mx-auto px-4 py-12">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+                        <div className="flex flex-col items-center gap-3">
+                            <Truck size={24} className="text-white" />
+                            <h4 className="text-xs font-bold tracking-widest uppercase">Free Shipping</h4>
+                            <p className="text-xs text-gray-300 font-light max-w-[200px]">
+                                Free worldwide shipping and returns - customs and duties taxes included
+                            </p>
+                        </div>
+                        <div className="flex flex-col items-center gap-3">
+                            <Headphones size={24} className="text-white" />
+                            <h4 className="text-xs font-bold tracking-widest uppercase">Customer Service</h4>
+                            <p className="text-xs text-gray-300 font-light max-w-[200px]">
+                                We are available from monday to friday to answer your questions.
+                            </p>
+                        </div>
+                        <div className="flex flex-col items-center gap-3">
+                            <Lock size={24} className="text-white" />
+                            <h4 className="text-xs font-bold tracking-widest uppercase">Secure Payment</h4>
+                            <p className="text-xs text-gray-300 font-light max-w-[200px]">
+                                Your payment information is processed securely.
+                            </p>
+                        </div>
+                        <div className="flex flex-col items-center gap-3">
+                            <Send size={24} className="text-white" />
+                            <h4 className="text-xs font-bold tracking-widest uppercase">Contact Us</h4>
+                            <p className="text-xs text-gray-300 font-light max-w-[200px]">
+                                Need to contact us? Just send us an e-mail at info@kevara.com
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Main Footer Content */}
+            <div className="container mx-auto px-4 py-16">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
+                    {/* Women Column */}
                     <div>
-                        <Link href="/" className="inline-block mb-6">
-                            <h2 className="text-3xl font-lora font-bold tracking-tight">Kevara.</h2>
-                        </Link>
-                        <p className="text-gray-300 font-figtree mb-6 leading-relaxed">
-                            Elevating everyday elegance with premium fabrics and timeless designs.
-                            Crafted for the modern individual.
-                        </p>
+                        <h3 className="text-xs font-bold tracking-widest uppercase mb-6">Women</h3>
+                        <ul className="space-y-3 text-sm text-gray-300 font-figtree">
+                            <li><Link href="/collections/women-essentials" className="hover:text-white transition-colors">Essentials</Link></li>
+                            <li><Link href="/collections/women-new" className="hover:text-white transition-colors">New Arrivals</Link></li>
+                            <li><Link href="/collections/women-dresses" className="hover:text-white transition-colors">Dresses</Link></li>
+                            <li><Link href="/collections/women-skirts" className="hover:text-white transition-colors">Skirts</Link></li>
+                            <li><Link href="/women" className="hover:text-white transition-colors">View All</Link></li>
+                        </ul>
+                    </div>
+
+                    {/* Men Column */}
+                    <div>
+                        <h3 className="text-xs font-bold tracking-widest uppercase mb-6">Men</h3>
+                        <ul className="space-y-3 text-sm text-gray-300 font-figtree">
+                            <li><Link href="/collections/men-essentials" className="hover:text-white transition-colors">Essentials</Link></li>
+                            <li><Link href="/collections/men-new" className="hover:text-white transition-colors">New Arrivals</Link></li>
+                            <li><Link href="/collections/men-shirts" className="hover:text-white transition-colors">Shirts</Link></li>
+                            <li><Link href="/collections/men-shorts" className="hover:text-white transition-colors">Shorts</Link></li>
+                            <li><Link href="/men" className="hover:text-white transition-colors">View All</Link></li>
+                        </ul>
+                    </div>
+
+                    {/* About Column */}
+                    <div>
+                        <h3 className="text-xs font-bold tracking-widest uppercase mb-6">About</h3>
+                        <ul className="space-y-3 text-sm text-gray-300 font-figtree">
+                            <li><Link href="/about/story" className="hover:text-white transition-colors">Story</Link></li>
+                            <li><Link href="/about/sustainability" className="hover:text-white transition-colors">Sustainability</Link></li>
+                            <li><Link href="/about/care" className="hover:text-white transition-colors">Product Care</Link></li>
+                            <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+                            <li><Link href="/faq" className="hover:text-white transition-colors">FAQ</Link></li>
+                        </ul>
+                    </div>
+
+                    {/* Follow Us Column */}
+                    <div>
+                        <h3 className="text-xs font-bold tracking-widest uppercase mb-6">Follow Us</h3>
                         <div className="flex gap-4">
-                            <Link href="#" className="hover:text-warm-cream transition-colors">
-                                <Instagram size={20} />
+                            <Link href="#" className="w-10 h-10 border border-white/20 flex items-center justify-center hover:bg-white hover:text-[#006D77] transition-all rounded-sm">
+                                <Facebook size={18} />
                             </Link>
-                            <Link href="#" className="hover:text-warm-cream transition-colors">
-                                <Facebook size={20} />
-                            </Link>
-                            <Link href="#" className="hover:text-warm-cream transition-colors">
-                                <Twitter size={20} />
+                            <Link href="#" className="w-10 h-10 border border-white/20 flex items-center justify-center hover:bg-white hover:text-[#006D77] transition-all rounded-sm">
+                                <Instagram size={18} />
                             </Link>
                         </div>
                     </div>
 
-                    {/* Quick Links */}
-                    <div>
-                        <h3 className="text-lg font-lora font-bold mb-6">Shop</h3>
-                        <ul className="space-y-3 font-figtree text-sm text-gray-300">
-                            <li>
-                                <Link href="#" className="hover:text-white transition-colors">
-                                    New Arrivals
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="#" className="hover:text-white transition-colors">
-                                    Best Sellers
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="#" className="hover:text-white transition-colors">
-                                    Clothing
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="#" className="hover:text-white transition-colors">
-                                    Accessories
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-
-                    {/* Support */}
-                    <div>
-                        <h3 className="text-lg font-lora font-bold mb-6">Support</h3>
-                        <ul className="space-y-3 font-figtree text-sm text-gray-300">
-                            <li>
-                                <Link href="#" className="hover:text-white transition-colors">
-                                    Contact Us
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="#" className="hover:text-white transition-colors">
-                                    Shipping & Returns
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="#" className="hover:text-white transition-colors">
-                                    Size Guide
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="#" className="hover:text-white transition-colors">
-                                    FAQ
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-
-                    {/* Newsletter */}
-                    <div>
-                        <h3 className="text-lg font-lora font-bold mb-6">Stay Updated</h3>
-                        <p className="text-gray-300 font-figtree mb-4 text-sm">
-                            Subscribe to our newsletter for exclusive offers and style tips.
+                    {/* Newsletter Column */}
+                    <div className="lg:col-span-1">
+                        <h3 className="text-xs font-bold tracking-widest uppercase mb-6">Newsletter</h3>
+                        <p className="text-sm text-gray-300 mb-4 font-figtree">
+                            Subscribe to our newsletter and get a 10% discount on your first order.
                         </p>
-                        <form className="flex flex-col gap-3">
+                        <form className="relative">
                             <input
                                 type="email"
-                                placeholder="Enter your email"
-                                className="bg-white/10 border border-white/20 rounded px-4 py-2 text-sm text-white placeholder:text-gray-400 focus:outline-none focus:border-white transition-colors"
+                                placeholder="Your e-mail"
+                                className="w-full bg-white/5 border border-white/10 rounded-sm px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:outline-none focus:border-white/30 transition-colors"
                             />
-                            <LiquidButton
-                                type="button"
-                                className="bg-white text-deep-teal font-medium py-2 rounded hover:bg-white border-none"
-                                variant="secondary"
-                            >
-                                Subscribe
-                            </LiquidButton>
+                            <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-white hover:text-gray-300">
+                                <Send size={16} />
+                            </button>
                         </form>
                     </div>
                 </div>
 
-                {/* Copyright */}
-                <div className="border-t border-white/10 pt-8 text-center text-xs text-gray-400 font-figtree">
-                    <p>&copy; {new Date().getFullYear()} Kevara. All rights reserved.</p>
+                {/* Bottom Bar */}
+                <div className="border-t border-white/10 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="flex items-center gap-4 text-xs text-gray-400">
+                        <span>United States (USD $)</span>
+                        <span>Kevara Theme Ivory</span>
+                        <span>Powered by Shopify</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400 mr-2">We accept</span>
+                        {/* Payment Icons Placeholders */}
+                        <div className="flex gap-1">
+                            {['Visa', 'Mastercard', 'Amex', 'PayPal'].map((card) => (
+                                <div key={card} className="w-8 h-5 bg-white rounded-sm flex items-center justify-center">
+                                    <span className="text-[6px] text-slate-900 font-bold">{card}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </div>
         </footer>

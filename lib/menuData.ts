@@ -2,11 +2,12 @@ export interface MenuItem {
     id: string;
     label: string;
     href: string;
-    shopify_layout_type?: "mixed" | "visual";
+    shopify_layout_type?: "mixed" | "visual" | "grid" | "list";
     columns?: {
         title: string;
-        links: { label: string; href: string }[];
+        items: { label: string; href: string }[];
     }[];
+    featuredImage?: string;
     images?: {
         label: string;
         src: string;
@@ -16,36 +17,114 @@ export interface MenuItem {
 
 export const MENU_DATA: MenuItem[] = [
     {
-        id: "women",
-        label: "Women",
-        href: "/collections/women",
+        id: "new-arrivals",
+        label: "New Arrivals",
+        href: "/collections/new-arrivals",
         shopify_layout_type: "mixed",
         columns: [
             {
-                title: "Clothing",
-                links: [
+                title: "CLOTHING",
+                items: [
+                    { label: "New In", href: "/collections/new-in" },
+                    { label: "Best Sellers", href: "/collections/best-sellers" },
+                    { label: "Back in Stock", href: "/collections/back-in-stock" },
+                    { label: "Coming Soon", href: "/collections/coming-soon" },
+                    { label: "Trending Now", href: "/collections/trending" },
+                    { label: "Online Exclusives", href: "/collections/online-exclusives" },
+                    { label: "Limited Edition", href: "/collections/limited-edition" },
+                    { label: "Last Chance", href: "/collections/last-chance" },
+                    { label: "Gift Cards", href: "/collections/gift-cards" },
+                ],
+            },
+            {
+                title: "COLLECTIONS",
+                items: [
+                    { label: "Spring 2024", href: "/collections/spring-2024" },
+                    { label: "Summer Essentials", href: "/collections/summer-essentials" },
+                    { label: "Workwear Edit", href: "/collections/workwear-edit" },
+                    { label: "Occasion Wear", href: "/collections/occasion-wear" },
+                    { label: "Vacation Shop", href: "/collections/vacation" },
+                    { label: "Wedding Guest", href: "/collections/wedding-guest" },
+                    { label: "Festival Edit", href: "/collections/festival" },
+                    { label: "Denim Guide", href: "/collections/denim-guide" },
+                ],
+            },
+        ],
+        images: [
+            {
+                label: "New Season",
+                src: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=800&auto=format&fit=crop",
+                href: "/collections/new-in",
+            },
+            {
+                label: "Trending",
+                src: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop",
+                href: "/collections/trending",
+            },
+            {
+                label: "Editor's Pick",
+                src: "https://images.unsplash.com/photo-1485230946086-1d99d529a132?q=80&w=800&auto=format&fit=crop",
+                href: "/collections/editors-pick",
+            },
+            {
+                label: "Summer Vibes",
+                src: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
+                href: "/collections/summer-vibes",
+            },
+            {
+                label: "Essentials",
+                src: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?q=80&w=800&auto=format&fit=crop",
+                href: "/collections/essentials",
+            },
+        ],
+    },
+    {
+        id: "women",
+        label: "Women",
+        href: "/women",
+        shopify_layout_type: "mixed",
+        columns: [
+            {
+                title: "CLOTHING",
+                items: [
                     { label: "New Arrivals", href: "/collections/women-new" },
+                    { label: "Best Sellers", href: "/collections/women-best-sellers" },
                     { label: "Dresses", href: "/collections/women-dresses" },
                     { label: "Tops & Shirts", href: "/collections/women-tops" },
-                    { label: "Trousers", href: "/collections/women-trousers" },
+                    { label: "Trousers & Shorts", href: "/collections/women-bottoms" },
+                    { label: "Jackets & Coats", href: "/collections/women-jackets" },
                     { label: "Knitwear", href: "/collections/women-knitwear" },
+                    { label: "Denim", href: "/collections/women-denim" },
+                    { label: "Skirts", href: "/collections/women-skirts" },
+                    { label: "Activewear", href: "/collections/women-activewear" },
+                    { label: "Swimwear", href: "/collections/women-swimwear" },
+                    { label: "Loungewear", href: "/collections/women-loungewear" },
+                    { label: "Linen Collection", href: "/collections/women-linen" },
+                    { label: "Occasion Wear", href: "/collections/women-occasion" },
+                    { label: "Workwear", href: "/collections/women-workwear" },
                 ],
             },
             {
-                title: "Collections",
-                links: [
-                    { label: "Workwear Edit", href: "/collections/workwear" },
-                    { label: "Linen Series", href: "/collections/linen" },
-                    { label: "Evening Wear", href: "/collections/evening" },
-                    { label: "Essentials", href: "/collections/essentials" },
+                title: "ACCESSORIES",
+                items: [
+                    { label: "Bags", href: "/collections/women-bags" },
+                    { label: "Jewelry", href: "/collections/women-jewelry" },
+                    { label: "Shoes", href: "/collections/women-shoes" },
+                    { label: "Scarves", href: "/collections/women-scarves" },
+                    { label: "Belts", href: "/collections/women-belts" },
+                    { label: "Sunglasses", href: "/collections/women-sunglasses" },
+                    { label: "Hats", href: "/collections/women-hats" },
+                    { label: "Hair Accessories", href: "/collections/women-hair" },
                 ],
             },
             {
-                title: "Accessories",
-                links: [
-                    { label: "Bags", href: "/collections/bags" },
-                    { label: "Jewelry", href: "/collections/jewelry" },
-                    { label: "Scarves", href: "/collections/scarves" },
+                title: "COLLECTIONS",
+                items: [
+                    { label: "Spring 2024", href: "/collections/spring-2024" },
+                    { label: "Summer Essentials", href: "/collections/summer-essentials" },
+                    { label: "Minimalist Edit", href: "/collections/minimalist" },
+                    { label: "Vacation Shop", href: "/collections/vacation" },
+                    { label: "Wedding Guest", href: "/collections/wedding-guest" },
                 ],
             },
         ],
@@ -65,88 +144,30 @@ export const MENU_DATA: MenuItem[] = [
                 src: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=800&auto=format&fit=crop",
                 href: "/collections/women-editors-pick",
             },
-        ],
-    },
-    {
-        id: "men",
-        label: "Men",
-        href: "/collections/men",
-        shopify_layout_type: "mixed",
-        columns: [
             {
-                title: "Clothing",
-                links: [
-                    { label: "New Arrivals", href: "/collections/men-new" },
-                    { label: "Shirts", href: "/collections/men-shirts" },
-                    { label: "T-Shirts", href: "/collections/men-tshirts" },
-                    { label: "Trousers", href: "/collections/men-trousers" },
-                    { label: "Jackets", href: "/collections/men-jackets" },
-                ],
+                label: "Dresses",
+                src: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=800&auto=format&fit=crop",
+                href: "/collections/women-dresses",
             },
             {
-                title: "Collections",
-                links: [
-                    { label: "Office Wear", href: "/collections/men-office" },
-                    { label: "Casual Weekend", href: "/collections/men-casual" },
-                    { label: "Summer Linen", href: "/collections/men-linen" },
-                ],
-            },
-            {
-                title: "Accessories",
-                links: [
-                    { label: "Belts", href: "/collections/men-belts" },
-                    { label: "Wallets", href: "/collections/men-wallets" },
-                ],
-            },
-        ],
-        images: [
-            {
-                label: "New Arrivals",
-                src: "https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?q=80&w=800&auto=format&fit=crop",
-                href: "/collections/men-new",
-            },
-            {
-                label: "Summer Edit",
-                src: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=800&auto=format&fit=crop",
-                href: "/collections/men-summer",
-            },
-            {
-                label: "Essentials",
-                src: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?q=80&w=800&auto=format&fit=crop",
-                href: "/collections/men-essentials",
+                label: "Accessories",
+                src: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=800&auto=format&fit=crop",
+                href: "/collections/women-accessories",
             },
         ],
     },
     {
-        id: "shop",
-        label: "Shop",
+        id: "collections",
+        label: "Collections",
         href: "/collections/all",
         shopify_layout_type: "mixed",
         columns: [
             {
-                title: "Categories",
-                links: [
-                    { label: "Shop All", href: "/collections/all" },
-                    { label: "Women", href: "/collections/women" },
-                    { label: "Men", href: "/collections/men" },
-                    { label: "Accessories", href: "/collections/accessories" },
-                ],
-            },
-            {
-                title: "Collections",
-                links: [
-                    { label: "New Arrivals", href: "/collections/new" },
-                    { label: "Best Sellers", href: "/collections/best-sellers" },
-                    { label: "Essentials", href: "/collections/essentials" },
-                    { label: "Sale", href: "/collections/sale" },
-                ],
-            },
-            {
-                title: "Featured",
-                links: [
-                    { label: "Editor's Pick", href: "/collections/editors-pick" },
-                    { label: "Gift Guide", href: "/collections/gift-guide" },
-                    { label: "Sustainability", href: "/pages/sustainability" },
+                title: "FEATURED",
+                items: [
+                    { label: "Home Sanctuary", href: "/collections/home-sanctuary" },
+                    { label: "Urban Explorer", href: "/collections/urban-explorer" },
+                    { label: "Minimalist", href: "/collections/minimalist" },
                 ],
             },
         ],
