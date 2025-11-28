@@ -128,7 +128,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                                                                         {col.title}
                                                                     </h4>
                                                                     <ul className="space-y-3 pl-2 border-l border-gray-100">
-                                                                        {col.links.map((link) => (
+                                                                        {col.items.map((link) => (
                                                                             <li key={link.label}>
                                                                                 <Link
                                                                                     href={link.href}
