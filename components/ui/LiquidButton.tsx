@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 interface LiquidButtonProps {
     children: React.ReactNode;
     href?: string;
-    onClick?: () => void;
+    onClick?: React.MouseEventHandler<HTMLButtonElement | HTMLAnchorElement>;
     className?: string;
     variant?: "primary" | "secondary";
     type?: "button" | "submit" | "reset";

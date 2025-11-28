@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import { X, Plus, Minus, User, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -31,10 +31,10 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
         setExpandedId(expandedId === id ? null : id);
     };
 
-    const sidebarVariants = {
+    const sidebarVariants: Variants = {
         closed: { x: "-100%" },
         open: {
-            x: 0,
+            x: "0%",
             transition: {
                 type: "tween",
                 ease: [0.4, 0, 0.2, 1],
@@ -43,7 +43,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
         },
     };
 
-    const containerVariants = {
+    const containerVariants: Variants = {
         closed: {},
         open: {
             transition: {
@@ -53,7 +53,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
         },
     };
 
-    const itemVariants = {
+    const itemVariants: Variants = {
         closed: { opacity: 0, x: -20 },
         open: { opacity: 1, x: 0 },
     };

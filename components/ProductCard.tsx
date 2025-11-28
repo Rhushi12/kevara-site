@@ -100,7 +100,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                     <LiquidButton
                         className="w-full bg-white text-slate-900 hover:text-slate-900 py-3 flex flex-col items-center justify-center gap-1 rounded shadow-lg border-none"
                         variant="secondary"
-                        onClick={(e) => {
+                        onClick={(e: React.MouseEvent) => {
                             e.preventDefault();
                             e.stopPropagation();
                             openQuickView(product);
@@ -116,7 +116,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 {/* Mobile: Quick View Button - Always visible icon */}
                 <button
                     className="md:hidden absolute bottom-3 right-3 z-20 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg text-slate-900 active:scale-95 transition-transform"
-                    onClick={(e) => {
+                    onClick={(e: React.MouseEvent) => {
                         e.preventDefault();
                         e.stopPropagation();
                         openQuickView(product);
