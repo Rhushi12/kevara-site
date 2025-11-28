@@ -63,7 +63,9 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     }
 }
 
-export async function saveNavigationMenu(menuData: any[]) {
+import { MenuItem } from "@/lib/menuData";
+
+export async function saveNavigationMenu(menuData: MenuItem[]) {
     try {
         const docRef = doc(db, "config", "navigation");
         await setDoc(docRef, { items: menuData });
@@ -74,25 +76,15 @@ export async function saveNavigationMenu(menuData: any[]) {
     }
 }
 
-export function subscribeToNavigation(callback: (data: any[]) => void) {
+export function subscribeToNavigation(callback: (data: MenuItem[]) => void) {
     const docRef = doc(db, "config", "navigation");
     return onSnapshot(docRef, (doc) => {
         if (doc.exists()) {
-            callback(doc.data().items);
+            callback(doc.data().items as MenuItem[]);
         } else {
             callback([]);
         }
     });
 }
 
-export async function uploadImage(file: File, path: string): Promise<string> {
-    try {
-        const storageRef = ref(storage, path);
-        const snapshot = await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(snapshot.ref);
-        return downloadURL;
-    } catch (error) {
-        console.error("Error uploading image:", error);
-        throw error;
-    }
-}
+

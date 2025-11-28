@@ -303,8 +303,8 @@ export default function Navbar() {
                                         <button
                                             onClick={() => setIsEditMode(!isEditMode)}
                                             className={`text-xs px-2 py-1 rounded border transition-colors ${isEditMode
-                                                    ? "bg-[#006D77] text-white border-[#006D77]"
-                                                    : "bg-transparent text-gray-500 border-gray-300 hover:border-[#006D77] hover:text-[#006D77]"
+                                                ? "bg-[#006D77] text-white border-[#006D77]"
+                                                : "bg-transparent text-gray-500 border-gray-300 hover:border-[#006D77] hover:text-[#006D77]"
                                                 }`}
                                         >
                                             {isEditMode ? "Done Editing" : "Edit Menu"}
