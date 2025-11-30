@@ -80,7 +80,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                             src={imageUrl}
                             alt={altText}
                             fill
-                            className="object-cover transition-transform duration-700 group-hover/card:scale-105"
+                            className={`object-cover transition-opacity duration-500 relative z-10 ${secondImageUrl ? 'group-hover/card:opacity-0' : ''}`}
                             sizes="(max-width: 768px) 50vw, 25vw"
                         />
                     )}
@@ -91,7 +91,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                             src={secondImageUrl}
                             alt={altText}
                             fill
-                            className="object-cover absolute inset-0 opacity-0 transition-opacity duration-500 group-hover/card:opacity-100"
+                            className="object-cover absolute inset-0 opacity-0 transition-opacity duration-500 group-hover/card:opacity-100 z-20"
                             sizes="(max-width: 768px) 50vw, 25vw"
                         />
                     )}
