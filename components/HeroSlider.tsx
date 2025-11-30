@@ -7,13 +7,19 @@ import Image from "next/image";
 import { HERO_SLIDES } from "@/lib/heroData";
 import LiquidButton from "@/components/ui/LiquidButton";
 
+import EditableText from "@/components/admin/EditableText";
+import SimpleImageUploadModal from "@/components/admin/SimpleImageUploadModal";
+
 interface HeroSliderProps {
     slides?: typeof HERO_SLIDES;
+    isEditMode?: boolean;
+    onUpdate?: (slides: typeof HERO_SLIDES) => void;
 }
 
-export default function HeroSlider({ slides = HERO_SLIDES }: HeroSliderProps) {
+export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, onUpdate }: HeroSliderProps) {
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
     // Phase 1: Initial Load Delay (1.5s)
     useEffect(() => {
@@ -25,10 +31,70 @@ export default function HeroSlider({ slides = HERO_SLIDES }: HeroSliderProps) {
 
     // Cycle to next slide
     const nextSlide = () => {
-        setCurrentSlide((prev) => (prev + 1) % slides.length);
+        if (slides.length > 0) {
+            setCurrentSlide((prev) => (prev + 1) % slides.length);
+        }
     };
 
-    const activeSlide = slides[currentSlide];
+    const activeSlide = slides[currentSlide] || slides[0];
+
+    // Handle updates
+    const updateSlide = (field: string, value: string) => {
+        if (!onUpdate) return;
+        const newSlides = [...slides];
+        newSlides[currentSlide] = { ...newSlides[currentSlide], [field]: value };
+        onUpdate(newSlides);
+    };
+
+    const handleImageUpload = async (file: File) => {
+        if (!onUpdate) return;
+
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
+            const data = await res.json();
+
+            if (!data.success) throw new Error("Upload failed");
+
+            const previewUrl = URL.createObjectURL(file);
+            const imageUrl = data.url || previewUrl;
+
+            const newSlides = [...slides];
+            newSlides[currentSlide] = { ...newSlides[currentSlide], image: imageUrl, image_id: data.fileId };
+            onUpdate(newSlides);
+            setIsUploadModalOpen(false);
+        } catch (error) {
+            console.error("Upload failed:", error);
+            alert("Failed to upload image");
+        }
+    };
+
+    const addNewSlide = () => {
+        if (!onUpdate) return;
+        const newSlide = {
+            id: Date.now(),
+            image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop",
+            heading: "New Slide Heading",
+            subheading: "New Subheading",
+            buttonText: "Shop Now",
+            link: "/collections/all",
+        };
+        onUpdate([...slides, newSlide]);
+        // Move to the new slide
+        setCurrentSlide(slides.length);
+    };
+
+    const removeCurrentSlide = () => {
+        if (!onUpdate || slides.length <= 1) return;
+        const newSlides = slides.filter((_, index) => index !== currentSlide);
+        onUpdate(newSlides);
+        setCurrentSlide(0);
+    };
 
     const slideVariants: Variants = {
         initial: {
@@ -68,8 +134,35 @@ export default function HeroSlider({ slides = HERO_SLIDES }: HeroSliderProps) {
         visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.64, 0, 0.78, 0] } }, // easeInQuint
     };
 
+    if (!activeSlide) return null;
+
     return (
         <div className="relative h-[85vh] md:h-[calc(100vh-80px)] w-full overflow-hidden bg-[#FDFBF7]">
+            {isEditMode && (
+                <div className="absolute top-4 right-4 z-50 flex gap-2">
+                    <button
+                        onClick={() => setIsUploadModalOpen(true)}
+                        className="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-4 py-2 rounded-full text-sm transition-colors"
+                    >
+                        Change Image
+                    </button>
+                    <button
+                        onClick={addNewSlide}
+                        className="bg-[#006D77] hover:bg-[#005a63] text-white px-4 py-2 rounded-full text-sm transition-colors shadow-lg"
+                    >
+                        + Add Slide
+                    </button>
+                    {slides.length > 1 && (
+                        <button
+                            onClick={removeCurrentSlide}
+                            className="bg-red-500/80 hover:bg-red-600/80 backdrop-blur-md text-white px-4 py-2 rounded-full text-sm transition-colors"
+                        >
+                            Remove Slide
+                        </button>
+                    )}
+                </div>
+            )}
+
             <AnimatePresence mode="popLayout" initial={false}>
                 {isLoaded && (
                     <motion.div
@@ -82,13 +175,19 @@ export default function HeroSlider({ slides = HERO_SLIDES }: HeroSliderProps) {
                     >
                         {/* Image Layer */}
                         <div className="relative w-full h-full">
-                            <Image
-                                src={activeSlide.image}
-                                alt={activeSlide.heading}
-                                fill
-                                className="object-cover"
-                                priority
-                            />
+                            {activeSlide.image && typeof activeSlide.image === 'string' && activeSlide.image.trim() !== "" ? (
+                                <Image
+                                    src={activeSlide.image}
+                                    alt={activeSlide.heading || "Hero Slide"}
+                                    fill
+                                    className="object-cover"
+                                    priority
+                                />
+                            ) : (
+                                <div className="w-full h-full bg-gray-800 flex items-center justify-center text-gray-500">
+                                    No Image
+                                </div>
+                            )}
                             <div className="absolute inset-0 bg-black/20" />
                         </div>
 
@@ -101,26 +200,62 @@ export default function HeroSlider({ slides = HERO_SLIDES }: HeroSliderProps) {
                                     animate="visible"
                                     key={`text-${activeSlide.id}`}
                                 >
-                                    <motion.h2
-                                        variants={fadeInVariants}
-                                        className="text-[11px] md:text-[13px] leading-[16px] font-bold font-figtree tracking-[0.2em] uppercase mb-4"
-                                    >
-                                        {activeSlide.subheading}
-                                    </motion.h2>
-                                    <motion.h1
-                                        variants={fadeUpVariants}
-                                        className="text-[48px] md:text-[64px] leading-[1.1] md:leading-[64px] font-normal font-lora mb-6 md:mb-8"
-                                    >
-                                        {activeSlide.heading}
-                                    </motion.h1>
+                                    <motion.div variants={fadeInVariants} className="mb-4">
+                                        {isEditMode ? (
+                                            <EditableText
+                                                value={activeSlide.subheading}
+                                                onSave={(val) => updateSlide("subheading", val)}
+                                                isAdmin={true}
+                                                className="text-[11px] md:text-[13px] leading-[16px] font-bold font-figtree tracking-[0.2em] uppercase bg-transparent text-white border-b border-white/20"
+                                            />
+                                        ) : (
+                                            <h2 className="text-[11px] md:text-[13px] leading-[16px] font-bold font-figtree tracking-[0.2em] uppercase">
+                                                {activeSlide.subheading}
+                                            </h2>
+                                        )}
+                                    </motion.div>
+
+                                    <motion.div variants={fadeUpVariants} className="mb-6 md:mb-8">
+                                        {isEditMode ? (
+                                            <EditableText
+                                                value={activeSlide.heading}
+                                                onSave={(val) => updateSlide("heading", val)}
+                                                isAdmin={true}
+                                                className="text-[48px] md:text-[64px] leading-[1.1] md:leading-[64px] font-normal font-lora bg-transparent text-white border-b border-white/20"
+                                            />
+                                        ) : (
+                                            <h1 className="text-[48px] md:text-[64px] leading-[1.1] md:leading-[64px] font-normal font-lora">
+                                                {activeSlide.heading}
+                                            </h1>
+                                        )}
+                                    </motion.div>
+
                                     <motion.div variants={fadeUpVariants}>
-                                        <LiquidButton
-                                            href={activeSlide.link}
-                                            variant={currentSlide === 0 ? "primary" : "secondary"}
-                                            className={currentSlide !== 0 ? "border-none" : ""}
-                                        >
-                                            {activeSlide.buttonText}
-                                        </LiquidButton>
+                                        {isEditMode ? (
+                                            <div className="flex gap-2 justify-center md:justify-start">
+                                                <EditableText
+                                                    value={activeSlide.buttonText}
+                                                    onSave={(val) => updateSlide("buttonText", val)}
+                                                    isAdmin={true}
+                                                    className="bg-transparent text-white border-b border-white/20 min-w-[100px]"
+                                                />
+                                                <EditableText
+                                                    value={activeSlide.link}
+                                                    onSave={(val) => updateSlide("link", val)}
+                                                    isAdmin={true}
+                                                    className="bg-transparent text-white border-b border-white/20 min-w-[100px] text-xs"
+                                                    placeholder="Link URL"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <LiquidButton
+                                                href={activeSlide.link}
+                                                variant={currentSlide === 0 ? "primary" : "secondary"}
+                                                className={currentSlide !== 0 ? "border-none" : ""}
+                                            >
+                                                {activeSlide.buttonText}
+                                            </LiquidButton>
+                                        )}
                                     </motion.div>
                                 </motion.div>
                             </div>
@@ -129,16 +264,19 @@ export default function HeroSlider({ slides = HERO_SLIDES }: HeroSliderProps) {
                 )}
             </AnimatePresence>
 
-            {/* Progress Indicators - Sharp & Thin */}
-            {isLoaded && (
+            {/* Progress Indicators - Sharp & Thin (Clickable) */}
+            {isLoaded && slides.length > 1 && (
                 <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-40 flex gap-4">
                     {slides.map((slide, index) => (
-                        <div
+                        <button
                             key={slide.id}
-                            className="h-[2px] w-16 bg-white/30 rounded-none overflow-hidden"
+                            onClick={() => setCurrentSlide(index)}
+                            className="h-[2px] w-16 bg-white/30 rounded-none overflow-hidden cursor-pointer hover:bg-white/50 transition-colors"
+                            aria-label={`Go to slide ${index + 1}`}
                         >
                             {index === currentSlide && (
                                 <motion.div
+                                    key={`progress-${currentSlide}-${slides.length}`}
                                     className="h-full bg-white"
                                     initial={{ width: "0%" }}
                                     animate={{
@@ -149,16 +287,22 @@ export default function HeroSlider({ slides = HERO_SLIDES }: HeroSliderProps) {
                                         },
                                     }}
                                     onAnimationComplete={() => {
-                                        if (index === currentSlide) {
+                                        if (index === currentSlide && !isEditMode) {
                                             nextSlide();
                                         }
                                     }}
                                 />
                             )}
-                        </div>
+                        </button>
                     ))}
                 </div>
             )}
+
+            <SimpleImageUploadModal
+                isOpen={isUploadModalOpen}
+                onClose={() => setIsUploadModalOpen(false)}
+                onUpload={handleImageUpload}
+            />
         </div>
     );
 }

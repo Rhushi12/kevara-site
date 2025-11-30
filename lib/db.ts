@@ -87,4 +87,16 @@ export function subscribeToNavigation(callback: (data: MenuItem[]) => void) {
     });
 }
 
+export async function uploadImage(file: File, path: string): Promise<string> {
+    try {
+        const storageRef = ref(storage, path);
+        const snapshot = await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+        return downloadURL;
+    } catch (error) {
+        console.error("Error uploading image:", error);
+        throw error;
+    }
+}
+
 

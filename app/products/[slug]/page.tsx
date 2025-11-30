@@ -8,37 +8,35 @@ import QuoteSection from "@/components/pdp/QuoteSection";
 import StickyProductBar from "@/components/pdp/StickyProductBar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { MOCK_SHOPIFY_PRODUCTS } from "@/lib/mockData";
+import { getProductByHandle, getProducts } from "@/lib/shopify-admin";
 
-export default function ProductPage({ params }: { params: { slug: string } }) {
-    // Find product by handle (slug)
-    const productData = MOCK_SHOPIFY_PRODUCTS.find(
-        (p) => p.node.handle === params.slug
-    );
+export default async function ProductPage({ params }: { params: { slug: string } }) {
+    // Await params for Next.js 15 compatibility
+    // @ts-ignore
+    const { slug } = await params || params;
 
-    // Fallback for demo purposes if not found (or show 404)
-    // For now, if not found, let's default to the first one or show 404.
-    // Given the user wants "any product" to work, let's fallback to the first one if specific one isn't found, 
-    // BUT ideally we should match. Let's try to match, if not, use the Evry Jumpsuit (id 7) as default for "demo" feel
-    // or just 404. Let's stick to strict matching first, but since I only added a few, 
-    // I'll default to the Jumpsuit if the slug doesn't match anything, so the UI doesn't break for random clicks.
-    const product = productData || MOCK_SHOPIFY_PRODUCTS.find(p => p.node.handle === "evry-7027-jumpsuit") || MOCK_SHOPIFY_PRODUCTS[0];
+    // Fetch real product data
+    let product = null;
+    try {
+        product = await getProductByHandle(slug);
+    } catch (error) {
+        console.error("Error fetching product:", error);
+    }
 
     if (!product) return notFound();
 
-    const { title, priceRange, images, variants } = product.node;
+    const { title, priceRange, images, variants, descriptionHtml } = product;
     const price = parseFloat(priceRange.minVariantPrice.amount);
     const currency = priceRange.minVariantPrice.currencyCode;
 
     // Transform images
-    const productImages = images.edges.map(edge => edge.node.url);
+    const productImages = images.edges.map((edge: any) => edge.node.url);
 
     // Extract colors and sizes from variants
-    // Mock logic: assuming variant title is "Size / Color"
     const uniqueColors = new Set<string>();
     const uniqueSizes = new Set<string>();
 
-    variants.edges.forEach(v => {
+    variants.edges.forEach((v: any) => {
         const parts = v.node.title.split("/");
         if (parts.length > 1) {
             uniqueSizes.add(parts[0].trim());
@@ -54,7 +52,11 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
         value: getColorHex(name)
     }));
 
-    const sizes = Array.from(uniqueSizes).length > 0 ? Array.from(uniqueSizes) : ["S", "M", "L"];
+    const sizes = Array.from(uniqueSizes).length > 0 ? Array.from(uniqueSizes) : ["One Size"];
+
+    // Fetch related products (just get first 4 for now)
+    const relatedProductsEdges = await getProducts(4);
+    const relatedProducts = relatedProductsEdges.map((edge: any) => edge.node);
 
     return (
         <main className="bg-white min-h-screen">
@@ -92,6 +94,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                             reviews={124} // Mock reviews
                             colors={colors}
                             sizes={sizes}
+                            description={descriptionHtml}
                         />
                     </div>
                 </div>
@@ -102,7 +105,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-12 pt-12">
                     {/* Left: Tabs (7 cols) */}
                     <div className="md:col-span-7">
-                        <ProductTabs />
+                        <ProductTabs description={descriptionHtml} />
                     </div>
 
                     {/* Right: Complete Look (5 cols) */}
@@ -124,17 +127,19 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                     <h2 className="text-3xl font-lora text-slate-900">You may also like</h2>
                 </div>
                 <div className="container mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8">
-                    {MOCK_SHOPIFY_PRODUCTS.slice(0, 4).map((p, i) => (
+                    {relatedProducts.map((p: any, i: number) => (
                         <div key={i} className="group cursor-pointer">
                             <div className="relative aspect-[3/4] bg-gray-100 mb-4 overflow-hidden rounded-sm">
                                 <img
-                                    src={p.node.images.edges[0]?.node.url}
-                                    alt={p.node.title}
+                                    src={p.images.edges[0]?.node.url}
+                                    alt={p.title}
                                     className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105"
                                 />
                             </div>
-                            <h3 className="text-sm font-medium text-slate-900 group-hover:text-[#006D77]">{p.node.title}</h3>
-                            <span className="text-xs text-slate-500">${p.node.priceRange.minVariantPrice.amount}</span>
+                            <h3 className="text-sm font-medium text-slate-900 group-hover:text-[#006D77]">{p.title}</h3>
+                            <span className="text-xs text-slate-500">
+                                {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(parseFloat(p.priceRange.minVariantPrice.amount))}
+                            </span>
                         </div>
                     ))}
                 </div>
@@ -159,6 +164,7 @@ function getColorHex(name: string) {
         "Purple": "#6B21A8",
         "White": "#FFFFFF",
         "Default": "#000000",
+        "Green": "#15803d",
     };
     return map[name] || "#000000";
 }

@@ -25,54 +25,45 @@ export default function Navbar() {
     const [uploadTarget, setUploadTarget] = useState<{ menuId: string; } | null>(null);
 
     useEffect(() => {
-        // Dynamically import to avoid server-side issues if needed, though this is a client component
-        import("@/lib/db").then(({ subscribeToNavigation }) => {
-            const unsubscribe = subscribeToNavigation((data) => {
-                if (data && data.length > 0) {
-                    setMenuData(data);
+        async function fetchMenu() {
+            try {
+                const res = await fetch('/api/navigation');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.length > 0) {
+                        setMenuData(data);
+                    }
                 }
-            });
-            return () => unsubscribe();
-        });
+            } catch (error) {
+                console.error("Failed to fetch menu:", error);
+            }
+        }
+        fetchMenu();
     }, []);
+
+    const saveMenuToShopify = async (updatedMenu: any[]) => {
+        try {
+            const res = await fetch('/api/navigation/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ menuTabs: updatedMenu }),
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error ? JSON.stringify(data.error) : "Failed to save menu");
+            }
+        } catch (error: any) {
+            console.error("Failed to save menu:", error);
+            alert(`Failed to save changes: ${error.message}`);
+        }
+    };
 
     const handleUpdateMenuLabel = async (id: string, newLabel: string) => {
         const updatedMenu = menuData.map(item =>
             item.id === id ? { ...item, label: newLabel } : item
         );
         setMenuData(updatedMenu);
-        const { saveNavigationMenu } = await import("@/lib/db");
-        await saveNavigationMenu(updatedMenu);
-    };
-
-    const handleUpdateColumnTitle = async (menuId: string, colIdx: number, newTitle: string) => {
-        const updatedMenu = menuData.map(item => {
-            if (item.id === menuId && item.columns) {
-                const newCols = [...item.columns];
-                newCols[colIdx] = { ...newCols[colIdx], title: newTitle };
-                return { ...item, columns: newCols };
-            }
-            return item;
-        });
-        setMenuData(updatedMenu);
-        const { saveNavigationMenu } = await import("@/lib/db");
-        await saveNavigationMenu(updatedMenu);
-    };
-
-    const handleUpdateLink = async (menuId: string, colIdx: number, linkIdx: number, newLabel: string) => {
-        const updatedMenu = menuData.map(item => {
-            if (item.id === menuId && item.columns) {
-                const newCols = [...item.columns];
-                const newItems = [...newCols[colIdx].items];
-                newItems[linkIdx] = { ...newItems[linkIdx], label: newLabel };
-                newCols[colIdx] = { ...newCols[colIdx], items: newItems };
-                return { ...item, columns: newCols };
-            }
-            return item;
-        });
-        setMenuData(updatedMenu);
-        const { saveNavigationMenu } = await import("@/lib/db");
-        await saveNavigationMenu(updatedMenu);
+        await saveMenuToShopify(updatedMenu);
     };
 
     const handleAddLink = async (menuId: string, colIdx: number) => {
@@ -86,8 +77,7 @@ export default function Navbar() {
             return item;
         });
         setMenuData(updatedMenu);
-        const { saveNavigationMenu } = await import("@/lib/db");
-        await saveNavigationMenu(updatedMenu);
+        await saveMenuToShopify(updatedMenu);
     };
 
     const handleDeleteLink = async (menuId: string, colIdx: number, linkIdx: number) => {
@@ -102,8 +92,7 @@ export default function Navbar() {
             return item;
         });
         setMenuData(updatedMenu);
-        const { saveNavigationMenu } = await import("@/lib/db");
-        await saveNavigationMenu(updatedMenu);
+        await saveMenuToShopify(updatedMenu);
     };
 
     const handleAddColumn = async (menuId: string) => {
@@ -115,8 +104,7 @@ export default function Navbar() {
             return item;
         });
         setMenuData(updatedMenu);
-        const { saveNavigationMenu } = await import("@/lib/db");
-        await saveNavigationMenu(updatedMenu);
+        await saveMenuToShopify(updatedMenu);
     };
 
     const handleDeleteColumn = async (menuId: string, colIdx: number) => {
@@ -129,8 +117,7 @@ export default function Navbar() {
             return item;
         });
         setMenuData(updatedMenu);
-        const { saveNavigationMenu } = await import("@/lib/db");
-        await saveNavigationMenu(updatedMenu);
+        await saveMenuToShopify(updatedMenu);
     };
 
     const handleAddImage = (menuId: string) => {
@@ -142,19 +129,36 @@ export default function Navbar() {
         if (!uploadTarget) return;
 
         try {
-            const { uploadImage, saveNavigationMenu } = await import("@/lib/db");
-            const imageUrl = await uploadImage(file, `menu-images/${Date.now()}-${file.name}`);
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
+            const data = await res.json();
+
+            if (!data.success) throw new Error("Upload failed");
+
+            const fileId = data.fileId;
+            const previewUrl = URL.createObjectURL(file);
+            const imageUrl = data.url || previewUrl;
 
             const updatedMenu = menuData.map(item => {
                 if (item.id === uploadTarget.menuId) {
-                    const newImages = [...(item.images || []), { label, src: imageUrl, href }];
+                    const newImages = [...(item.images || []), {
+                        label,
+                        src: imageUrl,
+                        href,
+                        imageId: fileId // Store ID for backend update
+                    }];
                     return { ...item, images: newImages };
                 }
                 return item;
             });
 
             setMenuData(updatedMenu);
-            await saveNavigationMenu(updatedMenu);
+            await saveMenuToShopify(updatedMenu);
             setIsUploadModalOpen(false);
             setUploadTarget(null);
         } catch (error) {
@@ -173,8 +177,80 @@ export default function Navbar() {
             return item;
         });
         setMenuData(updatedMenu);
-        const { saveNavigationMenu } = await import("@/lib/db");
-        await saveNavigationMenu(updatedMenu);
+        await saveMenuToShopify(updatedMenu);
+    };
+
+    const clonePage = async (targetHandle: string, title: string) => {
+        try {
+            const sourceHandle = "women-new";
+            const res = await fetch(`/api/pages?handle=${sourceHandle}`);
+            if (!res.ok) throw new Error("Failed to fetch source page");
+            const sourceData = await res.json();
+
+            if (!sourceData || Object.keys(sourceData).length === 0) return;
+
+            await fetch('/api/pages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    handle: targetHandle,
+                    data: { ...sourceData, hero_title: title }
+                }),
+            });
+        } catch (error) {
+            console.error("Page cloning failed:", error);
+        }
+    };
+
+    const handleUpdateColumnTitle = async (menuId: string, colIdx: number, newTitle: string) => {
+        const updatedMenu = menuData.map(item => {
+            if (item.id === menuId && item.columns) {
+                const newCols = [...item.columns];
+                newCols[colIdx] = { ...newCols[colIdx], title: newTitle };
+                return { ...item, columns: newCols };
+            }
+            return item;
+        });
+        setMenuData(updatedMenu);
+        await saveMenuToShopify(updatedMenu);
+    };
+
+    const handleUpdateLink = async (menuId: string, colIdx: number, linkIdx: number, newLabel: string) => {
+        const updatedMenu = [...menuData];
+        const menuItem = updatedMenu.find(item => item.id === menuId);
+        if (!menuItem || !menuItem.columns) return;
+
+        const col = menuItem.columns[colIdx];
+        const link = col.items[linkIdx];
+
+        // Auto-generate URL
+        const catSlug = col.title.toLowerCase().replace(/\s+/g, "-");
+        const linkSlug = newLabel.toLowerCase().replace(/\s+/g, "-");
+        const newHref = `/collections/${catSlug}-${linkSlug}`;
+
+        // Clone Page
+        const handle = `${catSlug}-${linkSlug}`;
+        await clonePage(handle, newLabel);
+
+        col.items[linkIdx] = { ...link, label: newLabel, href: newHref };
+
+        setMenuData(updatedMenu);
+        await saveMenuToShopify(updatedMenu);
+    };
+
+    const handleUpdateLinkHref = async (menuId: string, colIdx: number, linkIdx: number, newHref: string) => {
+        const updatedMenu = menuData.map(item => {
+            if (item.id === menuId && item.columns) {
+                const newCols = [...item.columns];
+                const newItems = [...newCols[colIdx].items];
+                newItems[linkIdx] = { ...newItems[linkIdx], href: newHref };
+                newCols[colIdx] = { ...newCols[colIdx], items: newItems };
+                return { ...item, columns: newCols };
+            }
+            return item;
+        });
+        setMenuData(updatedMenu);
+        await saveMenuToShopify(updatedMenu);
     };
 
     const hoverLineClass =
@@ -202,7 +278,7 @@ export default function Navbar() {
 
     return (
         <>
-            <MobileMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+            <MobileMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} menuItems={menuData} />
             <ImageUploadModal
                 isOpen={isUploadModalOpen}
                 onClose={() => setIsUploadModalOpen(false)}
@@ -218,7 +294,7 @@ export default function Navbar() {
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                         className="fixed inset-0 bg-black/20 z-40"
-                        onMouseEnter={() => setActiveMenuId(null)}
+                        onMouseEnter={() => !isEditMode && setActiveMenuId(null)}
                     />
                 )}
             </AnimatePresence>
@@ -287,6 +363,11 @@ export default function Navbar() {
 
                     {/* Right: Icons */}
                     <div className="flex items-center gap-6">
+                        {/* Template 1 Link */}
+                        <Link href="/template-1" className="hidden md:block text-sm font-medium hover:text-[#006D77] transition-colors">
+                            Template 1
+                        </Link>
+
                         {/* Login / Account */}
                         {!user ? (
                             <Link href="/login" className="hidden md:block text-sm font-medium hover:text-[#006D77] transition-colors">
@@ -330,7 +411,7 @@ export default function Navbar() {
                 </div>
 
                 {/* Mega Menu - Centered Container */}
-                <AnimatePresence>
+                <AnimatePresence mode="wait">
                     {activeMenuItem && activeMenuItem.shopify_layout_type && (
                         <motion.div
                             key={activeMenuItem.id}
@@ -339,7 +420,7 @@ export default function Navbar() {
                             animate="visible"
                             exit="exit"
                             onMouseEnter={() => setActiveMenuId(activeMenuItem.id)}
-                            onMouseLeave={() => setActiveMenuId(null)}
+                            onMouseLeave={() => !isEditMode && setActiveMenuId(null)}
                             className="absolute top-full left-0 right-0 bg-white shadow-sm border-t border-gray-100 z-50"
                         >
                             <div className="max-w-7xl mx-auto px-8 py-12">
@@ -375,22 +456,30 @@ export default function Navbar() {
 
                                                     <ul className="space-y-2">
                                                         {col.items.map((link, linkIdx) => (
-                                                            <li key={linkIdx} className="group/link flex items-center justify-between">
+                                                            <li key={linkIdx} className="group/link flex flex-col mb-2">
                                                                 {isAdmin && isEditMode ? (
-                                                                    <>
+                                                                    <div className="flex flex-col gap-1 w-full">
+                                                                        <div className="flex items-center justify-between">
+                                                                            <EditableText
+                                                                                value={link.label}
+                                                                                onSave={(newVal) => handleUpdateLink(activeMenuItem.id, colIdx, linkIdx, newVal)}
+                                                                                isAdmin={true}
+                                                                                className="text-sm text-slate-600 hover:text-[#006D77] transition-colors block w-full font-medium"
+                                                                            />
+                                                                            <button
+                                                                                onClick={() => handleDeleteLink(activeMenuItem.id, colIdx, linkIdx)}
+                                                                                className="text-red-400 hover:text-red-600 ml-2"
+                                                                            >
+                                                                                <X size={12} />
+                                                                            </button>
+                                                                        </div>
                                                                         <EditableText
-                                                                            value={link.label}
-                                                                            onSave={(newVal) => handleUpdateLink(activeMenuItem.id, colIdx, linkIdx, newVal)}
+                                                                            value={link.href}
+                                                                            onSave={(newVal) => handleUpdateLinkHref(activeMenuItem.id, colIdx, linkIdx, newVal)}
                                                                             isAdmin={true}
-                                                                            className="text-sm text-slate-600 hover:text-[#006D77] transition-colors block w-full"
+                                                                            className="text-[10px] text-gray-400 hover:text-[#006D77] block w-full font-mono"
                                                                         />
-                                                                        <button
-                                                                            onClick={() => handleDeleteLink(activeMenuItem.id, colIdx, linkIdx)}
-                                                                            className="opacity-0 group-hover/link:opacity-100 text-red-400 hover:text-red-600 ml-2"
-                                                                        >
-                                                                            <X size={10} />
-                                                                        </button>
-                                                                    </>
+                                                                    </div>
                                                                 ) : (
                                                                     <Link
                                                                         href={link.href}

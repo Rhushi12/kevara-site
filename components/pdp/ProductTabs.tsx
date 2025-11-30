@@ -10,7 +10,7 @@ const tabs = [
     { id: "shipping", label: "Shipping & Returns" },
 ];
 
-export default function ProductTabs() {
+export default function ProductTabs({ description }: { description?: string }) {
     const [activeTab, setActiveTab] = useState("description");
 
     return (
@@ -22,8 +22,8 @@ export default function ProductTabs() {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={`pb-4 text-sm uppercase tracking-widest transition-colors relative whitespace-nowrap ${activeTab === tab.id
-                                ? "text-[#006D77]"
-                                : "text-slate-400 hover:text-slate-600"
+                            ? "text-[#006D77]"
+                            : "text-slate-400 hover:text-slate-600"
                             }`}
                     >
                         {tab.label}
@@ -49,18 +49,24 @@ export default function ProductTabs() {
                             transition={{ duration: 0.2 }}
                             className="space-y-4 text-slate-600 font-light leading-relaxed"
                         >
-                            <p>
-                                With a jumpsuit like this beauty, your entire outfit is covered just by adding accessories according to the occasion. The Evry 7027 Jumpsuit features a relaxed fit with a defined waist, offering both comfort and a flattering silhouette.
-                            </p>
-                            <p>
-                                Crafted from our signature eco-friendly blend, it breathes well and moves with you. Perfect for those busy days that turn into evenings out.
-                            </p>
-                            <ul className="list-disc pl-5 space-y-1 mt-4">
-                                <li>Relaxed fit with adjustable waist tie</li>
-                                <li>Button-down front closure</li>
-                                <li>Two functional chest pockets</li>
-                                <li>Machine washable</li>
-                            </ul>
+                            {description ? (
+                                <div dangerouslySetInnerHTML={{ __html: description }} />
+                            ) : (
+                                <>
+                                    <p>
+                                        With a jumpsuit like this beauty, your entire outfit is covered just by adding accessories according to the occasion. The Evry 7027 Jumpsuit features a relaxed fit with a defined waist, offering both comfort and a flattering silhouette.
+                                    </p>
+                                    <p>
+                                        Crafted from our signature eco-friendly blend, it breathes well and moves with you. Perfect for those busy days that turn into evenings out.
+                                    </p>
+                                    <ul className="list-disc pl-5 space-y-1 mt-4">
+                                        <li>Relaxed fit with adjustable waist tie</li>
+                                        <li>Button-down front closure</li>
+                                        <li>Two functional chest pockets</li>
+                                        <li>Machine washable</li>
+                                    </ul>
+                                </>
+                            )}
                         </motion.div>
                     )}
 

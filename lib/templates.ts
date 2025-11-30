@@ -1,0 +1,56 @@
+import { PageContent } from "@/types/page-editor";
+
+export const TEMPLATE_1: PageContent = {
+    sections: [
+        {
+            id: "hero-1",
+            type: "hero_slider",
+            settings: {
+                slides: [
+                    {
+                        id: "slide-1",
+                        image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=2070&auto=format&fit=crop",
+                        heading: "New Season Arrivals",
+                        subheading: "DISCOVER THE LATEST TRENDS",
+                        buttonText: "SHOP COLLECTION",
+                        link: "/collections/new-arrivals"
+                    }
+                ]
+            }
+        },
+        {
+            id: "essentials-1",
+            type: "shop_essentials",
+            settings: {
+                title: "Dress up in the heat",
+                description: "SS21 Series of Comfortable textures. With luxurious, natural-looking makeup, we find reasons for the face. New textures and colors bring new inspiration to your everyday life.",
+                items: [] // Will use component defaults
+            }
+        },
+        {
+            id: "lookbook-1",
+            type: "lookbook",
+            settings: {
+                title: "Summer 2025",
+                subtitle: "LOOKBOOK",
+                image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=1000&auto=format&fit=crop",
+                cta_text: "VIEW LOOKBOOK",
+                cta_link: "/pages/lookbook"
+            }
+        },
+        {
+            id: "featured-1",
+            type: "featured_product",
+            settings: {
+                product_handle: "classic-oxford-shirt" // Placeholder
+            }
+        },
+        {
+            id: "grid-1",
+            type: "collection_grid",
+            settings: {
+                items: []
+            }
+        }
+    ]
+};

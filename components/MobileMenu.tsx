@@ -7,12 +7,38 @@ import Link from "next/link";
 import Image from "next/image";
 import { MENU_DATA } from "@/lib/menuData";
 
+interface MenuLink {
+    label: string;
+    href: string;
+}
+
+interface MenuColumn {
+    title: string;
+    items: MenuLink[];
+}
+
+interface MenuImage {
+    label: string;
+    href: string;
+    src: string;
+}
+
+interface MenuItem {
+    id: string;
+    label: string;
+    href: string;
+    shopify_layout_type?: string;
+    columns?: MenuColumn[];
+    images?: MenuImage[];
+}
+
 interface MobileMenuProps {
     isOpen: boolean;
     onClose: () => void;
+    menuItems: MenuItem[];
 }
 
-export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
+export default function MobileMenu({ isOpen, onClose, menuItems }: MobileMenuProps) {
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
     // Prevent body scroll when menu is open
@@ -94,7 +120,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                                 animate="open"
                                 className="py-4"
                             >
-                                {MENU_DATA.map((item) => (
+                                {menuItems.map((item) => (
                                     <motion.div key={item.id} variants={itemVariants} className="border-b border-gray-50 last:border-none">
                                         <div className="px-6 py-4">
                                             <div

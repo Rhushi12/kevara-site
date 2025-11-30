@@ -1,4 +1,14 @@
-export const HERO_SLIDES = [
+export interface HeroSlide {
+    id: number;
+    image: string;
+    image_id?: string;
+    heading: string;
+    subheading: string;
+    buttonText: string;
+    link: string;
+}
+
+export const HERO_SLIDES: HeroSlide[] = [
     {
         id: 1,
         image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop",

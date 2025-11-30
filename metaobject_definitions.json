@@ -1,0 +1,300 @@
+[
+  {
+    "type": "hero_slide",
+    "name": "Hero Slide",
+    "fieldDefinitions": [
+      {
+        "key": "heading",
+        "name": "Heading",
+        "type": {
+          "name": "single_line_text_field"
+        }
+      },
+      {
+        "key": "subheading",
+        "name": "Subheading",
+        "type": {
+          "name": "single_line_text_field"
+        }
+      },
+      {
+        "key": "image",
+        "name": "Image",
+        "type": {
+          "name": "file_reference"
+        }
+      },
+      {
+        "key": "button_text",
+        "name": "Button Text",
+        "type": {
+          "name": "single_line_text_field"
+        }
+      },
+      {
+        "key": "link",
+        "name": "Link",
+        "type": {
+          "name": "url"
+        }
+      }
+    ]
+  },
+  {
+    "type": "marquee_item",
+    "name": "Marquee Item",
+    "fieldDefinitions": [
+      {
+        "key": "text",
+        "name": "Text",
+        "type": {
+          "name": "single_line_text_field"
+        }
+      }
+    ]
+  },
+  {
+    "type": "homepage_section",
+    "name": "Homepage Section",
+    "fieldDefinitions": [
+      {
+        "key": "section_type",
+        "name": "Section Type",
+        "type": {
+          "name": "single_line_text_field"
+        }
+      },
+      {
+        "key": "heading",
+        "name": "Heading",
+        "type": {
+          "name": "single_line_text_field"
+        }
+      },
+      {
+        "key": "description",
+        "name": "Description",
+        "type": {
+          "name": "multi_line_text_field"
+        }
+      },
+      {
+        "key": "image",
+        "name": "Image",
+        "type": {
+          "name": "file_reference"
+        }
+      },
+      {
+        "key": "button_label",
+        "name": "Button Label",
+        "type": {
+          "name": "single_line_text_field"
+        }
+      }
+    ]
+  },
+  {
+    "type": "mega_menu_configuration",
+    "name": "Mega Menu Configuration",
+    "fieldDefinitions": [
+      {
+        "key": "trigger_name",
+        "name": "Trigger Name",
+        "type": {
+          "name": "single_line_text_field"
+        }
+      },
+      {
+        "key": "layout_type",
+        "name": "Layout Type",
+        "type": {
+          "name": "single_line_text_field"
+        }
+      },
+      {
+        "key": "promo_images",
+        "name": "Promo Images",
+        "type": {
+          "name": "list.file_reference"
+        }
+      },
+      {
+        "key": "promo_headings",
+        "name": "Promo Headings",
+        "type": {
+          "name": "list.single_line_text_field"
+        }
+      },
+      {
+        "key": "promo_links",
+        "name": "Promo Links",
+        "type": {
+          "name": "list.url"
+        }
+      },
+      {
+        "key": "link_columns_json",
+        "name": "Link Columns JSON",
+        "type": {
+          "name": "multi_line_text_field"
+        }
+      }
+    ]
+  },
+  {
+    "type": "global_mega_menu",
+    "name": "Global Mega Menu",
+    "fieldDefinitions": [
+      {
+        "key": "menu_structure_json",
+        "name": "Menu Structure JSON",
+        "type": {
+          "name": "json"
+        }
+      },
+      {
+        "key": "all_menu_images",
+        "name": "All Menu Images",
+        "type": {
+          "name": "list.file_reference"
+        }
+      }
+    ]
+  },
+  {
+    "type": "collection_page_layout",
+    "name": "Collection Page Layout",
+    "fieldDefinitions": [
+      {
+        "key": "banner",
+        "name": "Banner",
+        "type": {
+          "name": "file_reference"
+        }
+      },
+      {
+        "key": "window_1",
+        "name": "Window 1",
+        "type": {
+          "name": "file_reference"
+        }
+      },
+      {
+        "key": "window_2",
+        "name": "Window 2",
+        "type": {
+          "name": "file_reference"
+        }
+      },
+      {
+        "key": "product_grid",
+        "name": "Product Grid",
+        "type": {
+          "name": "file_reference"
+        }
+      },
+      {
+        "key": "focal_section",
+        "name": "Focal Section",
+        "type": {
+          "name": "file_reference"
+        }
+      }
+    ]
+  },
+  {
+    "type": "page_banner",
+    "name": "Page Banner",
+    "fieldDefinitions": [
+      {
+        "key": "title",
+        "name": "Title",
+        "type": {
+          "name": "single_line_text_field"
+        }
+      },
+      {
+        "key": "image",
+        "name": "Image",
+        "type": {
+          "name": "file_reference"
+        }
+      }
+    ]
+  },
+  {
+    "type": "page_window",
+    "name": "Page Window",
+    "fieldDefinitions": [
+      {
+        "key": "title",
+        "name": "Title",
+        "type": {
+          "name": "single_line_text_field"
+        }
+      },
+      {
+        "key": "subtitle",
+        "name": "Subtitle",
+        "type": {
+          "name": "single_line_text_field"
+        }
+      },
+      {
+        "key": "image",
+        "name": "Image",
+        "type": {
+          "name": "file_reference"
+        }
+      }
+    ]
+  },
+  {
+    "type": "page_product_grid",
+    "name": "Page Product Grid",
+    "fieldDefinitions": [
+      {
+        "key": "products_json",
+        "name": "Products JSON",
+        "type": {
+          "name": "json"
+        }
+      }
+    ]
+  },
+  {
+    "type": "page_focal_section",
+    "name": "Page Focal Section",
+    "fieldDefinitions": [
+      {
+        "key": "title",
+        "name": "Title",
+        "type": {
+          "name": "single_line_text_field"
+        }
+      },
+      {
+        "key": "subtitle",
+        "name": "Subtitle",
+        "type": {
+          "name": "single_line_text_field"
+        }
+      },
+      {
+        "key": "description",
+        "name": "Description",
+        "type": {
+          "name": "multi_line_text_field"
+        }
+      },
+      {
+        "key": "image",
+        "name": "Image",
+        "type": {
+          "name": "file_reference"
+        }
+      }
+    ]
+  }
+]

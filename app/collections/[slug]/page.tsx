@@ -1,97 +1,223 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import CollectionHero from "@/components/CollectionHero";
-import StickyFilter from "@/components/StickyFilter";
-import FocalSection from "@/components/FocalSection";
-import ProductCard from "@/components/ProductCard";
-import Image from "next/image";
-import { MOCK_SHOPIFY_PRODUCTS } from "@/lib/mockData";
+import HeroSlider from "@/components/HeroSlider";
+import WomenShopEssentials from "@/components/WomenShopEssentials"; // Reusing generic components where possible
+import LookbookFeature from "@/components/LookbookFeature";
+import FeaturedProduct from "@/components/FeaturedProduct";
+import CollectionGrid from "@/components/CollectionGrid";
+import { PageContent, PageSection } from "@/types/page-editor";
 
-// Helper to format slug to title
-const formatTitle = (slug: string) => {
-    return slug
-        .split("-")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
+// Default Content for New Collections
+const DEFAULT_COLLECTION_CONTENT: PageContent = {
+    sections: [
+        {
+            id: "hero-1",
+            type: "hero_slider",
+            settings: {
+                slides: [
+                    {
+                        id: "1",
+                        image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop",
+                        heading: "New Collection",
+                        subheading: "DISCOVER THE LATEST TRENDS",
+                        buttonText: "SHOP NOW",
+                        link: "#",
+                    }
+                ]
+            }
+        },
+        {
+            id: "grid-1",
+            type: "collection_grid",
+            settings: {
+                items: []
+            }
+        }
+    ]
 };
-
-// Mock images for the "Two Windows" section
-const COLLECTION_WINDOWS = [
-    {
-        id: 1,
-        image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=1000&auto=format&fit=crop",
-        title: "Editor's Pick",
-        subtitle: "TRENDING NOW"
-    },
-    {
-        id: 2,
-        image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop",
-        title: "New Arrivals",
-        subtitle: "JUST LANDED"
-    }
-];
 
 export default function CollectionPage() {
     const params = useParams();
     const slug = params?.slug as string;
-    const title = slug ? formatTitle(slug) : "Collection";
+    const { isAdmin } = useAuth();
 
-    // Use a relevant image based on slug or default
-    const heroImage = "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop";
+    const [content, setContent] = useState<PageContent>(DEFAULT_COLLECTION_CONTENT);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch Page Content
+    useEffect(() => {
+        if (!slug) return;
+        async function fetchContent() {
+            try {
+                const res = await fetch(`/api/builder/content?handle=${slug}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.sections && data.sections.length > 0) {
+                        setContent(data);
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch page content:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchContent();
+    }, [slug]);
+
+    // Save Page Content
+    const saveChanges = async () => {
+        setIsSaving(true);
+        try {
+            const res = await fetch("/api/builder/content", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ handle: slug, data: content }),
+            });
+            if (!res.ok) throw new Error("Failed to save");
+            alert("Changes saved successfully!");
+            setIsEditMode(false);
+        } catch (error) {
+            console.error("Failed to save:", error);
+            alert("Failed to save changes.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    // Update Section Helper
+    const updateSection = useCallback((sectionId: string, newSettings: any) => {
+        setContent((prev) => ({
+            ...prev,
+            sections: prev.sections.map((section) =>
+                section.id === sectionId
+                    ? { ...section, settings: { ...section.settings, ...newSettings } }
+                    : section
+            ),
+        }));
+    }, []);
+
+    if (loading) return <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">Loading...</div>;
 
     return (
         <main className="min-h-screen bg-[#FDFBF7]">
             <Navbar />
-            <CollectionHero title={title} image={heroImage} />
 
-            <div className="container mx-auto px-4 py-16">
-                <div className="flex flex-col lg:flex-row gap-8 relative">
-                    {/* Sticky Sidebar (Left) */}
-                    <div className="w-full lg:w-1/4">
-                        <StickyFilter />
-                    </div>
-
-                    {/* Main Content (Right) */}
-                    <div className="w-full lg:w-3/4">
-                        {/* Two Windows Section */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
-                            {COLLECTION_WINDOWS.map((window) => (
-                                <div key={window.id} className="relative aspect-[4/5] group overflow-hidden cursor-pointer">
-                                    <Image
-                                        src={window.image}
-                                        alt={window.title}
-                                        fill
-                                        className="object-cover transition-transform duration-700 group-hover:scale-105"
-                                    />
-                                    <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors" />
-                                    <div className="absolute bottom-8 left-8 text-white">
-                                        <span className="text-xs font-bold tracking-widest uppercase mb-2 block">
-                                            {window.subtitle}
-                                        </span>
-                                        <h3 className="text-2xl font-lora">
-                                            {window.title}
-                                        </h3>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Product Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
-                            {/* Duplicating mock products to fill the grid */}
-                            {[...MOCK_SHOPIFY_PRODUCTS, ...MOCK_SHOPIFY_PRODUCTS, ...MOCK_SHOPIFY_PRODUCTS].slice(0, 9).map((product, index) => (
-                                <ProductCard key={`${product.node.id}-${index}`} product={product} />
-                            ))}
-                        </div>
-                    </div>
+            {/* Admin Controls */}
+            {isAdmin && (
+                <div className="fixed bottom-6 right-6 z-50 flex gap-4">
+                    {isEditMode ? (
+                        <>
+                            <button
+                                onClick={() => setIsEditMode(false)}
+                                className="bg-gray-800 text-white px-6 py-3 rounded-full shadow-lg hover:bg-gray-700 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={saveChanges}
+                                disabled={isSaving}
+                                className="bg-[#006D77] text-white px-6 py-3 rounded-full shadow-lg hover:bg-[#005a63] transition-colors disabled:opacity-50"
+                            >
+                                {isSaving ? "Saving..." : "Save Changes"}
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            onClick={() => setIsEditMode(true)}
+                            className="bg-black text-white px-6 py-3 rounded-full shadow-lg hover:bg-gray-900 transition-colors"
+                        >
+                            Edit Page
+                        </button>
+                    )}
                 </div>
-            </div>
+            )}
 
-            <FocalSection />
+            {/* Dynamic Section Rendering */}
+            {content.sections.map((section) => {
+                switch (section.type) {
+                    case "hero_slider":
+                        return (
+                            <HeroSlider
+                                key={section.id}
+                                slides={(section.settings as any).slides || []}
+                                isEditMode={isEditMode}
+                                onUpdate={(newSlides) => updateSection(section.id, { slides: newSlides })}
+                            />
+                        );
+                    case "shop_essentials":
+                        // Using WomenShopEssentials as a generic component since it's dynamic now
+                        // Ideally we should rename it to ShopEssentials in a future refactor
+                        return (
+                            <WomenShopEssentials
+                                key={section.id}
+                                data={(section.settings as any).items || []}
+                                isEditMode={isEditMode}
+                                onUpdate={(newItems) => updateSection(section.id, { items: newItems })}
+                            />
+                        );
+                    case "lookbook":
+                        return (
+                            <LookbookFeature
+                                key={section.id}
+                                data={section.settings as any}
+                                isEditMode={isEditMode}
+                                onUpdate={(newData) => updateSection(section.id, newData)}
+                            />
+                        );
+                    case "featured_product":
+                        return (
+                            <FeaturedProductWrapper
+                                key={section.id}
+                                section={section}
+                                isEditMode={isEditMode}
+                                onUpdate={(newData) => updateSection(section.id, newData)}
+                            />
+                        );
+                    case "collection_grid":
+                        return (
+                            <CollectionGrid
+                                key={section.id}
+                                data={(section.settings as any).items || []}
+                                isEditMode={isEditMode}
+                                onUpdate={(newItems) => updateSection(section.id, { items: newItems })}
+                            />
+                        );
+                    default:
+                        return null;
+                }
+            })}
+
             <Footer />
         </main>
+    );
+}
+
+// Wrapper to handle data fetching for Featured Product
+function FeaturedProductWrapper({ section, isEditMode, onUpdate }: { section: PageSection, isEditMode: boolean, onUpdate: (data: any) => void }) {
+    const [product, setProduct] = useState<any>(null);
+    const handle = (section.settings as any).product_handle;
+
+    useEffect(() => {
+        if (handle) {
+            fetch(`/api/products/${handle}`)
+                .then(res => res.json())
+                .then(data => setProduct(data.product))
+                .catch(err => console.error("Failed to fetch featured product", err));
+        }
+    }, [handle]);
+
+    return (
+        <FeaturedProduct
+            product={product}
+            isEditMode={isEditMode}
+        />
     );
 }

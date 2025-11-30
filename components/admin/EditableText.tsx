@@ -9,6 +9,7 @@ interface EditableTextProps {
     isAdmin: boolean;
     className?: string;
     as?: "span" | "h1" | "h2" | "h3" | "p" | "div";
+    placeholder?: string;
 }
 
 export default function EditableText({
@@ -17,13 +18,14 @@ export default function EditableText({
     isAdmin,
     className,
     as: Component = "span",
+    placeholder,
 }: EditableTextProps) {
     const [isEditing, setIsEditing] = useState(false);
-    const [tempValue, setTempValue] = useState(value);
+    const [tempValue, setTempValue] = useState(value || "");
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        setTempValue(value);
+        setTempValue(value || "");
     }, [value]);
 
     useEffect(() => {
@@ -57,7 +59,7 @@ export default function EditableText({
                 onBlur={handleSave}
                 onKeyDown={handleKeyDown}
                 className={cn(
-                    "bg-white border border-[#006D77] rounded px-1 outline-none min-w-[50px] text-inherit font-inherit",
+                    "bg-white text-black border border-[#006D77] rounded px-1 outline-none min-w-[50px] font-inherit",
                     className
                 )}
                 onClick={(e) => e.stopPropagation()} // Prevent triggering parent clicks
@@ -79,7 +81,7 @@ export default function EditableText({
                 className
             )}
         >
-            {value}
+            {value || (isAdmin && placeholder ? <span className="text-gray-400 italic">{placeholder}</span> : value)}
         </Component>
     );
 }

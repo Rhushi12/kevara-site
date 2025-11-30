@@ -1,5 +1,9 @@
 "use client";
 
+// export const dynamic = 'force-dynamic';
+// export const fetchCache = 'force-no-store';
+// export const revalidate = 0;
+
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
@@ -9,6 +13,7 @@ import LiquidButton from "@/components/ui/LiquidButton";
 import { MOCK_SHOPIFY_PRODUCTS } from "@/lib/mockData";
 import { db } from "@/lib/firebase";
 import { collection, writeBatch, doc, setDoc } from "firebase/firestore";
+import MenuEditor from "@/components/admin/MenuEditor";
 
 export default function AdminPage() {
     const { user, isAdmin, loading } = useAuth();
@@ -107,29 +112,12 @@ export default function AdminPage() {
                     )}
                 </div>
 
-                <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 max-w-2xl mt-8">
+                <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 max-w-4xl mt-8">
                     <h2 className="text-xl font-bold mb-4">Menu Management</h2>
                     <p className="text-gray-600 mb-6">
-                        Migrate the static menu data to Firestore to enable dynamic editing.
+                        Manage navigation links. Adding a new link will automatically clone the "Women New" page template.
                     </p>
-                    <LiquidButton
-                        onClick={async () => {
-                            if (!confirm("Overwrite existing menu data in DB?")) return;
-                            setMessage("Seeding menu...");
-                            try {
-                                const { MENU_DATA } = await import("@/lib/menuData");
-                                const { saveNavigationMenu } = await import("@/lib/db");
-                                await saveNavigationMenu(MENU_DATA);
-                                setMessage("Menu data migrated successfully!");
-                            } catch (e: any) {
-                                console.error(e);
-                                setMessage("Error migrating menu: " + e.message);
-                            }
-                        }}
-                        className="px-6 py-3 bg-[#006D77] text-white font-medium hover:bg-[#005a63]"
-                    >
-                        Seed Menu Data
-                    </LiquidButton>
+                    <MenuEditor />
                 </div>
             </div>
 

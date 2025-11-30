@@ -12,6 +12,7 @@ interface ProductInfoProps {
     reviews: number;
     colors: { name: string; value: string }[];
     sizes: string[];
+    description?: string;
 }
 
 export default function ProductInfo({
@@ -22,6 +23,7 @@ export default function ProductInfo({
     reviews,
     colors,
     sizes,
+    description,
 }: ProductInfoProps) {
     const [selectedColor, setSelectedColor] = useState(colors[0]);
     const [selectedSize, setSelectedSize] = useState(sizes[0]);
@@ -117,6 +119,11 @@ export default function ProductInfo({
                     ))}
                 </div>
             </div>
+
+            {/* Description (Short) */}
+            {description && (
+                <div className="text-sm text-slate-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: description }} />
+            )}
 
             {/* Actions */}
             <div className="flex flex-col gap-3 mt-4">
