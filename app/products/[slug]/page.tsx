@@ -6,57 +6,95 @@ import CompleteLook from "@/components/pdp/CompleteLook";
 import ProductStory from "@/components/pdp/ProductStory";
 import QuoteSection from "@/components/pdp/QuoteSection";
 import StickyProductBar from "@/components/pdp/StickyProductBar";
+import SizeGuidePanel from "@/components/SizeGuidePanel";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { getProductByHandle, getProducts } from "@/lib/shopify-admin";
+import { getCustomProductBySlug, getCustomProducts } from "@/lib/custom-products";
+import { getPageContent } from "@/lib/shopify-admin";
+import RelatedProductsCarousel from "@/components/pdp/RelatedProductsCarousel";
+import SustainabilityBanner from "@/components/pdp/SustainabilityBanner";
+import { MOCK_SHOPIFY_PRODUCTS } from "@/lib/mockData";
 
 export default async function ProductPage({ params }: { params: { slug: string } }) {
     // Await params for Next.js 15 compatibility
     // @ts-ignore
     const { slug } = await params || params;
 
-    // Fetch real product data
+    // Fetch custom product data by slug
+    console.log('[PDP] Looking for product with slug:', slug);
     let product = null;
     try {
-        product = await getProductByHandle(slug);
+        product = await getCustomProductBySlug(slug);
+        console.log('[PDP] Product found in Shopify:', product ? product.title : 'NULL');
     } catch (error) {
         console.error("Error fetching product:", error);
     }
 
-    if (!product) return notFound();
+    // Fallback to mock data if not found in Shopify (to support homepage mock products)
+    if (!product) {
+        const mockProduct = MOCK_SHOPIFY_PRODUCTS.find(p => p.node.handle === slug || p.node.slug === slug);
+        if (mockProduct) {
+            console.log('[PDP] Product found in Mock Data:', mockProduct.node.title);
+            product = mockProduct.node;
+        }
+    }
 
-    const { title, priceRange, images, variants, descriptionHtml } = product;
+    if (!product) {
+        console.error('[PDP] Product not found for slug:', slug);
+        return notFound();
+    }
+
+    const { title, priceRange, images, variants, descriptionHtml, colors: productColors, sizes: productSizes } = product;
     const price = parseFloat(priceRange.minVariantPrice.amount);
     const currency = priceRange.minVariantPrice.currencyCode;
 
     // Transform images
     const productImages = images.edges.map((edge: any) => edge.node.url);
 
-    // Extract colors and sizes from variants
-    const uniqueColors = new Set<string>();
-    const uniqueSizes = new Set<string>();
+    // Use colors and sizes from custom product data (if available)
+    // Otherwise fall back to extracting from variants
+    let colors = productColors && productColors.length > 0
+        ? productColors
+        : [];
 
-    variants.edges.forEach((v: any) => {
-        const parts = v.node.title.split("/");
-        if (parts.length > 1) {
-            uniqueSizes.add(parts[0].trim());
-            uniqueColors.add(parts[1].trim());
-        } else {
-            uniqueSizes.add("One Size");
-            uniqueColors.add("Default");
+    let sizes = productSizes && productSizes.length > 0
+        ? productSizes
+        : ["One Size"];
+
+    // If no colors from custom data, try to extract from variants (fallback for old products)
+    if (colors.length === 0) {
+        const uniqueColors = new Set<string>();
+        const uniqueSizes = new Set<string>();
+
+        variants.edges.forEach((v: any) => {
+            const parts = v.node.title.split("/");
+            if (parts.length > 1) {
+                uniqueSizes.add(parts[0].trim());
+                uniqueColors.add(parts[1].trim());
+            } else {
+                uniqueSizes.add("One Size");
+                uniqueColors.add("Default");
+            }
+        });
+
+        colors = Array.from(uniqueColors).map(name => ({
+            name,
+            value: getColorHex(name)
+        }));
+
+        if (uniqueSizes.size > 0) {
+            sizes = Array.from(uniqueSizes);
         }
-    });
+    }
 
-    const colors = Array.from(uniqueColors).map(name => ({
-        name,
-        value: getColorHex(name)
-    }));
+    // Fetch related custom products
+    const allProducts = await getCustomProducts();
+    const relatedProducts = allProducts
+        .filter((edge: any) => edge.node.handle !== product.handle) // Exclude current product
+        .map((edge: any) => edge.node);
 
-    const sizes = Array.from(uniqueSizes).length > 0 ? Array.from(uniqueSizes) : ["One Size"];
-
-    // Fetch related products (just get first 4 for now)
-    const relatedProductsEdges = await getProducts(4);
-    const relatedProducts = relatedProductsEdges.map((edge: any) => edge.node);
+    // Fetch global PDP settings
+    const globalSettings = await getPageContent("pdp-global-settings");
 
     return (
         <main className="bg-white min-h-screen">
@@ -65,9 +103,12 @@ export default async function ProductPage({ params }: { params: { slug: string }
                 product={{
                     title: title,
                     price: price,
-                    image: productImages[0]
+                    image: productImages[0],
+                    colors: colors,
+                    sizes: sizes
                 }}
             />
+            <SizeGuidePanel />
 
             {/* Breadcrumbs */}
             <div className="container mx-auto px-4 py-6">
@@ -81,7 +122,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
                     {/* Left: Gallery (7 cols) */}
                     <div className="md:col-span-7">
-                        <ProductGallery images={productImages} />
+                        <ProductGallery images={images} />
                     </div>
 
                     {/* Right: Info (5 cols) */}
@@ -90,8 +131,6 @@ export default async function ProductPage({ params }: { params: { slug: string }
                             title={title}
                             price={price}
                             originalPrice={price * 1.2} // Mock original price
-                            rating={4.8} // Mock rating
-                            reviews={124} // Mock reviews
                             colors={colors}
                             sizes={sizes}
                             description={descriptionHtml}
@@ -110,40 +149,28 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
                     {/* Right: Complete Look (5 cols) */}
                     <div className="md:col-span-5 pl-0 md:pl-8">
-                        <CompleteLook />
+                        <CompleteLook
+                            currentProductHandle={product.handle}
+                            initialRelatedIds={product.relatedProducts || []}
+                            availableProducts={allProducts.map((edge: any) => edge.node)}
+                        />
                     </div>
                 </div>
             </div>
 
             {/* Brand Story */}
-            <ProductStory />
+            <ProductStory initialData={globalSettings?.product_story} />
+
+
 
             {/* Quote Section */}
             <QuoteSection />
 
+            {/* Sustainability Banner */}
+            <SustainabilityBanner initialData={globalSettings?.sustainability_banner} />
+
             {/* You May Also Like */}
-            <div className="py-24 bg-white">
-                <div className="container mx-auto px-4 text-center mb-12">
-                    <h2 className="text-3xl font-lora text-slate-900">You may also like</h2>
-                </div>
-                <div className="container mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8">
-                    {relatedProducts.map((p: any, i: number) => (
-                        <div key={i} className="group cursor-pointer">
-                            <div className="relative aspect-[3/4] bg-gray-100 mb-4 overflow-hidden rounded-sm">
-                                <img
-                                    src={p.images.edges[0]?.node.url}
-                                    alt={p.title}
-                                    className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105"
-                                />
-                            </div>
-                            <h3 className="text-sm font-medium text-slate-900 group-hover:text-[#006D77]">{p.title}</h3>
-                            <span className="text-xs text-slate-500">
-                                {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(parseFloat(p.priceRange.minVariantPrice.amount))}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-            </div>
+            <RelatedProductsCarousel products={relatedProducts} />
 
             <Footer />
         </main>

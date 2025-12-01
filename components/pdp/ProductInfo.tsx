@@ -1,154 +1,162 @@
 "use client";
 
 import { useState } from "react";
-import { Star, Heart, Share2 } from "lucide-react";
+import { Heart } from "lucide-react";
 import LiquidButton from "@/components/ui/LiquidButton";
+import { useSizeGuideStore } from "@/lib/store";
 
 interface ProductInfoProps {
     title: string;
     price: number;
     originalPrice?: number;
-    rating: number;
-    reviews: number;
-    colors: { name: string; value: string }[];
+    colors: { name: string; hex: string }[];
     sizes: string[];
-    description?: string;
+    description: string;
 }
+
+const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 
 export default function ProductInfo({
     title,
     price,
     originalPrice,
-    rating,
-    reviews,
     colors,
     sizes,
-    description,
+    description
 }: ProductInfoProps) {
-    const [selectedColor, setSelectedColor] = useState(colors[0]);
-    const [selectedSize, setSelectedSize] = useState(sizes[0]);
+    const [selectedColor, setSelectedColor] = useState(colors[0]?.name || "");
+    const [selectedSize, setSelectedSize] = useState(sizes[0] || "");
+    const { openSizeGuide } = useSizeGuideStore();
+
+    const discountPercentage = originalPrice
+        ? Math.round(((originalPrice - price) / originalPrice) * 100)
+        : 0;
 
     return (
-        <div className="flex flex-col gap-6 sticky top-24">
-            {/* Header */}
-            <div>
-                <h1 className="text-3xl md:text-4xl font-lora text-slate-900 mb-2">
-                    {title}
-                </h1>
-                <div className="flex items-center gap-4 mb-4">
-                    <div className="flex items-center gap-2">
-                        <span className="text-xl font-medium text-[#006D77]">
-                            ${price.toFixed(2)}
+        <div className="flex flex-col gap-8 sticky top-24">
+            {/* Header Section */}
+            <div className="space-y-4">
+                <div className="flex items-start justify-between">
+                    <h1 className="text-3xl md:text-4xl font-lora font-medium text-slate-900 leading-tight">
+                        {title}
+                    </h1>
+                    <button className="p-2 rounded-full hover:bg-slate-50 transition-colors text-slate-400 hover:text-red-500">
+                        <Heart size={24} />
+                    </button>
+                </div>
+
+                {/* Price */}
+                <div className="flex flex-col gap-2">
+                    <div className="flex items-baseline gap-4">
+                        <span className="text-2xl font-figtree font-semibold text-slate-900">
+                            {new Intl.NumberFormat("en-IN", {
+                                style: "currency",
+                                currency: "INR",
+                            }).format(price)}
                         </span>
-                        {originalPrice && (
-                            <span className="text-sm text-slate-400 line-through">
-                                ${originalPrice.toFixed(2)}
-                            </span>
+                        {originalPrice && originalPrice > price && (
+                            <>
+                                <span className="text-lg text-slate-400 line-through font-figtree">
+                                    {new Intl.NumberFormat("en-IN", {
+                                        style: "currency",
+                                        currency: "INR",
+                                    }).format(originalPrice)}
+                                </span>
+                                <span className="px-2 py-1 bg-red-50 text-red-600 text-xs font-bold uppercase tracking-wider rounded">
+                                    {discountPercentage}% OFF
+                                </span>
+                            </>
                         )}
-                        {originalPrice && (
-                            <span className="text-xs bg-[#006D77] text-white px-2 py-0.5 rounded-full">
-                                SAVE {(100 - (price / originalPrice) * 100).toFixed(0)}%
-                            </span>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
-                            <Star
-                                key={i}
-                                size={14}
-                                className={
-                                    i < Math.floor(rating)
-                                        ? "fill-[#006D77] text-[#006D77]"
-                                        : "text-gray-300"
-                                }
-                            />
-                        ))}
-                        <span className="text-xs text-slate-500 ml-1">
-                            ({reviews} reviews)
-                        </span>
                     </div>
                 </div>
             </div>
 
-            {/* Color Selector */}
-            <div>
-                <span className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3 block">
-                    Color: <span className="text-slate-900">{selectedColor.name}</span>
-                </span>
-                <div className="flex gap-3">
-                    {colors.map((color) => (
-                        <button
-                            key={color.name}
-                            onClick={() => setSelectedColor(color)}
-                            className={`w-8 h-8 rounded-full border-2 transition-all ${selectedColor.name === color.name
-                                ? "border-[#006D77] p-0.5"
-                                : "border-transparent"
-                                }`}
-                        >
-                            <div
-                                className="w-full h-full rounded-full border border-gray-200"
-                                style={{ backgroundColor: color.value }}
-                            />
-                        </button>
-                    ))}
-                </div>
-            </div>
+            <div className="h-px bg-slate-200" />
 
-            {/* Size Selector */}
-            <div>
-                <div className="flex justify-between items-center mb-3">
-                    <span className="text-xs font-bold uppercase tracking-widest text-slate-500">
-                        Size: <span className="text-slate-900">{selectedSize}</span>
+            {/* Color Selection */}
+            {colors.length > 0 && (
+                <div className="space-y-3">
+                    <span className="text-sm font-bold uppercase tracking-widest text-slate-900">
+                        Color: <span className="text-slate-500 font-normal capitalize">{selectedColor}</span>
                     </span>
-                    <button className="text-xs text-slate-500 underline hover:text-[#006D77]">
+                    <div className="flex flex-wrap gap-4">
+                        {colors.map((color) => (
+                            <button
+                                key={color.name}
+                                onClick={() => setSelectedColor(color.name)}
+                                className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${selectedColor === color.name
+                                    ? "border-slate-900 scale-110"
+                                    : "border-transparent hover:border-slate-300"
+                                    }`}
+                            >
+                                <div
+                                    className="w-8 h-8 rounded-full border border-slate-200 shadow-sm"
+                                    style={{ backgroundColor: color.hex }}
+                                    title={color.name}
+                                />
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Size Selection */}
+            <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                    <span className="text-sm font-bold uppercase tracking-widest text-slate-900">
+                        Size: <span className="text-slate-500 font-normal">{selectedSize}</span>
+                    </span>
+                    <button
+                        onClick={openSizeGuide}
+                        className="text-xs text-slate-500 underline hover:text-slate-900"
+                    >
                         Size Guide
                     </button>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    {sizes.map((size) => (
-                        <button
-                            key={size}
-                            onClick={() => setSelectedSize(size)}
-                            className={`w-12 h-10 flex items-center justify-center text-sm border transition-all ${selectedSize === size
-                                ? "border-[#006D77] bg-[#006D77] text-white"
-                                : "border-gray-200 text-slate-600 hover:border-[#006D77]"
-                                }`}
-                        >
-                            {size}
-                        </button>
-                    ))}
+                    {ALL_SIZES.map((size) => {
+                        const isAvailable = sizes.includes(size);
+                        return (
+                            <button
+                                key={size}
+                                onClick={() => isAvailable && setSelectedSize(size)}
+                                disabled={!isAvailable}
+                                className={`h-10 min-w-[3rem] px-3 rounded border text-sm font-medium transition-all relative overflow-hidden ${isAvailable
+                                    ? selectedSize === size
+                                        ? "border-slate-900 bg-slate-900 text-white"
+                                        : "border-slate-200 text-slate-600 hover:border-slate-900 hover:text-slate-900"
+                                    : "border-slate-100 text-slate-300 cursor-not-allowed bg-slate-50"
+                                    }`}
+                            >
+                                {size}
+                                {!isAvailable && (
+                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                        <div className="w-full h-px bg-slate-300 -rotate-45 transform origin-center" />
+                                    </div>
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 
-            {/* Description (Short) */}
-            {description && (
-                <div className="text-sm text-slate-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: description }} />
-            )}
-
-            {/* Actions */}
-            <div className="flex flex-col gap-3 mt-4">
+            {/* Actions: WhatsApp & Email */}
+            <div className="flex flex-col gap-3 pt-4">
                 <LiquidButton
-                    onClick={() => console.log("Added to cart")}
-                    className="w-full py-4 text-sm uppercase tracking-widest"
+                    className="w-full h-12 bg-[#25D366] text-white hover:bg-[#128C7E] rounded-lg flex items-center justify-center gap-2 border-none"
+                    variant="primary"
+                    onClick={() => window.open(`https://wa.me/919876543210?text=Hi, I'm interested in ${title}`, '_blank')}
                 >
-                    Add to Cart
+                    <span className="font-medium">Chat with WhatsApp</span>
                 </LiquidButton>
-                <button className="w-full py-4 text-sm uppercase tracking-widest bg-[#4A3B32] text-white hover:bg-[#3A2E27] transition-colors">
-                    Buy it Now
-                </button>
-            </div>
 
-            {/* Footer Meta */}
-            <div className="flex items-center justify-between pt-4">
-                <div className="flex gap-4">
-                    <button className="flex items-center gap-2 text-xs text-slate-500 hover:text-[#006D77] transition-colors">
-                        <Share2 size={16} /> Share
-                    </button>
-                    <button className="flex items-center gap-2 text-xs text-slate-500 hover:text-[#006D77] transition-colors">
-                        <Heart size={16} /> Save
-                    </button>
-                </div>
-                <span className="text-xs text-slate-400">Free shipping on orders over $150</span>
+                <LiquidButton
+                    className="w-full h-12 bg-white text-slate-900 border border-slate-900 hover:bg-slate-50 rounded-lg flex items-center justify-center gap-2"
+                    variant="secondary"
+                    onClick={() => window.location.href = `mailto:contact@kevara.com?subject=Inquiry about ${title}`}
+                >
+                    <span className="font-medium">Send us an Email</span>
+                </LiquidButton>
             </div>
         </div>
     );

@@ -210,7 +210,7 @@ export default function CollectionGrid({ data = [], isEditMode = false, onUpdate
                             initial={{ x: 100, opacity: 0 }}
                             whileInView={{ x: 0, opacity: 1 }}
                             viewport={{ once: true }}
-                            transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+                            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
                             className="w-full h-[400px] md:h-1/2"
                         >
                             {isEditMode ? (

@@ -9,6 +9,7 @@ import WomenShopEssentials from "@/components/WomenShopEssentials";
 import LookbookFeature from "@/components/LookbookFeature";
 import FeaturedProduct from "@/components/FeaturedProduct";
 import CollectionGrid from "@/components/CollectionGrid";
+import SizeGuidePanel from "@/components/SizeGuidePanel";
 import { PageContent, PageSection } from "@/types/page-editor";
 
 // Default Initial Content (if empty)
@@ -32,6 +33,23 @@ export default function Template1Page() {
                 if (res.ok) {
                     const data = await res.json();
                     if (data && data.sections && data.sections.length > 0) {
+                        // Ensure featured_product section exists (migration for existing pages)
+                        const hasFeatured = data.sections.find((s: any) => s.type === "featured_product");
+                        if (!hasFeatured) {
+                            // Insert it before the last section (Collection Grid) or at the end
+                            const gridIndex = data.sections.findIndex((s: any) => s.type === "collection_grid");
+                            const newSection = {
+                                id: "featured-1",
+                                type: "featured_product",
+                                settings: { product_handle: "" }
+                            };
+
+                            if (gridIndex !== -1) {
+                                data.sections.splice(gridIndex, 0, newSection);
+                            } else {
+                                data.sections.push(newSection);
+                            }
+                        }
                         setContent(data);
                     }
                 }
@@ -81,6 +99,7 @@ export default function Template1Page() {
     return (
         <main className="min-h-screen bg-[#FDFBF7]">
             <Navbar />
+            <SizeGuidePanel />
 
             {/* Admin Controls */}
             {isAdmin && (
@@ -188,8 +207,7 @@ function FeaturedProductWrapper({ section, isEditMode, onUpdate }: { section: Pa
         <FeaturedProduct
             product={product}
             isEditMode={isEditMode}
-        // FeaturedProduct doesn't have onUpdate for the product selection yet, 
-        // but we can add it later. For now, it just displays.
+            onUpdate={onUpdate}
         />
     );
 }

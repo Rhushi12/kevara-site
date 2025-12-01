@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Truck, RotateCcw, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 
 const tabs = [
     { id: "description", label: "Description" },
     { id: "sustainability", label: "Sustainability" },
-    { id: "shipping", label: "Shipping & Returns" },
 ];
 
 export default function ProductTabs({ description }: { description?: string }) {
@@ -89,34 +88,6 @@ export default function ProductTabs({ description }: { description?: string }) {
                             <p>
                                 This garment is made from 100% organic cotton, grown without the use of harmful chemicals or pesticides. By choosing organic, you're supporting healthier soil and water conservation.
                             </p>
-                        </motion.div>
-                    )}
-
-                    {activeTab === "shipping" && (
-                        <motion.div
-                            key="shipping"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            transition={{ duration: 0.2 }}
-                            className="space-y-4 text-slate-600 font-light leading-relaxed"
-                        >
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="flex items-start gap-3">
-                                    <Truck className="text-[#006D77] shrink-0" size={20} />
-                                    <div>
-                                        <h4 className="font-medium text-slate-900 mb-1">Free Shipping</h4>
-                                        <p className="text-sm">On all orders over $150. Standard shipping takes 3-5 business days.</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start gap-3">
-                                    <RotateCcw className="text-[#006D77] shrink-0" size={20} />
-                                    <div>
-                                        <h4 className="font-medium text-slate-900 mb-1">Easy Returns</h4>
-                                        <p className="text-sm">30-day return policy. Items must be unworn and in original packaging.</p>
-                                    </div>
-                                </div>
-                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>

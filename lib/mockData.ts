@@ -4,6 +4,7 @@ export const MOCK_SHOPIFY_PRODUCTS = [
       id: "gid://shopify/Product/1",
       title: "The Kevara Classic Shirt",
       handle: "kevara-classic-shirt",
+      slug: "kevara-classic-shirt",
       priceRange: {
         minVariantPrice: {
           amount: "1499.00",
@@ -43,6 +44,7 @@ export const MOCK_SHOPIFY_PRODUCTS = [
       id: "gid://shopify/Product/2",
       title: "Silk Evening Gown",
       handle: "silk-evening-gown",
+      slug: "silk-evening-gown",
       priceRange: {
         minVariantPrice: {
           amount: "4999.00",
@@ -82,6 +84,7 @@ export const MOCK_SHOPIFY_PRODUCTS = [
       id: "gid://shopify/Product/3",
       title: "Linen Summer Blazer",
       handle: "linen-summer-blazer",
+      slug: "linen-summer-blazer",
       priceRange: {
         minVariantPrice: {
           amount: "3299.00",
@@ -121,6 +124,7 @@ export const MOCK_SHOPIFY_PRODUCTS = [
       id: "gid://shopify/Product/4",
       title: "Tailored Trousers",
       handle: "tailored-trousers",
+      slug: "tailored-trousers",
       priceRange: {
         minVariantPrice: {
           amount: "2499.00",

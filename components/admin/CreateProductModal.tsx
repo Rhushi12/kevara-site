@@ -1,6 +1,8 @@
 import { useState, useRef } from "react";
-import { X, Upload, Image as ImageIcon } from "lucide-react";
+import { X, Upload, Image as ImageIcon, Plus, Trash2, Palette, Ruler } from "lucide-react";
 import Image from "next/image";
+import FileInput from "@/components/admin/FileInput";
+import { useProductQueueStore } from "@/lib/productQueueStore";
 
 interface CreateProductModalProps {
     isOpen: boolean;
@@ -8,15 +10,40 @@ interface CreateProductModalProps {
     onSuccess: (product: any) => void;
 }
 
+interface Color {
+    name: string;
+    hex: string;
+}
+
+const PRESET_COLORS = [
+    { name: "Black", hex: "#000000" },
+    { name: "White", hex: "#FFFFFF" },
+    { name: "Red", hex: "#DC2626" },
+    { name: "Blue", hex: "#2563EB" },
+    { name: "Green", hex: "#16A34A" },
+    { name: "Yellow", hex: "#EAB308" },
+    { name: "Pink", hex: "#EC4899" },
+    { name: "Purple", hex: "#9333EA" },
+    { name: "Gray", hex: "#6B7280" },
+    { name: "Beige", hex: "#D4C5B0" },
+];
+
+const SIZE_OPTIONS = ["XS", "S", "M", "L", "XL", "XXL", "One Size"];
+
 export default function CreateProductModal({ isOpen, onClose, onSuccess }: CreateProductModalProps) {
     const [title, setTitle] = useState("");
     const [price, setPrice] = useState("");
     const [description, setDescription] = useState("");
     const [files, setFiles] = useState<File[]>([]);
     const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+    const [colors, setColors] = useState<Color[]>([]);
+    const [sizes, setSizes] = useState<string[]>([]);
+    const [customColorName, setCustomColorName] = useState("");
+    const [customColorHex, setCustomColorHex] = useState("#000000");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const { addToQueue } = useProductQueueStore();
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFiles = Array.from(e.target.files || []);
@@ -35,15 +62,52 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
         setFiles(newFiles);
 
         const newUrls = [...previewUrls];
-        URL.revokeObjectURL(newUrls[index]); // Cleanup
+        URL.revokeObjectURL(newUrls[index]);
         newUrls.splice(index, 1);
         setPreviewUrls(newUrls);
+    };
+
+    const addPresetColor = (color: Color) => {
+        if (!colors.find(c => c.hex === color.hex)) {
+            setColors([...colors, color]);
+        }
+    };
+
+    const addCustomColor = () => {
+        if (customColorName && !colors.find(c => c.hex === customColorHex)) {
+            setColors([...colors, { name: customColorName, hex: customColorHex }]);
+            setCustomColorName("");
+            setCustomColorHex("#000000");
+        }
+    };
+
+    const removeColor = (hex: string) => {
+        setColors(colors.filter(c => c.hex !== hex));
+    };
+
+    const toggleSize = (size: string) => {
+        if (sizes.includes(size)) {
+            setSizes(sizes.filter(s => s !== size));
+        } else {
+            setSizes([...sizes, size]);
+        }
+    };
+
+    const resetForm = () => {
+        setTitle("");
+        setPrice("");
+        setDescription("");
+        setFiles([]);
+        setPreviewUrls([]);
+        setColors([]);
+        setSizes([]);
+        setError("");
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!title || !price || files.length === 0) {
-            setError("Please fill in all required fields and upload at least one image");
+            setError("Please fill in title, price, and upload at least one image");
             return;
         }
 
@@ -57,6 +121,14 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
             formData.append("description", description);
             files.forEach(file => formData.append("images", file));
 
+            // Add colors and sizes as JSON
+            if (colors.length > 0) {
+                formData.append("colors", JSON.stringify(colors));
+            }
+            if (sizes.length > 0) {
+                formData.append("sizes", JSON.stringify(sizes));
+            }
+
             const res = await fetch("/api/products/create", {
                 method: "POST",
                 body: formData,
@@ -68,12 +140,7 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
 
             onSuccess(data.product);
             onClose();
-            // Reset form
-            setTitle("");
-            setPrice("");
-            setDescription("");
-            setFiles([]);
-            setPreviewUrls([]);
+            resetForm();
         } catch (err: any) {
             console.error(err);
             setError(err.message || "Something went wrong");
@@ -82,35 +149,126 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
         }
     };
 
+    const handleAddToQueue = () => {
+        if (!title || !price || files.length === 0) {
+            setError("Please fill in title, price, and upload at least one image");
+            return;
+        }
+
+        addToQueue({
+            title,
+            price,
+            description,
+            files,
+            colors,
+            sizes,
+        });
+
+        // Show success message
+        alert(`"${title}" has been added to the background queue!`);
+
+        onClose();
+        resetForm();
+    };
+
     if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white w-full max-w-2xl rounded-xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
-                <div className="p-4 border-b flex justify-between items-center bg-gray-50">
-                    <h2 className="text-xl font-lora font-medium">Create New Product</h2>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
-                        <X size={20} />
+            <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+                {/* Header */}
+                <div className="p-6 border-b bg-gradient-to-r from-slate-50 to-gray-50 flex justify-between items-center">
+                    <h2 className="text-2xl font-lora font-medium text-slate-900">Create New Product</h2>
+                    <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-white/80 rounded-full transition-all duration-200 hover:scale-110"
+                    >
+                        <X size={22} />
                     </button>
                 </div>
 
+                {/* Content */}
                 <div className="flex-1 overflow-y-auto p-6">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {error && (
-                            <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm">
-                                {error}
+                            <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-r-lg text-sm animate-in fade-in slide-in-from-left-2 duration-300">
+                                <p className="font-medium">{error}</p>
                             </div>
                         )}
 
-                        <div className="grid md:grid-cols-2 gap-8">
-                            {/* Image Upload */}
-                            <div className="space-y-4">
-                                <label className="block text-sm font-medium text-gray-700">Product Images *</label>
+                        {/* Basic Info Section */}
+                        <div className="space-y-4">
+                            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Basic Information</h3>
 
-                                {/* Image Grid */}
-                                <div className="grid grid-cols-2 gap-2 mb-2">
+                            {/* Title */}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
+                                    Product Title <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    placeholder="Enter product name..."
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all duration-200 placeholder:text-gray-400"
+                                    required
+                                />
+                            </div>
+
+                            {/* Price */}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
+                                    Price (₹) <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    value={price}
+                                    onChange={(e) => setPrice(e.target.value)}
+                                    placeholder="0.00"
+                                    step="0.01"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all duration-200 placeholder:text-gray-400"
+                                    required
+                                />
+                            </div>
+
+                            {/* Description */}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
+                                    Description
+                                </label>
+                                <textarea
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    placeholder="Describe your product..."
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all duration-200 placeholder:text-gray-400 min-h-[100px] resize-y"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Images Section */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <ImageIcon size={18} className="text-slate-600" />
+                                <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Product Images</h3>
+                                <span className="text-red-500">*</span>
+                            </div>
+
+                            {previewUrls.length === 0 ? (
+                                <FileInput
+                                    accept="image/png, image/jpeg, image/jpg, image/webp"
+                                    maxSizeInMB={10}
+                                    allowMultiple={true}
+                                    onFileChange={async (selectedFiles) => {
+                                        const filesArray = Array.from(selectedFiles);
+                                        setFiles([...files, ...filesArray]);
+                                        const newUrls = filesArray.map(file => URL.createObjectURL(file));
+                                        setPreviewUrls([...previewUrls, ...newUrls]);
+                                    }}
+                                />
+                            ) : (
+                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
                                     {previewUrls.map((url, index) => (
-                                        <div key={index} className="relative aspect-[3/4] rounded-lg overflow-hidden border border-gray-200 group">
+                                        <div key={index} className="relative group aspect-square rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-200">
                                             <Image
                                                 src={url}
                                                 alt={`Preview ${index + 1}`}
@@ -120,99 +278,175 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
                                             <button
                                                 type="button"
                                                 onClick={() => removeImage(index)}
-                                                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                className="absolute top-1 right-1 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600"
                                             >
-                                                <X size={12} />
+                                                <X size={14} />
                                             </button>
                                         </div>
                                     ))}
 
-                                    {/* Upload Button */}
-                                    <div
+                                    <button
+                                        type="button"
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="aspect-[3/4] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[#006D77] hover:bg-gray-50 transition-colors"
+                                        className="aspect-square border-2 border-dashed border-gray-300 rounded-lg hover:border-slate-900 hover:bg-slate-50 transition-all duration-200 flex flex-col items-center justify-center gap-2 text-gray-500 hover:text-slate-900 group"
                                     >
-                                        <div className="bg-gray-100 p-3 rounded-full mb-2">
-                                            <Upload className="text-gray-400" size={20} />
-                                        </div>
-                                        <p className="text-xs text-gray-500 font-medium text-center px-2">Add Image</p>
-                                    </div>
+                                        <Upload size={24} className="group-hover:scale-110 transition-transform duration-200" />
+                                        <span className="text-xs font-medium">Add More</span>
+                                    </button>
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        multiple
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                        className="hidden"
+                                    />
                                 </div>
+                            )}
+                            <p className="text-xs text-gray-500">Tip: Upload at least 2 images for the hover effect!</p>
+                        </div>
 
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/*"
-                                    multiple
-                                    className="hidden"
-                                    onChange={handleFileChange}
-                                />
-                                <p className="text-xs text-gray-400">Supported formats: JPG, PNG, WEBP</p>
+                        {/* Colors Section */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <Palette size={18} className="text-slate-600" />
+                                <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Available Colors</h3>
                             </div>
 
-                            {/* Fields */}
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Product Title *</label>
+                            {/* Preset Colors */}
+                            <div className="flex flex-wrap gap-2">
+                                {PRESET_COLORS.map((color) => (
+                                    <button
+                                        key={color.hex}
+                                        type="button"
+                                        onClick={() => addPresetColor(color)}
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-lg border-2 transition-all duration-200 hover:scale-105 ${colors.find(c => c.hex === color.hex)
+                                            ? 'border-slate-900 bg-slate-50'
+                                            : 'border-gray-200 hover:border-slate-400'
+                                            }`}
+                                        title={color.name}
+                                    >
+                                        <div
+                                            className="w-6 h-6 rounded-full border-2 border-gray-300"
+                                            style={{ backgroundColor: color.hex }}
+                                        />
+                                        <span className="text-sm font-medium text-slate-700">{color.name}</span>
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Custom Color */}
+                            <div className="flex gap-2 items-end">
+                                <div className="flex-1">
+                                    <label className="block text-xs font-medium text-slate-600 mb-1">Custom Color Name</label>
                                     <input
                                         type="text"
-                                        value={title}
-                                        onChange={(e) => setTitle(e.target.value)}
-                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#006D77] focus:border-transparent outline-none transition-all"
-                                        placeholder="e.g. Summer Linen Dress"
-                                        required
+                                        value={customColorName}
+                                        onChange={(e) => setCustomColorName(e.target.value)}
+                                        placeholder="Navy Blue"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                                     />
                                 </div>
-
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Price (INR) *</label>
+                                    <label className="block text-xs font-medium text-slate-600 mb-1">Hex</label>
                                     <input
-                                        type="number"
-                                        value={price}
-                                        onChange={(e) => setPrice(e.target.value)}
-                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#006D77] focus:border-transparent outline-none transition-all"
-                                        placeholder="e.g. 2499"
-                                        required
+                                        type="color"
+                                        value={customColorHex}
+                                        onChange={(e) => setCustomColorHex(e.target.value)}
+                                        className="h-10 w-20 border border-gray-300 rounded-lg cursor-pointer"
                                     />
                                 </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                                    <textarea
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        rows={4}
-                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#006D77] focus:border-transparent outline-none transition-all resize-none"
-                                        placeholder="Product description..."
-                                    />
-                                </div>
+                                <button
+                                    type="button"
+                                    onClick={addCustomColor}
+                                    disabled={!customColorName}
+                                    className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                >
+                                    <Plus size={16} />
+                                    Add
+                                </button>
                             </div>
+
+                            {/* Selected Colors */}
+                            {colors.length > 0 && (
+                                <div className="mt-3 p-4 bg-slate-50 rounded-lg">
+                                    <p className="text-xs font-medium text-slate-600 mb-3">Selected Colors ({colors.length})</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {colors.map((color) => (
+                                            <div
+                                                key={color.hex}
+                                                className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-slate-200 group"
+                                            >
+                                                <div
+                                                    className="w-5 h-5 rounded-full border-2 border-gray-300"
+                                                    style={{ backgroundColor: color.hex }}
+                                                />
+                                                <span className="text-sm font-medium text-slate-700">{color.name}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeColor(color.hex)}
+                                                    className="ml-1 text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Sizes Section */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <Ruler size={18} className="text-slate-600" />
+                                <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Available Sizes</h3>
+                            </div>
+
+                            <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                                {SIZE_OPTIONS.map((size) => (
+                                    <button
+                                        key={size}
+                                        type="button"
+                                        onClick={() => toggleSize(size)}
+                                        className={`py-3 px-4 rounded-lg border-2 font-medium transition-all duration-200 hover:scale-105 ${sizes.includes(size)
+                                            ? 'bg-slate-900 text-white border-slate-900'
+                                            : 'bg-white text-slate-700 border-gray-300 hover:border-slate-900'
+                                            }`}
+                                    >
+                                        {size}
+                                    </button>
+                                ))}
+                            </div>
+                            {sizes.length > 0 && (
+                                <p className="text-xs text-slate-600">Selected: {sizes.join(", ")}</p>
+                            )}
+                        </div>
+
+                        {/* Submit Buttons */}
+                        <div className="pt-4 border-t space-y-3">
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full py-4 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+                            >
+                                {loading ? "Creating Product..." : "Create Now"}
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={handleAddToQueue}
+                                disabled={loading}
+                                className="w-full py-4 bg-white text-slate-900 border-2 border-slate-900 rounded-xl font-medium hover:bg-slate-50 disabled:bg-gray-100 disabled:border-gray-400 disabled:text-gray-400 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+                            >
+                                Add to Background Queue
+                            </button>
+
+                            <p className="text-xs text-center text-gray-500">
+                                Queue products to continue working while they're created in the background
+                            </p>
                         </div>
                     </form>
-                </div>
-
-                <div className="p-4 border-t bg-gray-50 flex justify-end gap-3">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-200 transition-colors"
-                        disabled={loading}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={loading}
-                        className="px-6 py-2 rounded-lg bg-black text-white hover:bg-gray-800 transition-colors font-medium disabled:opacity-50 flex items-center gap-2"
-                    >
-                        {loading ? (
-                            <>
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                Creating...
-                            </>
-                        ) : (
-                            "Create Product"
-                        )}
-                    </button>
                 </div>
             </div>
         </div>

@@ -14,6 +14,7 @@ interface ProductCardProps {
             id: string;
             title: string;
             handle: string;
+            slug?: string;
             priceRange: {
                 minVariantPrice: {
                     amount: string;
@@ -42,19 +43,23 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
     const { openQuickView } = useQuickViewStore();
-    const { title, handle, priceRange, images, variants } = product.node;
-    const price = priceRange.minVariantPrice.amount;
-    const currency = priceRange.minVariantPrice.currencyCode;
-    const imageUrl = images.edges[0]?.node.url;
-    const secondImageUrl = images.edges[1]?.node.url;
-    const altText = images.edges[0]?.node.altText || title;
+
+    if (!product?.node) return null;
+
+    const { title, handle, slug, priceRange, images, variants } = product.node;
+
+    const price = priceRange?.minVariantPrice?.amount || "0";
+    const currency = priceRange?.minVariantPrice?.currencyCode || "USD";
+    const imageUrl = images?.edges?.[0]?.node?.url;
+    const secondImageUrl = images?.edges?.[1]?.node?.url;
+    const altText = images?.edges?.[0]?.node?.altText || title;
 
     // Extract colors from variants (Mock logic: assume variant title contains color)
     // In a real app, this would parse options.
-    const colors = variants.edges.map((v) => {
+    const colors = variants?.edges?.map((v) => {
         const parts = v.node.title.split("/");
         return parts.length > 1 ? parts[1].trim() : "Default";
-    });
+    }) || [];
 
     // Map color names to hex codes (Mock logic)
     const getColorHex = (name: string) => {
@@ -70,11 +75,15 @@ export default function ProductCard({ product }: ProductCardProps) {
         return map[name] || "#000000";
     };
 
+    const productSlug = (slug && slug.length > 2) ? slug : (handle && handle.length > 2) ? handle : null;
+
+    if (!productSlug) return null;
+
     return (
         <div className="group/card relative flex flex-col h-full">
             {/* Image Container */}
             <div className="relative w-full overflow-hidden bg-gray-100 aspect-[3/4] rounded-lg">
-                <Link href={`/products/${handle}`} className="block w-full h-full">
+                <Link href={`/products/${productSlug}`} className="block w-full h-full">
                     {imageUrl && (
                         <Image
                             src={imageUrl}
@@ -132,7 +141,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
             {/* Product Info */}
             <div className="mt-4 space-y-2">
-                <Link href={`/products/${handle}`}>
+                <Link href={`/products/${productSlug}`}>
                     <h3 className="text-lg font-lora text-gray-900 group-hover/card:text-slate-900 transition-colors">
                         {title}
                     </h3>

@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getProducts } from '@/lib/shopify-admin';
+import { getCustomProducts } from '@/lib/custom-products';
 
 export async function GET() {
     try {
-        const products = await getProducts(50); // Fetch top 50 products
+        const products = await getCustomProducts(); // Fetch all custom products
         return NextResponse.json({ products });
     } catch (error) {
         console.error("Failed to fetch products:", error);

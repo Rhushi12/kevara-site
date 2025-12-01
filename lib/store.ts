@@ -27,6 +27,8 @@ interface Product {
                 };
             }[];
         };
+        colors?: { name: string; hex: string }[];
+        sizes?: string[];
     };
 }
 
@@ -42,4 +44,16 @@ export const useQuickViewStore = create<QuickViewState>((set) => ({
     selectedProduct: null,
     openQuickView: (product) => set({ isOpen: true, selectedProduct: product }),
     closeQuickView: () => set({ isOpen: false }),
+}));
+
+interface SizeGuideState {
+    isOpen: boolean;
+    openSizeGuide: () => void;
+    closeSizeGuide: () => void;
+}
+
+export const useSizeGuideStore = create<SizeGuideState>((set) => ({
+    isOpen: false,
+    openSizeGuide: () => set({ isOpen: true }),
+    closeSizeGuide: () => set({ isOpen: false }),
 }));

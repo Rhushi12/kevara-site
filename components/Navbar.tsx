@@ -401,12 +401,14 @@ export default function Navbar() {
                         <button className="hidden md:block hover:opacity-70 transition-opacity">
                             <Search size={20} />
                         </button>
-                        <button className="hover:opacity-70 transition-opacity relative">
-                            <ShoppingBag size={20} />
-                            <span className="absolute -top-1 -right-1 bg-slate-900 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
-                                0
-                            </span>
-                        </button>
+                        {isAdmin && (
+                            <Link href="/cart" className="hover:opacity-70 transition-opacity relative">
+                                <ShoppingBag size={20} />
+                                <span className="absolute -top-1 -right-1 bg-slate-900 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
+                                    0
+                                </span>
+                            </Link>
+                        )}
                     </div>
                 </div>
 

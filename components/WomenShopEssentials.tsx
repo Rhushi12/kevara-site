@@ -197,55 +197,97 @@ export default function WomenShopEssentials({ data = {}, isEditMode = false, onU
                 </div>
             </motion.div>
 
-            {/* Products Grid */}
-            <div className="overflow-x-auto md:overflow-hidden pb-8 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory scrollbar-hide">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={activeTabIndex}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.4 }}
-                        className="flex md:grid md:grid-cols-4 gap-4 md:gap-8 w-max md:w-full"
-                    >
-                        {activeTab.products && activeTab.products.length > 0 ? (
-                            activeTab.products.map((product: any, index: number) => (
-                                <motion.div
-                                    key={product.id || index}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: index * 0.1 }}
-                                    className="w-[85vw] md:w-auto snap-center shrink-0 relative group/product"
-                                >
-                                    <ProductCard product={{ node: product }} />
-                                    {isEditMode && (
-                                        <button
-                                            onClick={() => removeProduct(product.id)}
-                                            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover/product:opacity-100 transition-opacity z-10"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                                        </button>
-                                    )}
-                                </motion.div>
-                            ))
-                        ) : (
-                            <div className="col-span-4 text-center py-12 text-gray-400">
-                                No products found in this collection.
-                            </div>
-                        )}
 
-                        {/* Add Product Button */}
-                        {isEditMode && (
-                            <motion.button
-                                onClick={() => setIsChoiceModalOpen(true)}
-                                className="w-[85vw] md:w-auto min-h-[400px] snap-center shrink-0 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:text-[#006D77] hover:border-[#006D77] transition-colors"
-                            >
-                                <Plus size={48} />
-                                <span className="mt-4 font-medium">Add Product</span>
-                            </motion.button>
-                        )}
-                    </motion.div>
-                </AnimatePresence>
+            {/* Products Carousel */}
+            <div className="relative">
+                {/* Navigation Arrows */}
+                {activeTab.products && activeTab.products.length > 4 && (
+                    <>
+                        <button
+                            onClick={() => {
+                                const container = document.getElementById('products-carousel');
+                                if (container) {
+                                    container.scrollBy({ left: -300, behavior: 'smooth' });
+                                }
+                            }}
+                            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all hidden md:flex items-center justify-center"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                        </button>
+                        <button
+                            onClick={() => {
+                                const container = document.getElementById('products-carousel');
+                                if (container) {
+                                    container.scrollBy({ left: 300, behavior: 'smooth' });
+                                }
+                            }}
+                            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all hidden md:flex items-center justify-center"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </button>
+                    </>
+                )}
+
+                <div
+                    id="products-carousel"
+                    className="overflow-x-auto md:overflow-x-auto -mx-4 px-4 md:px-8 snap-x snap-mandatory"
+                    style={{
+                        scrollbarWidth: 'none',
+                        msOverflowStyle: 'none'
+                    }}
+                >
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={activeTabIndex}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.4 }}
+                            className="flex gap-4 md:gap-6 w-max"
+                        >
+                            {activeTab.products && activeTab.products.length > 0 ? (
+                                activeTab.products.map((product: any, index: number) => (
+                                    <motion.div
+                                        key={product.id || index}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: index * 0.1 }}
+                                        className="w-[280px] md:w-[300px] snap-center shrink-0 relative group/product"
+                                    >
+                                        <ProductCard product={{ node: product }} />
+                                        {isEditMode && (
+                                            <button
+                                                onClick={() => removeProduct(product.id)}
+                                                className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover/product:opacity-100 transition-opacity z-10"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                            </button>
+                                        )}
+                                    </motion.div>
+                                ))
+                            ) : (
+                                <div className="w-full text-center py-12 text-gray-400">
+                                    No products found in this collection.
+                                </div>
+                            )}
+
+                            {/* Add Product Button */}
+                            {isEditMode && (
+                                <motion.button
+                                    onClick={() => setIsChoiceModalOpen(true)}
+                                    className="w-[280px] md:w-[300px] min-h-[400px] snap-center shrink-0 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:text-[#006D77] hover:border-[#006D77] transition-colors"
+                                >
+                                    <Plus size={48} />
+                                    <span className="mt-4 font-medium">Add Product</span>
+                                </motion.button>
+                            )}
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
             </div>
 
             <div className="flex justify-center mt-12">

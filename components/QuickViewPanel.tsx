@@ -22,9 +22,11 @@ export default function QuickViewPanel() {
     useEffect(() => {
         if (selectedProduct) {
             setQuantity(1);
-            // Mock default selections
-            setSelectedColor(extractColors(selectedProduct)[0] || "");
-            setSelectedSize("M");
+            // Initialize with first available color and size
+            const productColors = selectedProduct.node.colors || [];
+            const productSizes = selectedProduct.node.sizes || ["M"];
+            setSelectedColor(productColors[0]?.name || "");
+            setSelectedSize(productSizes[0] || "M");
         }
     }, [selectedProduct]);
 
@@ -113,12 +115,14 @@ export default function QuickViewPanel() {
 
     if (!selectedProduct) return null;
 
-    const { title, priceRange, images } = selectedProduct.node;
+    const { title, priceRange, images, colors, sizes } = selectedProduct.node;
     const price = priceRange.minVariantPrice.amount;
     const currency = priceRange.minVariantPrice.currencyCode;
     const imageUrl = images.edges[0]?.node.url;
-    const colors = extractColors(selectedProduct);
-    const sizes = ["XS", "S", "M", "L", "XL"]; // Mock sizes
+
+    // Use real colors and sizes from metaobject, fallback to empty arrays
+    const productColors = colors || [];
+    const productSizes = sizes || ["XS", "S", "M", "L", "XL"]; // Fallback if no sizes
 
     return (
         <div
@@ -184,16 +188,16 @@ export default function QuickViewPanel() {
                                 Color: <span className="text-gray-500 font-normal normal-case">{selectedColor}</span>
                             </label>
                             <div className="flex flex-wrap gap-3">
-                                {colors.map((color: string) => (
+                                {productColors.map((color) => (
                                     <button
-                                        key={color}
-                                        onClick={() => setSelectedColor(color)}
-                                        className={`w-8 h-8 rounded-full border transition-all ${selectedColor === color
+                                        key={color.name}
+                                        onClick={() => setSelectedColor(color.name)}
+                                        className={`w-8 h-8 rounded-full border transition-all ${selectedColor === color.name
                                             ? "border-slate-900 ring-1 ring-slate-900 ring-offset-2"
                                             : "border-gray-200 hover:border-gray-400"
                                             }`}
-                                        style={{ backgroundColor: getColorHex(color) }}
-                                        title={color}
+                                        style={{ backgroundColor: color.hex }}
+                                        title={color.name}
                                     />
                                 ))}
                             </div>
@@ -205,7 +209,7 @@ export default function QuickViewPanel() {
                                 Size: <span className="text-gray-500 font-normal normal-case">{selectedSize}</span>
                             </label>
                             <div className="flex flex-wrap gap-2">
-                                {sizes.map((size) => (
+                                {productSizes.map((size) => (
                                     <button
                                         key={size}
                                         onClick={() => setSelectedSize(size)}
@@ -248,24 +252,23 @@ export default function QuickViewPanel() {
                     {/* Actions */}
                     <div className="mt-auto space-y-3 qv-content-item">
                         <LiquidButton
-                            className="w-full"
-                            variant="primary"
+                            className="w-full bg-[#25D366] text-white hover:bg-[#128C7E] border-none"
                             onClick={() => {
-                                console.log("Added to cart:", { ...selectedProduct, quantity, selectedColor, selectedSize });
+                                window.open(`https://wa.me/919876543210?text=Hi, I'm interested in ${title} (Color: ${selectedColor}, Size: ${selectedSize})`, '_blank');
                                 closeQuickView();
                             }}
                         >
-                            Add to Cart - {new Intl.NumberFormat("en-IN", { style: "currency", currency }).format(parseFloat(price) * quantity)}
+                            Chat with WhatsApp
                         </LiquidButton>
                         <LiquidButton
-                            className="w-full border border-gray-200"
+                            className="w-full"
                             variant="secondary"
                             onClick={() => {
-                                console.log("Buy it now:", { ...selectedProduct, quantity, selectedColor, selectedSize });
+                                window.location.href = `mailto:contact@kevara.com?subject=Inquiry about ${title}&body=I'm interested in ${title} (Color: ${selectedColor}, Size: ${selectedSize})`;
                                 closeQuickView();
                             }}
                         >
-                            Buy it Now
+                            Send us an Email
                         </LiquidButton>
                     </div>
                 </div>
