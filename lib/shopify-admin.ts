@@ -284,7 +284,12 @@ export async function createProduct(data: { title: string; description: string; 
     input: {
       title: data.title,
       descriptionHtml: data.description,
-      status: "ACTIVE"
+      status: "ACTIVE",
+      variants: [
+        {
+          price: data.price
+        }
+      ]
     },
     media: mediaInput
   };
@@ -300,45 +305,8 @@ export async function createProduct(data: { title: string; description: string; 
   const defaultVariantId = product.variants?.edges[0]?.node?.id;
   console.log(`[createProduct] Created product ${product.id}. Default Variant ID: ${defaultVariantId}`);
 
-  // 3. Update Default Variant Price
-  if (defaultVariantId && data.price) {
-    console.log(`[createProduct] Updating price to ${data.price} for variant ${defaultVariantId}`);
-    try {
-      const updateVariantMutation = `
-        mutation productVariantUpdate($input: ProductVariantInput!) {
-          productVariantUpdate(input: $input) {
-            productVariant {
-              id
-              price
-            }
-            userErrors {
-              field
-              message
-            }
-          }
-        }
-      `;
+  // Price is already set during creation, no need for separate update.
 
-      const updateVariables = {
-        input: {
-          id: defaultVariantId,
-          price: data.price
-        }
-      };
-
-      const updateResult = await shopifyFetch(updateVariantMutation, updateVariables);
-      if (updateResult.productVariantUpdate.userErrors.length > 0) {
-        console.error("Variant Update Errors:", JSON.stringify(updateResult.productVariantUpdate.userErrors));
-      } else {
-        console.log(`[createProduct] Price update successful. New Price: ${updateResult.productVariantUpdate.productVariant.price}`);
-      }
-    } catch (error: any) {
-      console.error("Failed to update variant price - mutation may not be supported:", error.message);
-      // Don't throw - allow product creation to succeed even if price update fails
-    }
-  } else {
-    console.warn("[createProduct] Skipping price update. Missing variant ID or price.");
-  }
 
   // 4. Return Optimistic Data Immediately
   // We don't wait for Shopify to process images or price updates fully.
