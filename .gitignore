@@ -48,3 +48,4 @@ next-env.d.ts
 *_error*.log
 *_log.txt
 test.txt
+serviceAccountKey.json
