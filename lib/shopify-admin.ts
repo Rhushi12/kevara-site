@@ -18,7 +18,8 @@ function logDebug(message: string, data?: any) {
   }
 }
 
-async function shopifyFetch(query: string, variables: any = {}) {
+// Exported fetch function for admin API
+export async function shopifyFetch(query: string, variables: any = {}) {
   const url = `https://${domain}/admin/api/2024-07/graphql.json`;
 
   try {
@@ -93,6 +94,7 @@ async function upsertMetaobject(type: string, handle: string, fields: any[]) {
 }
 
 // 1. UPLOAD FILE TO SHOPIFY FILES API
+// 1. UPLOAD FILE TO SHOPIFY FILES API
 export async function uploadFileToShopify(file: File) {
   const resourceUrl = await stageAndUploadFile(file);
 
@@ -111,6 +113,11 @@ export async function uploadFileToShopify(file: File) {
               url
             }
           }
+          ... on Video {
+            sources {
+              url
+            }
+          }
         }
         userErrors {
           field
@@ -120,7 +127,8 @@ export async function uploadFileToShopify(file: File) {
     }
   `;
 
-  const contentType = file.type.startsWith("image/") ? "IMAGE" : "FILE";
+  const isVideo = file.type.startsWith("video/");
+  const contentType = isVideo ? "VIDEO" : (file.type.startsWith("image/") ? "IMAGE" : "FILE");
 
   const fileVariables = {
     files: [{
@@ -133,7 +141,8 @@ export async function uploadFileToShopify(file: File) {
 
   if (fileData.fileCreate.userErrors.length > 0) {
     console.error("File Create Errors:", fileData.fileCreate.userErrors);
-    throw new Error("Failed to create file record in Shopify");
+    const errorMessages = fileData.fileCreate.userErrors.map((e: any) => e.message).join(", ");
+    throw new Error(`Failed to create file record in Shopify: ${errorMessages}`);
   }
 
   return fileData.fileCreate.files[0].id;
@@ -196,9 +205,12 @@ async function stageAndUploadFile(file: File) {
     }
   `;
 
+  const isVideo = file.type.startsWith("video/");
+  const resourceType = isVideo ? "VIDEO" : (file.type.startsWith("image/") ? "IMAGE" : "FILE");
+
   const stagedVariables = {
     input: [{
-      resource: "IMAGE",
+      resource: resourceType,
       filename: file.name,
       mimeType: file.type,
       httpMethod: "POST",
@@ -209,7 +221,8 @@ async function stageAndUploadFile(file: File) {
 
   if (stagedData.stagedUploadsCreate.userErrors.length > 0) {
     console.error("Staged Upload Errors:", stagedData.stagedUploadsCreate.userErrors);
-    throw new Error("Failed to create staged upload");
+    const errorMessages = stagedData.stagedUploadsCreate.userErrors.map((e: any) => e.message).join(", ");
+    throw new Error(`Failed to create staged upload: ${errorMessages}`);
   }
 
   const target = stagedData.stagedUploadsCreate.stagedTargets[0];

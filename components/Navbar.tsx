@@ -353,9 +353,9 @@ export default function Navbar() {
                             <Image
                                 src="/aesthetic-logo.png"
                                 alt="Kevara Logo"
-                                width={150}
-                                height={50}
-                                className="h-12 md:h-14 w-auto object-contain"
+                                width={120}
+                                height={40}
+                                className="h-8 md:h-10 w-auto object-contain"
                                 priority
                             />
                         </Link>

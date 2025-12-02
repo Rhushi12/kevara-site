@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
+import ProductCard from "@/components/ProductCard";
 
 interface Product {
     handle: string;
@@ -96,34 +97,23 @@ export default function RelatedProductsCarousel({ products }: RelatedProductsCar
                     {products.map((product, index) => (
                         <motion.div
                             key={product.handle}
-                            className="min-w-[calc(50%-12px)] md:min-w-[calc(25%-18px)] snap-start flex-shrink-0 select-none"
+                            className="min-w-[280px] md:min-w-[300px] snap-start flex-shrink-0 select-none"
                             initial={{ opacity: 0, y: 30 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: index * 0.1 }}
                         >
-                            <Link href={`/products/${product.slug}`} className="block group/card" draggable={false}>
-                                <div className="relative aspect-[3/4] bg-gray-100 mb-4 overflow-hidden rounded-sm">
-                                    {product.images?.edges?.[0]?.node?.url && (
-                                        <Image
-                                            src={product.images.edges[0].node.url}
-                                            alt={product.title}
-                                            fill
-                                            className="object-cover transition-transform duration-700 group-hover/card:scale-105"
-                                            draggable={false}
-                                        />
-                                    )}
-                                </div>
-                                <h3 className="text-sm font-medium text-slate-900 group-hover/card:text-[#006D77] transition-colors">
-                                    {product.title}
-                                </h3>
-                                <span className="text-xs text-slate-500">
-                                    {new Intl.NumberFormat("en-IN", {
-                                        style: "currency",
-                                        currency: product.priceRange.minVariantPrice.currencyCode,
-                                    }).format(parseFloat(product.priceRange.minVariantPrice.amount))}
-                                </span>
-                            </Link>
+                            <ProductCard product={{
+                                node: {
+                                    id: product.handle, // Using handle as ID since ID might not be in this flat structure
+                                    title: product.title,
+                                    handle: product.handle,
+                                    slug: product.slug,
+                                    priceRange: product.priceRange,
+                                    images: product.images,
+                                    variants: { edges: [] } // Mock variants if missing
+                                }
+                            }} />
                         </motion.div>
                     ))}
                 </div>

@@ -9,6 +9,7 @@ export async function POST(request: Request) {
         const description = formData.get('description') as string;
         const price = formData.get('price') as string;
         const files = formData.getAll('images') as File[];
+        const videoFile = formData.get('video') as File | null;
         const colorsJson = formData.get('colors') as string | null;
         const sizesJson = formData.get('sizes') as string | null;
 
@@ -31,7 +32,14 @@ export async function POST(request: Request) {
             }
         }
 
-        console.log(`[API] Uploaded ${imageGids.length} images. Creating custom product...`);
+        // Upload video if provided
+        let videoGid: string | undefined;
+        if (videoFile && videoFile instanceof File && videoFile.size > 0) {
+            console.log(`[API] Uploading video: ${videoFile.name}`);
+            videoGid = await uploadFileToShopify(videoFile);
+        }
+
+        console.log(`[API] Uploaded ${imageGids.length} images and ${videoGid ? 1 : 0} video. Creating custom product...`);
 
         // Create custom product with all data
         const product = await createCustomProduct({
@@ -40,6 +48,7 @@ export async function POST(request: Request) {
             price,
             currency: "INR",
             imageGids,
+            videoGid,
             colors,
             sizes,
             status: "ACTIVE"

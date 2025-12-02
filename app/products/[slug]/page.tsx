@@ -79,7 +79,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
         colors = Array.from(uniqueColors).map(name => ({
             name,
-            value: getColorHex(name)
+            hex: getColorHex(name)
         }));
 
         if (uniqueSizes.size > 0) {
@@ -130,7 +130,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
                         <ProductInfo
                             title={title}
                             price={price}
-                            originalPrice={price * 1.2} // Mock original price
+                            // originalPrice={price * 1.2} // Removed fake original price
                             colors={colors}
                             sizes={sizes}
                             description={descriptionHtml}

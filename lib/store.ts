@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 
-interface Product {
+export interface Product {
     node: {
         id: string;
         title: string;
         handle: string;
+        slug?: string;
         priceRange: {
             minVariantPrice: {
                 amount: string;
@@ -29,6 +30,9 @@ interface Product {
         };
         colors?: { name: string; hex: string }[];
         sizes?: string[];
+        relatedProducts?: string[];
+        video?: string;
+        status?: string;
     };
 }
 

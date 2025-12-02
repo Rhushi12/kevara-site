@@ -131,6 +131,32 @@ export default function WomenShopEssentials({ data = {}, isEditMode = false, onU
         onUpdate(updated);
     };
 
+    const handleAddTab = () => {
+        if (!onUpdate) return;
+        const newTabs = [...tabs, { title: "New Category", products: [] }];
+        const updated = { ...refreshedData, items: newTabs };
+        setRefreshedData(updated);
+        onUpdate(updated);
+        setActiveTabIndex(newTabs.length - 1); // Switch to new tab
+    };
+
+    const handleRemoveTab = (index: number, e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent tab switching
+        if (!onUpdate) return;
+
+        if (confirm("Are you sure you want to delete this tab?")) {
+            const newTabs = tabs.filter((_, i) => i !== index);
+            const updated = { ...refreshedData, items: newTabs };
+            setRefreshedData(updated);
+            onUpdate(updated);
+
+            // Adjust active tab if needed
+            if (activeTabIndex >= newTabs.length) {
+                setActiveTabIndex(Math.max(0, newTabs.length - 1));
+            }
+        }
+    };
+
     return (
         <section className="container mx-auto px-4 pt-12 pb-12 md:py-24 group/section overflow-hidden">
             <motion.div
@@ -167,33 +193,57 @@ export default function WomenShopEssentials({ data = {}, isEditMode = false, onU
                 )}
 
                 {/* Toggle */}
-                <div className="flex justify-center gap-8 border-b border-gray-200 max-w-xs mx-auto relative">
+                <div className="flex flex-wrap justify-center gap-8 border-b border-gray-200 max-w-4xl mx-auto relative items-center">
                     {tabs.map((tab: any, index: number) => (
-                        <button
-                            key={index}
-                            onClick={() => setActiveTabIndex(index)}
-                            className={`pb-4 text-sm font-bold tracking-widest uppercase transition-colors relative ${activeTabIndex === index ? "text-slate-900" : "text-gray-400 hover:text-gray-600"
-                                }`}
-                        >
-                            {isEditMode ? (
-                                <EditableText
-                                    value={tab.title}
-                                    onSave={(val) => updateTabTitle(index, val)}
-                                    isAdmin={true}
-                                    className="bg-transparent border-b border-gray-300"
-                                />
-                            ) : (
-                                tab.title
+                        <div key={index} className="relative group/tab">
+                            <button
+                                onClick={() => setActiveTabIndex(index)}
+                                className={`pb-4 text-sm font-bold tracking-widest uppercase transition-colors relative ${activeTabIndex === index ? "text-slate-900" : "text-gray-400 hover:text-gray-600"
+                                    }`}
+                            >
+                                {isEditMode ? (
+                                    <EditableText
+                                        value={tab.title}
+                                        onSave={(val) => updateTabTitle(index, val)}
+                                        isAdmin={true}
+                                        className="bg-transparent border-b border-gray-300 min-w-[80px] text-center"
+                                    />
+                                ) : (
+                                    tab.title
+                                )}
+                                {activeTabIndex === index && (
+                                    <motion.div
+                                        layoutId="activeTabUnderlineWomen"
+                                        className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#006D77]"
+                                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                    />
+                                )}
+                            </button>
+
+                            {/* Delete Tab Button */}
+                            {isEditMode && (
+                                <button
+                                    onClick={(e) => handleRemoveTab(index, e)}
+                                    className="absolute -top-2 -right-3 bg-red-100 text-red-500 rounded-full p-1 opacity-0 group-hover/tab:opacity-100 transition-opacity hover:bg-red-200"
+                                    title="Remove Tab"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                </button>
                             )}
-                            {activeTabIndex === index && (
-                                <motion.div
-                                    layoutId="activeTabUnderlineWomen"
-                                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#006D77]"
-                                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                />
-                            )}
-                        </button>
+                        </div>
                     ))}
+
+                    {/* Add Tab Button */}
+                    {isEditMode && (
+                        <button
+                            onClick={handleAddTab}
+                            className="pb-4 text-gray-400 hover:text-[#006D77] transition-colors flex items-center gap-1"
+                            title="Add New Category"
+                        >
+                            <Plus size={20} />
+                            <span className="text-xs font-medium">ADD</span>
+                        </button>
+                    )}
                 </div>
             </motion.div>
 
@@ -210,7 +260,7 @@ export default function WomenShopEssentials({ data = {}, isEditMode = false, onU
                                     container.scrollBy({ left: -300, behavior: 'smooth' });
                                 }
                             }}
-                            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all hidden md:flex items-center justify-center"
+                            className="absolute left-0 top-1/2 -translate-y-1/2 z-40 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all hidden md:flex items-center justify-center"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <polyline points="15 18 9 12 15 6"></polyline>
@@ -223,7 +273,7 @@ export default function WomenShopEssentials({ data = {}, isEditMode = false, onU
                                     container.scrollBy({ left: 300, behavior: 'smooth' });
                                 }
                             }}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all hidden md:flex items-center justify-center"
+                            className="absolute right-0 top-1/2 -translate-y-1/2 z-40 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all hidden md:flex items-center justify-center"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <polyline points="9 18 15 12 9 6"></polyline>
@@ -234,7 +284,7 @@ export default function WomenShopEssentials({ data = {}, isEditMode = false, onU
 
                 <div
                     id="products-carousel"
-                    className="overflow-x-auto md:overflow-x-auto -mx-4 px-4 md:px-8 snap-x snap-mandatory"
+                    className="overflow-x-auto md:overflow-x-auto -mx-4 px-4 md:px-8 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
                     style={{
                         scrollbarWidth: 'none',
                         msOverflowStyle: 'none'
@@ -262,7 +312,7 @@ export default function WomenShopEssentials({ data = {}, isEditMode = false, onU
                                         {isEditMode && (
                                             <button
                                                 onClick={() => removeProduct(product.id)}
-                                                className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover/product:opacity-100 transition-opacity z-10"
+                                                className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover/product:opacity-100 transition-opacity z-50"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                                             </button>

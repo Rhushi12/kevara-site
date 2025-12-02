@@ -114,29 +114,18 @@ export default function ProductInfo({
                     </button>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    {ALL_SIZES.map((size) => {
-                        const isAvailable = sizes.includes(size);
-                        return (
-                            <button
-                                key={size}
-                                onClick={() => isAvailable && setSelectedSize(size)}
-                                disabled={!isAvailable}
-                                className={`h-10 min-w-[3rem] px-3 rounded border text-sm font-medium transition-all relative overflow-hidden ${isAvailable
-                                    ? selectedSize === size
-                                        ? "border-slate-900 bg-slate-900 text-white"
-                                        : "border-slate-200 text-slate-600 hover:border-slate-900 hover:text-slate-900"
-                                    : "border-slate-100 text-slate-300 cursor-not-allowed bg-slate-50"
-                                    }`}
-                            >
-                                {size}
-                                {!isAvailable && (
-                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                        <div className="w-full h-px bg-slate-300 -rotate-45 transform origin-center" />
-                                    </div>
-                                )}
-                            </button>
-                        );
-                    })}
+                    {sizes.map((size) => (
+                        <button
+                            key={size}
+                            onClick={() => setSelectedSize(size)}
+                            className={`h-10 min-w-[3rem] px-3 rounded border text-sm font-medium transition-all relative overflow-hidden ${selectedSize === size
+                                ? "border-slate-900 bg-slate-900 text-white"
+                                : "border-slate-200 text-slate-600 hover:border-slate-900 hover:text-slate-900"
+                                }`}
+                        >
+                            {size}
+                        </button>
+                    ))}
                 </div>
             </div>
 

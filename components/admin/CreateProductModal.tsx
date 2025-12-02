@@ -36,6 +36,8 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
     const [description, setDescription] = useState("");
     const [files, setFiles] = useState<File[]>([]);
     const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+    const [videoFile, setVideoFile] = useState<File | null>(null);
+    const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
     const [colors, setColors] = useState<Color[]>([]);
     const [sizes, setSizes] = useState<string[]>([]);
     const [customColorName, setCustomColorName] = useState("");
@@ -43,6 +45,7 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const videoInputRef = useRef<HTMLInputElement>(null);
     const { addToQueue } = useProductQueueStore();
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,6 +59,14 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
         }
     };
 
+    const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setVideoFile(file);
+            setVideoPreviewUrl(URL.createObjectURL(file));
+        }
+    };
+
     const removeImage = (index: number) => {
         const newFiles = [...files];
         newFiles.splice(index, 1);
@@ -65,6 +76,17 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
         URL.revokeObjectURL(newUrls[index]);
         newUrls.splice(index, 1);
         setPreviewUrls(newUrls);
+    };
+
+    const removeVideo = () => {
+        setVideoFile(null);
+        if (videoPreviewUrl) {
+            URL.revokeObjectURL(videoPreviewUrl);
+            setVideoPreviewUrl(null);
+        }
+        if (videoInputRef.current) {
+            videoInputRef.current.value = "";
+        }
     };
 
     const addPresetColor = (color: Color) => {
@@ -99,6 +121,8 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
         setDescription("");
         setFiles([]);
         setPreviewUrls([]);
+        setVideoFile(null);
+        setVideoPreviewUrl(null);
         setColors([]);
         setSizes([]);
         setError("");
@@ -120,6 +144,10 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
             formData.append("price", price);
             formData.append("description", description);
             files.forEach(file => formData.append("images", file));
+
+            if (videoFile) {
+                formData.append("video", videoFile);
+            }
 
             // Add colors and sizes as JSON
             if (colors.length > 0) {
@@ -304,6 +332,47 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
                                 </div>
                             )}
                             <p className="text-xs text-gray-500">Tip: Upload at least 2 images for the hover effect!</p>
+                        </div>
+
+                        {/* Video Section */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <ImageIcon size={18} className="text-slate-600" />
+                                <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Product Video (Optional)</h3>
+                            </div>
+
+                            {!videoPreviewUrl ? (
+                                <div
+                                    onClick={() => videoInputRef.current?.click()}
+                                    className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-slate-900 hover:bg-slate-50 transition-all duration-200 group"
+                                >
+                                    <Upload size={32} className="mx-auto text-gray-400 group-hover:text-slate-900 mb-2 transition-colors duration-200" />
+                                    <p className="text-sm font-medium text-gray-600 group-hover:text-slate-900">Click to upload video</p>
+                                    <p className="text-xs text-gray-500 mt-1">MP4, WebM (Max 50MB)</p>
+                                    <input
+                                        ref={videoInputRef}
+                                        type="file"
+                                        accept="video/*"
+                                        onChange={handleVideoChange}
+                                        className="hidden"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="relative aspect-video rounded-lg overflow-hidden bg-black border-2 border-gray-200">
+                                    <video
+                                        src={videoPreviewUrl}
+                                        className="w-full h-full object-cover"
+                                        controls
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={removeVideo}
+                                        className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors duration-200 shadow-lg"
+                                    >
+                                        <X size={16} />
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         {/* Colors Section */}

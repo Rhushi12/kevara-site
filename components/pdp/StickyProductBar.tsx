@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import LiquidButton from "@/components/ui/LiquidButton";
-import { MessageCircle, Mail } from "lucide-react";
+import { MessageCircle, Mail, ChevronDown } from "lucide-react";
 
 interface StickyProductBarProps {
     product: {
@@ -23,15 +23,33 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
         product.sizes?.find(s => ["XS", "S", "M", "L", "XL", "XXL"].includes(s)) || product.sizes?.[0]
     );
 
+    const [isColorOpen, setIsColorOpen] = useState(false);
+    const [isSizeOpen, setIsSizeOpen] = useState(false);
+    const colorDropdownRef = useRef<HTMLDivElement>(null);
+    const sizeDropdownRef = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
         const handleScroll = () => {
-            // Show bar when scrolled past 800px (approx height of main product section)
             const threshold = 800;
             setIsVisible(window.scrollY > threshold);
         };
 
+        const handleClickOutside = (event: MouseEvent) => {
+            if (colorDropdownRef.current && !colorDropdownRef.current.contains(event.target as Node)) {
+                setIsColorOpen(false);
+            }
+            if (sizeDropdownRef.current && !sizeDropdownRef.current.contains(event.target as Node)) {
+                setIsSizeOpen(false);
+            }
+        };
+
         window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
     }, []);
 
     const colors = product.colors || [];
@@ -70,60 +88,105 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
 
                         {/* Selectors & Actions */}
                         <div className="flex items-center gap-3 md:gap-4 flex-shrink-0">
-                            {/* Color Selector */}
-                            {colors.length > 0 && (
-                                <div className="hidden lg:flex gap-2 items-center">
-                                    {colors.slice(0, 5).map((color) => (
-                                        <button
-                                            key={color.name}
-                                            onClick={() => setSelectedColor(color)}
-                                            className={`w-7 h-7 rounded-full border-2 transition-all ${selectedColor?.name === color.name
-                                                ? "border-slate-900 ring-2 ring-offset-1 ring-slate-900"
-                                                : "border-gray-300 hover:border-slate-500"
-                                                }`}
-                                            title={color.name}
-                                        >
-                                            <div
-                                                className="w-full h-full rounded-full"
-                                                style={{ backgroundColor: color.value || color.hex || '#000000' }}
-                                            />
-                                        </button>
-                                    ))}
-                                    {colors.length > 5 && (
-                                        <span className="text-xs text-slate-500">+{colors.length - 5}</span>
-                                    )}
-                                </div>
-                            )}
 
-                            {/* Size Selector - Show all standard sizes */}
-                            <div className="hidden md:flex gap-1.5">
-                                {["XS", "S", "M", "L", "XL", "XXL"].map((size) => {
-                                    const isAvailable = sizes.includes(size);
-                                    return (
+                            {/* Unified Dropdown Container */}
+                            <div className="hidden md:flex items-center bg-white border border-gray-200 rounded-lg shadow-sm divide-x divide-gray-200 h-10">
+
+                                {/* Color Dropdown */}
+                                {colors.length > 0 && (
+                                    <div className="relative" ref={colorDropdownRef}>
                                         <button
-                                            key={size}
-                                            onClick={() => isAvailable && setSelectedSize(size)}
-                                            disabled={!isAvailable}
-                                            className={`relative w-9 h-9 flex items-center justify-center text-xs font-medium border transition-all ${selectedSize === size
-                                                ? "border-slate-900 bg-slate-900 text-white"
-                                                : isAvailable
-                                                    ? "border-gray-300 text-slate-700 hover:border-slate-900"
-                                                    : "border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50"
-                                                }`}
+                                            onClick={() => setIsColorOpen(!isColorOpen)}
+                                            className="flex items-center gap-2 px-3 h-full hover:bg-gray-50 transition-colors min-w-[140px] justify-between"
                                         >
-                                            {size}
-                                            {!isAvailable && (
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    <div className="w-full h-0.5 bg-gray-300 rotate-45" />
-                                                </div>
-                                            )}
+                                            <div className="flex items-center gap-2">
+                                                <div
+                                                    className="w-4 h-4 rounded-full border border-gray-200"
+                                                    style={{ backgroundColor: selectedColor?.hex || selectedColor?.value || '#000' }}
+                                                />
+                                                <span className="text-sm text-slate-700 truncate max-w-[80px]">
+                                                    {selectedColor?.name || "Select Color"}
+                                                </span>
+                                            </div>
+                                            <ChevronDown size={14} className={`text-gray-400 transition-transform ${isColorOpen ? 'rotate-180' : ''}`} />
                                         </button>
-                                    );
-                                })}
+
+                                        {/* Dropdown Menu */}
+                                        <AnimatePresence>
+                                            {isColorOpen && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    exit={{ opacity: 0, y: 10 }}
+                                                    className="absolute top-full left-0 mt-2 w-full min-w-[160px] bg-white border border-gray-100 rounded-lg shadow-xl overflow-hidden py-1 z-50"
+                                                >
+                                                    {colors.map((color) => (
+                                                        <button
+                                                            key={color.name}
+                                                            onClick={() => {
+                                                                setSelectedColor(color);
+                                                                setIsColorOpen(false);
+                                                            }}
+                                                            className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                                                        >
+                                                            <div
+                                                                className="w-4 h-4 rounded-full border border-gray-200"
+                                                                style={{ backgroundColor: color.hex || color.value || '#000' }}
+                                                            />
+                                                            <span className={`text-sm ${selectedColor?.name === color.name ? 'font-medium text-slate-900' : 'text-slate-600'}`}>
+                                                                {color.name}
+                                                            </span>
+                                                        </button>
+                                                    ))}
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                )}
+
+                                {/* Size Dropdown */}
+                                {sizes.length > 0 && (
+                                    <div className="relative" ref={sizeDropdownRef}>
+                                        <button
+                                            onClick={() => setIsSizeOpen(!isSizeOpen)}
+                                            className="flex items-center gap-2 px-3 h-full hover:bg-gray-50 transition-colors min-w-[100px] justify-between"
+                                        >
+                                            <span className="text-sm text-slate-700">
+                                                {selectedSize || "Size"}
+                                            </span>
+                                            <ChevronDown size={14} className={`text-gray-400 transition-transform ${isSizeOpen ? 'rotate-180' : ''}`} />
+                                        </button>
+
+                                        {/* Dropdown Menu */}
+                                        <AnimatePresence>
+                                            {isSizeOpen && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    exit={{ opacity: 0, y: 10 }}
+                                                    className="absolute top-full right-0 mt-2 w-full min-w-[120px] bg-white border border-gray-100 rounded-lg shadow-xl overflow-hidden py-1 z-50"
+                                                >
+                                                    {sizes.map((size) => (
+                                                        <button
+                                                            key={size}
+                                                            onClick={() => {
+                                                                setSelectedSize(size);
+                                                                setIsSizeOpen(false);
+                                                            }}
+                                                            className={`w-full px-4 py-2 text-left hover:bg-gray-50 text-sm transition-colors ${selectedSize === size ? 'font-medium text-slate-900 bg-gray-50' : 'text-slate-600'}`}
+                                                        >
+                                                            {size}
+                                                        </button>
+                                                    ))}
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                )}
                             </div>
 
                             <LiquidButton
-                                onClick={() => window.open(`https://wa.me/?text=I'm interested in ${product.title}`, '_blank')}
+                                onClick={() => window.open(`https://wa.me/919876543210?text=I'm interested in ${product.title} (Color: ${selectedColor?.name}, Size: ${selectedSize})`, '_blank')}
                                 className="px-4 md:px-6 py-2 md:py-2.5 text-xs h-9 md:h-10 min-w-[140px] uppercase tracking-wider bg-[#25D366] hover:bg-[#128C7E] border-none text-white"
                             >
                                 <div className="flex items-center gap-2">
@@ -133,7 +196,7 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
                             </LiquidButton>
 
                             <button
-                                onClick={() => window.location.href = `mailto:?subject=Inquiry about ${product.title}`}
+                                onClick={() => window.location.href = `mailto:contact@kevara.com?subject=Inquiry about ${product.title}&body=I'm interested in ${product.title} (Color: ${selectedColor?.name}, Size: ${selectedSize})`}
                                 className="px-4 py-2 h-9 md:h-10 border border-[#4A3B32] text-[#4A3B32] hover:bg-[#4A3B32] hover:text-white transition-colors uppercase text-xs tracking-wider flex items-center gap-2"
                             >
                                 <Mail size={16} />

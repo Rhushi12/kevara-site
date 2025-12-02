@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { deleteCustomProduct } from '@/lib/custom-products';
+import { removeProductFromAllPages } from '@/lib/remove-product-from-pages';
 
 export async function DELETE(request: Request) {
     try {
@@ -10,7 +11,13 @@ export async function DELETE(request: Request) {
         }
 
         console.log(`[API] Deleting product with ID: ${id}`);
+
+        // Delete product from metaobjects
         const deletedId = await deleteCustomProduct(id);
+
+        // Remove product from all page sections
+        console.log(`[API] Removing product from all page sections...`);
+        await removeProductFromAllPages(id);
 
         return NextResponse.json({ success: true, deletedId });
     } catch (error: any) {

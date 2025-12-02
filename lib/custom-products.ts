@@ -94,6 +94,7 @@ export interface CustomProductInput {
   price: string;
   currency?: string;
   imageGids?: string[]; // Shopify File GIDs
+  videoGid?: string; // Shopify Video GID
   colors?: Array<{ name: string; hex: string }>;
   sizes?: string[];
   status?: string;
@@ -121,6 +122,14 @@ export async function createCustomProduct(data: CustomProductInput) {
     fields.push({
       key: "images",
       value: JSON.stringify(data.imageGids)
+    });
+  }
+
+  // Add video GID if provided
+  if (data.videoGid) {
+    fields.push({
+      key: "video",
+      value: data.videoGid
     });
   }
 
@@ -171,6 +180,13 @@ export async function getCustomProducts() {
                           altText
                         }
                       }
+                      ... on Video {
+                        id
+                        sources {
+                          url
+                          mimeType
+                        }
+                      }
                     }
                   }
                 }
@@ -197,6 +213,15 @@ function transformMetaobjectToProduct(metaobject: any) {
     // Extract image URLs from references
     if (field.key === 'images' && field.references) {
       acc.imageUrls = field.references.edges.map((edge: any) => edge.node.image?.url).filter(Boolean);
+    }
+
+    // Extract video URL from references
+    if (field.key === 'video' && field.references) {
+      const videoNode = field.references.edges[0]?.node;
+      if (videoNode && videoNode.sources) {
+        // Prefer .mp4 or .m3u8, usually sources[0] is good
+        acc.videoUrl = videoNode.sources[0]?.url;
+      }
     }
 
     return acc;
@@ -249,6 +274,7 @@ function transformMetaobjectToProduct(metaobject: any) {
       colors,
       sizes,
       relatedProducts,
+      video: fields.videoUrl || null,
       status: fields.status
     }
   };

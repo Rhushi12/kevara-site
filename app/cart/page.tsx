@@ -280,19 +280,34 @@ export default function AdminProductManager() {
                                 >
                                     <Link href={`/products/${product.node.slug || product.node.handle}`}>
                                         <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
+                                            {/* Video Layer */}
+                                            {product.node.video && (
+                                                <div className="absolute inset-0 z-10">
+                                                    <video
+                                                        src={product.node.video}
+                                                        autoPlay
+                                                        muted
+                                                        loop
+                                                        playsInline
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {/* Image Layer - Shows if no video, or underneath video (though video covers it) */}
                                             {product.node.images?.edges?.[0]?.node?.url ? (
                                                 <Image
                                                     src={product.node.images.edges[0].node.url}
                                                     alt={product.node.title}
                                                     fill
-                                                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                                    className={`object-cover group-hover:scale-105 transition-transform duration-500 ${product.node.video ? 'z-0' : 'z-10'}`}
                                                 />
-                                            ) : (
+                                            ) : !product.node.video && (
                                                 <div className="w-full h-full flex items-center justify-center text-gray-400">
                                                     <Package size={32} />
                                                 </div>
                                             )}
-                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 z-20" />
                                         </div>
                                     </Link>
 
@@ -304,7 +319,7 @@ export default function AdminProductManager() {
                                             handleDelete(product.node.id, product.node.title);
                                         }}
                                         disabled={deletingId === product.node.id}
-                                        className="absolute top-2 right-2 p-2 bg-white/90 backdrop-blur-sm rounded-full text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                        className="absolute top-2 right-2 p-2 bg-white/90 backdrop-blur-sm rounded-full text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm opacity-0 group-hover:opacity-100 focus:opacity-100 z-30"
                                         title="Delete Product"
                                     >
                                         {deletingId === product.node.id ? (
