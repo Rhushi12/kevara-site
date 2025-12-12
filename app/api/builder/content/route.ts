@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPageContent } from "@/lib/shopify-admin";
+import { getPageContent, deletePageContent, getPageContentBySlug } from "@/lib/shopify-admin";
 import { savePageData } from "@/lib/save-page-data";
 
 export const dynamic = 'force-dynamic';
@@ -21,6 +21,34 @@ export async function GET(req: NextRequest) {
     }
 }
 
+export async function DELETE(req: NextRequest) {
+    const { searchParams } = new URL(req.url);
+    const handle = searchParams.get("handle");
+
+    if (!handle) {
+        return NextResponse.json({ error: "Missing handle" }, { status: 400 });
+    }
+
+    try {
+        // 1. Find the page to get its ID
+        const page = await getPageContentBySlug(handle);
+        if (!page || !page.metaobject_id) {
+            return NextResponse.json({ error: "Page not found" }, { status: 404 });
+        }
+
+        // 2. Delete it
+        await deletePageContent(page.metaobject_id);
+
+        return NextResponse.json({ success: true });
+    } catch (error: any) {
+        console.error("Failed to delete page:", error);
+        return NextResponse.json({ error: error.message || "Failed to delete page" }, { status: 500 });
+    }
+}
+
+import fs from 'fs';
+import path from 'path';
+
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
@@ -35,6 +63,17 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true });
     } catch (error: any) {
         console.error("Failed to update page content:", error);
+
+        // Log to file for debugging
+        try {
+            const logPath = path.resolve(process.cwd(), 'server-error.log');
+            const timestamp = new Date().toISOString();
+            const logMessage = `[${timestamp}] ${error.message}\n${JSON.stringify(error, null, 2)}\n\n`;
+            fs.appendFileSync(logPath, logMessage);
+        } catch (e) {
+            console.error("Failed to write to log file", e);
+        }
+
         return NextResponse.json({ error: error.message || "Failed to update data" }, { status: 500 });
     }
 }

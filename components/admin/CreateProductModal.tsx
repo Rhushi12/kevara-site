@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { X, Upload, Image as ImageIcon, Plus, Trash2, Palette, Ruler } from "lucide-react";
+import { X, Upload, Image as ImageIcon, Plus, Trash2, Palette, Ruler, GripVertical } from "lucide-react";
 import Image from "next/image";
 import FileInput from "@/components/admin/FileInput";
 import { useProductQueueStore } from "@/lib/productQueueStore";
@@ -46,6 +46,7 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
     const [error, setError] = useState("");
     const fileInputRef = useRef<HTMLInputElement>(null);
     const videoInputRef = useRef<HTMLInputElement>(null);
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
     const { addToQueue } = useProductQueueStore();
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -87,6 +88,39 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
         if (videoInputRef.current) {
             videoInputRef.current.value = "";
         }
+    };
+
+    // Drag and drop handlers for image reordering
+    const handleDragStart = (index: number) => {
+        setDraggedIndex(index);
+    };
+
+    const handleDragOver = (e: React.DragEvent, index: number) => {
+        e.preventDefault();
+        if (draggedIndex === null || draggedIndex === index) return;
+
+        // Reorder files and preview URLs
+        const newFiles = [...files];
+        const newUrls = [...previewUrls];
+
+        const draggedFile = newFiles[draggedIndex];
+        const draggedUrl = newUrls[draggedIndex];
+
+        // Remove from old position
+        newFiles.splice(draggedIndex, 1);
+        newUrls.splice(draggedIndex, 1);
+
+        // Insert at new position
+        newFiles.splice(index, 0, draggedFile);
+        newUrls.splice(index, 0, draggedUrl);
+
+        setFiles(newFiles);
+        setPreviewUrls(newUrls);
+        setDraggedIndex(index);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIndex(null);
     };
 
     const addPresetColor = (color: Color) => {
@@ -296,17 +330,42 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
                             ) : (
                                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
                                     {previewUrls.map((url, index) => (
-                                        <div key={index} className="relative group aspect-square rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-200">
+                                        <div
+                                            key={index}
+                                            draggable
+                                            onDragStart={() => handleDragStart(index)}
+                                            onDragOver={(e) => handleDragOver(e, index)}
+                                            onDragEnd={handleDragEnd}
+                                            className={`relative group aspect-square rounded-lg overflow-hidden bg-gray-100 border-2 cursor-move transition-all duration-200 ${draggedIndex === index
+                                                    ? 'border-slate-900 scale-95 opacity-50'
+                                                    : 'border-gray-200 hover:border-slate-400'
+                                                }`}
+                                        >
+                                            {/* Drag Handle */}
+                                            <div className="absolute top-1 left-1 p-1 bg-black/50 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+                                                <GripVertical size={14} />
+                                            </div>
+
+                                            {/* Position Badge */}
+                                            <div className={`absolute bottom-1 left-1 px-2 py-0.5 text-[10px] font-bold rounded z-10 ${index === 0
+                                                    ? 'bg-emerald-500 text-white'
+                                                    : index === 1
+                                                        ? 'bg-blue-500 text-white'
+                                                        : 'bg-gray-700 text-white'
+                                                }`}>
+                                                {index === 0 ? 'DISPLAY' : index === 1 ? 'HOVER' : `#${index + 1}`}
+                                            </div>
+
                                             <Image
                                                 src={url}
                                                 alt={`Preview ${index + 1}`}
                                                 fill
-                                                className="object-cover"
+                                                className="object-cover pointer-events-none"
                                             />
                                             <button
                                                 type="button"
                                                 onClick={() => removeImage(index)}
-                                                className="absolute top-1 right-1 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600"
+                                                className="absolute top-1 right-1 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600 z-10"
                                             >
                                                 <X size={14} />
                                             </button>
@@ -331,7 +390,7 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
                                     />
                                 </div>
                             )}
-                            <p className="text-xs text-gray-500">Tip: Upload at least 2 images for the hover effect!</p>
+                            <p className="text-xs text-gray-500">💡 Drag to reorder — 1st image is display, 2nd is hover effect</p>
                         </div>
 
                         {/* Video Section */}

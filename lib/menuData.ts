@@ -192,23 +192,23 @@ export const MENU_DATA: MenuItem[] = [
     {
         id: "about",
         label: "About",
-        href: "/about",
+        href: "/pages/about",
         shopify_layout_type: "visual",
         images: [
             {
                 label: "Our Story",
                 src: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop",
-                href: "/about/story",
+                href: "/about-story",
             },
             {
                 label: "Sustainability",
                 src: "https://images.unsplash.com/photo-1532453288672-3a27e9be9efd?q=80&w=800&auto=format&fit=crop",
-                href: "/about/sustainability",
+                href: "/pages/sustainability",
             },
             {
                 label: "Craftsmanship",
                 src: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?q=80&w=800&auto=format&fit=crop",
-                href: "/about/craftsmanship",
+                href: "/pages/craftsmanship",
             },
         ],
     },

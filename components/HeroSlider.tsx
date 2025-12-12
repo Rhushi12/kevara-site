@@ -9,6 +9,7 @@ import LiquidButton from "@/components/ui/LiquidButton";
 
 import EditableText from "@/components/admin/EditableText";
 import SimpleImageUploadModal from "@/components/admin/SimpleImageUploadModal";
+import DimensionBadge from "@/components/admin/DimensionBadge";
 
 interface HeroSliderProps {
     slides?: typeof HERO_SLIDES;
@@ -21,11 +22,11 @@ export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, o
     const [isLoaded, setIsLoaded] = useState(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
-    // Phase 1: Initial Load Delay (1.5s)
+    // Phase 1: Initial Load Delay (0.5s)
     useEffect(() => {
         const timer = setTimeout(() => {
             setIsLoaded(true);
-        }, 1500);
+        }, 500);
         return () => clearTimeout(timer);
     }, []);
 
@@ -109,7 +110,7 @@ export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, o
         exit: {
             zIndex: 10,
             clipPath: "inset(0 100% 0 0)", // Wipe from Right to Left (hide right side)
-            transition: { duration: 0.5, ease: [0.64, 0, 0.78, 0] }, // easeInQuint
+            transition: { duration: 0.5, ease: [0.7, 0, 0.84, 0] }, // easeInQuint
         },
     };
 
@@ -126,18 +127,18 @@ export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, o
 
     const fadeUpVariants: Variants = {
         hidden: { opacity: 0, y: 20 }, // Fade Up (Bottom to Top)
-        visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.64, 0, 0.78, 0] } }, // easeInQuint
+        visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.7, 0, 0.84, 0] } }, // easeInQuint
     };
 
     const fadeInVariants: Variants = {
         hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.64, 0, 0.78, 0] } }, // easeInQuint
+        visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.7, 0, 0.84, 0] } }, // easeInQuint
     };
 
     if (!activeSlide) return null;
 
     return (
-        <div className="relative h-[85vh] md:h-[calc(100vh-80px)] w-full overflow-hidden bg-[#FDFBF7]">
+        <div className="relative h-[667px] w-full overflow-hidden bg-[#FDFBF7]">
             {isEditMode && (
                 <div className="absolute top-4 right-4 z-50 flex gap-2">
                     <button
@@ -162,6 +163,20 @@ export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, o
                     )}
                 </div>
             )}
+
+            {/* Teal Background Layer - Animates away when first slide loads */}
+            <AnimatePresence>
+                {!isLoaded && (
+                    <motion.div
+                        className="absolute inset-0 z-20 bg-[#006D77]"
+                        initial={{ clipPath: "inset(0 0 0 0%)" }}
+                        exit={{
+                            clipPath: "inset(0 100% 0 0)",
+                            transition: { duration: 0.8, ease: [0.7, 0, 0.84, 0] }
+                        }}
+                    />
+                )}
+            </AnimatePresence>
 
             <AnimatePresence mode="popLayout" initial={false}>
                 {isLoaded && (
@@ -188,26 +203,36 @@ export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, o
                                     No Image
                                 </div>
                             )}
-                            <div className="absolute inset-0 bg-black/20" />
+                            {/* Dimension Badge for Admin */}
+                            <DimensionBadge isAdmin={isEditMode} />
                         </div>
 
                         {/* Text Layer */}
-                        <div className={`absolute inset-0 flex items-center ${currentSlide === 0 ? "justify-center px-4" : "justify-start pl-10 md:pl-32"} z-30 pointer-events-none`}>
-                            <div className={`${currentSlide === 0 ? "text-center" : "text-left"} text-white max-w-4xl pointer-events-auto`}>
+                        <div className={`absolute inset-0 flex items-center ${activeSlide.alignment === "center" ? "justify-center text-center px-4" : activeSlide.alignment === "right" ? "justify-end text-right pr-10 md:pr-32" : "justify-start text-left pl-10 md:pl-32"} z-30 pointer-events-none`}>
+                            <div className={`text-white max-w-4xl pointer-events-auto ${activeSlide.alignment === "center" ? "items-center" : activeSlide.alignment === "right" ? "items-end" : "items-start"} flex flex-col`}>
                                 <motion.div
                                     variants={textContainerVariants}
                                     initial="hidden"
                                     animate="visible"
                                     key={`text-${activeSlide.id}`}
+                                    className={`flex flex-col ${activeSlide.alignment === "center" ? "items-center" : activeSlide.alignment === "right" ? "items-end" : "items-start"}`}
                                 >
                                     <motion.div variants={fadeInVariants} className="mb-4">
                                         {isEditMode ? (
-                                            <EditableText
-                                                value={activeSlide.subheading}
-                                                onSave={(val) => updateSlide("subheading", val)}
-                                                isAdmin={true}
-                                                className="text-[11px] md:text-[13px] leading-[16px] font-bold font-figtree tracking-[0.2em] uppercase bg-transparent text-white border-b border-white/20"
-                                            />
+                                            <div className="flex flex-col gap-2">
+                                                {/* Alignment Controls */}
+                                                <div className="flex gap-1 bg-black/50 rounded p-1 mb-2 self-start">
+                                                    <button onClick={() => updateSlide("alignment", "left")} className={`p-1 rounded ${activeSlide.alignment === "left" || !activeSlide.alignment ? "bg-white text-black" : "text-white"}`}>L</button>
+                                                    <button onClick={() => updateSlide("alignment", "center")} className={`p-1 rounded ${activeSlide.alignment === "center" ? "bg-white text-black" : "text-white"}`}>C</button>
+                                                    <button onClick={() => updateSlide("alignment", "right")} className={`p-1 rounded ${activeSlide.alignment === "right" ? "bg-white text-black" : "text-white"}`}>R</button>
+                                                </div>
+                                                <EditableText
+                                                    value={activeSlide.subheading}
+                                                    onSave={(val) => updateSlide("subheading", val)}
+                                                    isAdmin={true}
+                                                    className="text-[11px] md:text-[13px] leading-[16px] font-bold font-figtree tracking-[0.2em] uppercase bg-transparent text-white border-b border-white/20"
+                                                />
+                                            </div>
                                         ) : (
                                             <h2 className="text-[11px] md:text-[13px] leading-[16px] font-bold font-figtree tracking-[0.2em] uppercase">
                                                 {activeSlide.subheading}
@@ -230,31 +255,78 @@ export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, o
                                         )}
                                     </motion.div>
 
-                                    <motion.div variants={fadeUpVariants}>
+                                    <motion.div variants={fadeUpVariants} className="flex gap-4">
                                         {isEditMode ? (
-                                            <div className="flex gap-2 justify-center md:justify-start">
-                                                <EditableText
-                                                    value={activeSlide.buttonText}
-                                                    onSave={(val) => updateSlide("buttonText", val)}
-                                                    isAdmin={true}
-                                                    className="bg-transparent text-white border-b border-white/20 min-w-[100px]"
-                                                />
-                                                <EditableText
-                                                    value={activeSlide.link}
-                                                    onSave={(val) => updateSlide("link", val)}
-                                                    isAdmin={true}
-                                                    className="bg-transparent text-white border-b border-white/20 min-w-[100px] text-xs"
-                                                    placeholder="Link URL"
-                                                />
+                                            <div className="flex flex-col gap-4">
+                                                <div className="flex gap-2">
+                                                    <EditableText
+                                                        value={activeSlide.buttonText}
+                                                        onSave={(val) => updateSlide("buttonText", val)}
+                                                        isAdmin={true}
+                                                        className="bg-transparent text-white border-b border-white/20 min-w-[100px]"
+                                                        placeholder="Primary Btn"
+                                                    />
+                                                    <EditableText
+                                                        value={activeSlide.link}
+                                                        onSave={(val) => updateSlide("link", val)}
+                                                        isAdmin={true}
+                                                        className="bg-transparent text-white border-b border-white/20 min-w-[100px] text-xs"
+                                                        placeholder="Primary Link"
+                                                    />
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <EditableText
+                                                        value={activeSlide.secondaryButtonText || ""}
+                                                        onSave={(val) => updateSlide("secondaryButtonText", val)}
+                                                        isAdmin={true}
+                                                        className="bg-transparent text-white border-b border-white/20 min-w-[100px]"
+                                                        placeholder="Secondary Btn"
+                                                    />
+                                                    <EditableText
+                                                        value={activeSlide.secondaryButtonLink || ""}
+                                                        onSave={(val) => updateSlide("secondaryButtonLink", val)}
+                                                        isAdmin={true}
+                                                        className="bg-transparent text-white border-b border-white/20 min-w-[100px] text-xs"
+                                                        placeholder="Secondary Link"
+                                                    />
+                                                </div>
                                             </div>
                                         ) : (
-                                            <LiquidButton
-                                                href={activeSlide.link}
-                                                variant={currentSlide === 0 ? "primary" : "secondary"}
-                                                className={currentSlide !== 0 ? "border-none" : ""}
-                                            >
-                                                {activeSlide.buttonText}
-                                            </LiquidButton>
+                                            <>
+                                                <LiquidButton
+                                                    href={activeSlide.link}
+                                                    onClick={() => {
+                                                        if (!activeSlide.link) {
+                                                            const newSlug = `page-${Date.now()}`;
+                                                            const newUrl = `/pages/${newSlug}`;
+                                                            updateSlide("link", newUrl);
+                                                            window.open(newUrl, '_blank');
+                                                        }
+                                                    }}
+                                                    variant="secondary"
+                                                    className="border-none"
+                                                >
+                                                    {activeSlide.buttonText}
+                                                </LiquidButton>
+
+                                                {activeSlide.secondaryButtonText && (
+                                                    <LiquidButton
+                                                        href={activeSlide.secondaryButtonLink}
+                                                        onClick={() => {
+                                                            if (!activeSlide.secondaryButtonLink) {
+                                                                const newSlug = `page-${Date.now()}`;
+                                                                const newUrl = `/pages/${newSlug}`;
+                                                                updateSlide("secondaryButtonLink", newUrl);
+                                                                window.open(newUrl, '_blank');
+                                                            }
+                                                        }}
+                                                        variant="secondary"
+                                                        className="border-none"
+                                                    >
+                                                        {activeSlide.secondaryButtonText}
+                                                    </LiquidButton>
+                                                )}
+                                            </>
                                         )}
                                     </motion.div>
                                 </motion.div>

@@ -197,7 +197,7 @@ export default function AdminProductManager() {
                             {queue.map((item) => (
                                 <div key={item.id} className="p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors">
                                     <div className="relative w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200">
-                                        {item.files[0] ? (
+                                        {item.files?.[0] ? (
                                             <Image
                                                 src={URL.createObjectURL(item.files[0])}
                                                 alt={item.title}

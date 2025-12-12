@@ -62,38 +62,65 @@ class ShopifyGraphQLError extends Error {
 // ==============================================================================
 // 1. HELPER: Recursively find all Image GIDs (Fixes "Disappearing Images")
 // ==============================================================================
-export function extractMediaGids(data: any): string[] {
-    const gids = new Set<string>();
-    // Matches MediaImage, Video, and GenericFile GIDs
-    const gidPattern = /gid:\/\/shopify\/(?:MediaImage|Video|GenericFile)\/\d+/;
 
-    function traverse(obj: any) {
-        if (!obj) return;
 
-        if (typeof obj === 'string') {
-            if (gidPattern.test(obj)) gids.add(obj);
-        } else if (Array.isArray(obj)) {
-            obj.forEach(traverse);
-        } else if (typeof obj === 'object') {
-            Object.values(obj).forEach(traverse);
-        }
-    }
+function getHomeSanctuaryValue(data: any, field: "title" | "subtitle"): string {
+    if (!data || !data.sections) return "";
+    const section = data.sections.find((s: any) => s.type === "collection_grid");
+    return section?.settings?.[field] || "";
+}
 
-    traverse(data);
-    return Array.from(gids);
+function getHomeSanctuaryImage(data: any, index: number): string {
+    if (!data || !data.sections) return "";
+    const section = data.sections.find((s: any) => s.type === "collection_grid");
+    const items = section?.settings?.items || [];
+    return items[index]?.image_id || "";
+}
+
+function getLookbookValue(data: any, field: "title" | "subtitle" | "cta_text" | "cta_link" | "image_id"): string {
+    if (!data || !data.sections) return "";
+    const section = data.sections.find((s: any) => s.type === "lookbook");
+    return section?.settings?.[field] || "";
 }
 
 // ==============================================================================
 // 2. MAIN FUNCTION: The Robust Save
 // ==============================================================================
-export async function savePageData(handle: string, jsonData: any, type: string = "page_content") {
+import { getPageContent } from './shopify-admin';
+import { extractMediaGids } from './shopify-utils';
+
+export async function savePageData(slug: string, jsonData: any, type: string = "page_content") {
     if (!domain || !token) throw new Error("Configuration Error: Missing SHOPIFY_ADMIN_API_URL or SHOPIFY_ACCESS_TOKEN.");
 
-    // A. Extract Assets to prevent Garbage Collection
-    const assetIds = extractMediaGids(jsonData);
-    console.log(`[Save] Found ${assetIds.length} assets to link for ${handle}`);
+    // A. Check if page exists by slug to get its unique handle
+    let uniqueHandle = slug;
 
-    // B. The Mutation (Using 'metaobjectUpsert' to avoid duplicates)
+    // Only do lookup for page_content type, others might still use direct handles
+    if (type === "page_content") {
+        try {
+            const existingPage = await getPageContent(slug);
+            if (existingPage && existingPage.metaobject_handle) {
+                console.log(`[Save] Found existing page for slug '${slug}' with handle '${existingPage.metaobject_handle}'`);
+                uniqueHandle = existingPage.metaobject_handle;
+            } else {
+                // Generate new unique handle if not found
+                const timestamp = Date.now();
+                const random = Math.random().toString(36).substring(2, 8);
+                uniqueHandle = `page_${timestamp}_${random}`;
+                console.log(`[Save] Creating new page for slug '${slug}' with unique handle '${uniqueHandle}'`);
+            }
+        } catch (error) {
+            console.error(`[Save] Error looking up existing page:`, error);
+            // Fallback to slug as handle if lookup fails (legacy behavior)
+            uniqueHandle = slug;
+        }
+    }
+
+    // B. Extract Assets to prevent Garbage Collection
+    const assetIds = extractMediaGids(jsonData);
+    console.log(`[Save] Found ${assetIds.length} assets to link for ${slug} (handle: ${uniqueHandle})`);
+
+    // C. The Mutation (Using 'metaobjectUpsert' to avoid duplicates)
     const mutation = `
     mutation UpsertMetaobject($handle: MetaobjectHandleInput!, $metaobject: MetaobjectUpsertInput!) {
       metaobjectUpsert(handle: $handle, metaobject: $metaobject) {
@@ -111,11 +138,11 @@ export async function savePageData(handle: string, jsonData: any, type: string =
     }
   `;
 
-    // C. The Variables (Strictly typed for Shopify)
+    // D. The Variables (Strictly typed for Shopify)
     const variables: UpsertVariables = {
         handle: {
             type: type, // MUST match your Definition Handle exactly
-            handle: handle        // e.g. "page-home"
+            handle: uniqueHandle        // Unique handle
         },
         metaobject: {
             capabilities: {
@@ -125,12 +152,8 @@ export async function savePageData(handle: string, jsonData: any, type: string =
             },
             fields: [
                 {
-                    key: "page_handle",
-                    value: handle
-                },
-                {
                     key: "content_json", // Matches our definition
-                    value: JSON.stringify(jsonData)
+                    value: JSON.stringify({ ...jsonData, slug }) // Inject slug into JSON
                 },
                 {
                     key: "page_assets",
@@ -141,7 +164,7 @@ export async function savePageData(handle: string, jsonData: any, type: string =
         }
     };
 
-    // D. The Network Call
+    // E. The Network Call
     try {
         const response = await fetch(`https://${domain}/admin/api/2024-01/graphql.json`, {
             method: "POST",
@@ -159,7 +182,7 @@ export async function savePageData(handle: string, jsonData: any, type: string =
 
         const result: GraphQLResponse<MetaobjectUpsertResponse> = await response.json();
 
-        // E. High-Level GraphQL Error Handling (Syntax, Throttling)
+        // F. High-Level GraphQL Error Handling (Syntax, Throttling)
         if (result.errors && result.errors.length > 0) {
             const messages = result.errors.map(e => e.message).join("; ");
             throw new Error(`GraphQL Execution Failure: ${messages}`);
@@ -167,7 +190,7 @@ export async function savePageData(handle: string, jsonData: any, type: string =
 
         const { metaobjectUpsert } = result.data;
 
-        // F. UserError Handling (Business Logic Validation)
+        // G. UserError Handling (Business Logic Validation)
         if (metaobjectUpsert.userErrors && metaobjectUpsert.userErrors.length > 0) {
             const errorDetails = metaobjectUpsert.userErrors
                 .map(e => `Field [${e.field.join('.')}] - ${e.message} (${e.code})`)
@@ -175,7 +198,7 @@ export async function savePageData(handle: string, jsonData: any, type: string =
             throw new ShopifyGraphQLError(`Metaobject Validation Failed: ${errorDetails}`, metaobjectUpsert.userErrors);
         }
 
-        // G. Success State
+        // H. Success State
         if (!metaobjectUpsert.metaobject) {
             throw new Error("Upsert completed but returned null metaobject. Check permissions.");
         }
@@ -185,7 +208,7 @@ export async function savePageData(handle: string, jsonData: any, type: string =
 
     } catch (error) {
         // Log the error with context for server-side monitoring
-        console.error(` Failed for handle '${handle}':`, error);
+        console.error(` Failed for slug '${slug}':`, error);
         throw error;
     }
 }

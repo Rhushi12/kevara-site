@@ -41,6 +41,7 @@ export default function FeaturedProduct({
     const [selectedSize, setSelectedSize] = useState("");
     const [selectedColor, setSelectedColor] = useState("");
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+    const [quantity, setQuantity] = useState(1);
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
     const [allProducts, setAllProducts] = useState<any[]>([]);
     const { openSizeGuide } = useSizeGuideStore();
@@ -131,6 +132,9 @@ export default function FeaturedProduct({
             )}
 
             <div className="container mx-auto px-4 max-w-6xl">
+                <h2 className="text-center text-xs md:text-sm font-bold tracking-[0.2em] text-slate-900 uppercase mb-12 font-figtree">
+                    Featured Product
+                </h2>
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
                     {/* Thumbnails (Span 1) */}
                     <div className="hidden md:flex flex-col gap-4 md:col-span-1">
@@ -200,77 +204,96 @@ export default function FeaturedProduct({
                     </motion.div>
 
                     {/* Product Details (Span 5) */}
-                    <div className="md:col-span-5 flex flex-col justify-center">
-                        <span className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-2">
-                            Featured Collection
-                        </span>
-                        <h2 className="text-3xl md:text-4xl font-lora text-slate-900 mb-2">
-                            {product.title}
-                        </h2>
-                        <div className="text-xl text-slate-900 mb-4">{price}</div>
-
-                        <div className="flex items-center gap-1 mb-6">
-                            {[...Array(5)].map((_, i) => (
-                                <Star key={i} size={14} className="fill-yellow-400 text-yellow-400" />
-                            ))}
-                            <span className="text-xs text-slate-500 ml-2">(12 Reviews)</span>
-                        </div>
-
-                        {/* Color Selection */}
-                        {colors.length > 0 && (
-                            <div className="mb-6">
-                                <span className="text-xs font-bold uppercase block mb-3">Color: {selectedColor}</span>
-                                <div className="flex gap-3">
-                                    {colors.map((color) => (
-                                        <button
-                                            key={color.name}
-                                            onClick={() => setSelectedColor(color.name)}
-                                            className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${selectedColor === color.name
-                                                ? "border-[#006D77] scale-110"
-                                                : "border-transparent hover:border-slate-300"
-                                                }`}
-                                        >
-                                            <div
-                                                className="w-6 h-6 rounded-full border border-slate-200 shadow-sm"
-                                                style={{ backgroundColor: color.hex }}
-                                                title={color.name}
-                                            />
-                                        </button>
-                                    ))}
-                                </div>
+                    {/* Product Details (Span 5) */}
+                    <div className="md:col-span-5 flex flex-col h-full py-1">
+                        <div className="flex flex-col gap-10">
+                            <div>
+                                <h2 className="text-3xl md:text-5xl font-lora text-slate-900 mb-4 leading-tight">
+                                    {product.title}
+                                </h2>
+                                <div className="text-2xl md:text-3xl text-slate-900 font-medium">{price}</div>
                             </div>
-                        )}
 
-                        {/* Size Selection */}
-                        {sizes.length > 0 && (
-                            <div className="mb-8">
-                                <div className="flex justify-between mb-3">
-                                    <span className="text-xs font-bold uppercase">Size: {selectedSize}</span>
+                            <hr className="border-gray-100" />
+
+                            {/* Color Selection */}
+                            {colors.length > 0 && (
+                                <div>
+                                    <span className="text-xs font-bold uppercase block mb-4">Color: {selectedColor}</span>
+                                    <div className="flex gap-4">
+                                        {colors.map((color) => (
+                                            <button
+                                                key={color.name}
+                                                onClick={() => setSelectedColor(color.name)}
+                                                className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all ${selectedColor === color.name
+                                                    ? "border-[#006D77] scale-110"
+                                                    : "border-transparent hover:border-slate-300"
+                                                    }`}
+                                            >
+                                                <div
+                                                    className="w-10 h-10 rounded-full border border-slate-200 shadow-sm"
+                                                    style={{ backgroundColor: color.hex }}
+                                                    title={color.name}
+                                                />
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Size Selection */}
+                            {sizes.length > 0 && (
+                                <div>
+                                    <div className="flex justify-between mb-4">
+                                        <span className="text-xs font-bold uppercase">Size: {selectedSize}</span>
+                                        <button
+                                            onClick={openSizeGuide}
+                                            className="text-xs underline text-slate-500 hover:text-slate-900"
+                                        >
+                                            Size Guide
+                                        </button>
+                                    </div>
+                                    <div className="flex gap-3 flex-wrap">
+                                        {sizes.map((size) => (
+                                            <button
+                                                key={size}
+                                                onClick={() => setSelectedSize(size)}
+                                                className={`h-12 w-12 flex items-center justify-center rounded-md text-sm font-medium transition-all duration-200 ${selectedSize === size
+                                                    ? "bg-[#006D77] text-white shadow-md scale-105"
+                                                    : "bg-white border border-gray-200 text-slate-600 hover:border-[#006D77] hover:text-[#006D77] hover:scale-105"
+                                                    }`}
+                                            >
+                                                {size}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Quantity Selector */}
+                            <div className="mb-2">
+                                <span className="text-xs font-bold uppercase block mb-4">Quantity:</span>
+                                <div className="flex items-center border border-gray-200 w-40 rounded-md overflow-hidden">
                                     <button
-                                        onClick={openSizeGuide}
-                                        className="text-xs underline text-slate-500 hover:text-slate-900"
+                                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                        className="w-12 h-12 flex items-center justify-center text-slate-600 hover:bg-gray-50 transition-colors"
                                     >
-                                        Size Guide
+                                        -
+                                    </button>
+                                    <div className="flex-1 h-12 flex items-center justify-center text-sm font-medium border-x border-gray-200">
+                                        {quantity}
+                                    </div>
+                                    <button
+                                        onClick={() => setQuantity(quantity + 1)}
+                                        className="w-12 h-12 flex items-center justify-center text-slate-600 hover:bg-gray-50 transition-colors"
+                                    >
+                                        +
                                     </button>
                                 </div>
-                                <div className="flex gap-3 flex-wrap">
-                                    {sizes.map((size) => (
-                                        <button
-                                            key={size}
-                                            onClick={() => setSelectedSize(size)}
-                                            className={`h-10 min-w-[3rem] px-3 flex items-center justify-center border text-sm transition-colors ${selectedSize === size
-                                                ? "border-[#006D77] bg-[#006D77] text-white"
-                                                : "border-gray-200 hover:border-[#006D77]"
-                                                }`}
-                                        >
-                                            {size}
-                                        </button>
-                                    ))}
-                                </div>
                             </div>
-                        )}
+                        </div>
 
-                        <div className="flex flex-col gap-3">
+                        <div className="flex flex-col gap-3 mt-auto pt-8">
                             <LiquidButton
                                 className="w-full bg-[#25D366] text-white hover:bg-[#128C7E] border-none"
                                 onClick={() => window.open(`https://wa.me/919876543210?text=Hi, I'm interested in ${product.title} (Color: ${selectedColor}, Size: ${selectedSize})`, '_blank')}
@@ -284,10 +307,6 @@ export default function FeaturedProduct({
                                 Send us an Email
                             </LiquidButton>
                         </div>
-
-                        <p className="text-xs text-slate-500 mt-4">
-                            *Free shipping on orders over $200
-                        </p>
                     </div>
                 </div>
             </div>

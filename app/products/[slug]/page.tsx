@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import ProductGallery from "@/components/pdp/ProductGallery";
-import ProductInfo from "@/components/pdp/ProductInfo";
+import EditableProductInfo from "@/components/pdp/EditableProductInfo";
 import ProductTabs from "@/components/pdp/ProductTabs";
 import CompleteLook from "@/components/pdp/CompleteLook";
 import ProductStory from "@/components/pdp/ProductStory";
@@ -44,7 +44,8 @@ export default async function ProductPage({ params }: { params: { slug: string }
         return notFound();
     }
 
-    const { title, priceRange, images, variants, descriptionHtml, colors: productColors, sizes: productSizes } = product;
+    const { title, priceRange, images, variants, descriptionHtml, colors: productColors, sizes: productSizes, video } = product;
+    console.log(`[PDP Debug] Product: ${title}, Video: ${video ? 'Present' : 'Missing'}, Video URL: ${video}`);
     const price = parseFloat(priceRange.minVariantPrice.amount);
     const currency = priceRange.minVariantPrice.currencyCode;
 
@@ -122,18 +123,19 @@ export default async function ProductPage({ params }: { params: { slug: string }
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
                     {/* Left: Gallery (7 cols) */}
                     <div className="md:col-span-7">
-                        <ProductGallery images={images} />
+                        <ProductGallery images={images} video={video} />
                     </div>
 
                     {/* Right: Info (5 cols) */}
                     <div className="md:col-span-5">
-                        <ProductInfo
+                        <EditableProductInfo
                             title={title}
                             price={price}
                             // originalPrice={price * 1.2} // Removed fake original price
                             colors={colors}
                             sizes={sizes}
                             description={descriptionHtml}
+                            handle={product.handle}
                         />
                     </div>
                 </div>

@@ -9,14 +9,17 @@ interface SimpleImageUploadModalProps {
     onClose: () => void;
     onUpload: (file: File) => Promise<void>;
     title?: string;
+    accept?: string;
 }
 
 export default function SimpleImageUploadModal({
     isOpen,
     onClose,
     onUpload,
-    title = "Upload Image"
+    title = "Upload Image",
+    accept = "image/*"
 }: SimpleImageUploadModalProps) {
+    const isVideo = accept.includes("video");
     const [file, setFile] = useState<File | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
@@ -70,18 +73,22 @@ export default function SimpleImageUploadModal({
                             }`}
                     >
                         {preview ? (
-                            <img src={preview} alt="Preview" className="max-h-48 object-contain rounded" />
+                            isVideo ? (
+                                <video src={preview} className="max-h-48 object-contain rounded" controls muted />
+                            ) : (
+                                <img src={preview} alt="Preview" className="max-h-48 object-contain rounded" />
+                            )
                         ) : (
                             <>
                                 <Upload size={48} className="text-gray-400 mb-4" />
-                                <p className="text-sm text-gray-500 font-medium">Click to upload image</p>
-                                <p className="text-xs text-gray-400 mt-1">JPG, PNG, WEBP up to 2MB</p>
+                                <p className="text-sm text-gray-500 font-medium">Click to upload {isVideo ? "video" : "image"}</p>
+                                <p className="text-xs text-gray-400 mt-1">{isVideo ? "MP4, WEBM up to 100MB" : "JPG, PNG, WEBP up to 2MB"}</p>
                             </>
                         )}
                         <input
                             ref={fileInputRef}
                             type="file"
-                            accept="image/*"
+                            accept={accept}
                             onChange={handleFileChange}
                             className="hidden"
                         />
@@ -92,7 +99,7 @@ export default function SimpleImageUploadModal({
                         disabled={uploading || !file}
                         className={`w-full ${uploading || !file ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
-                        {uploading ? "Uploading..." : "Upload Image"}
+                        {uploading ? "Uploading..." : `Upload ${isVideo ? "Video" : "Image"}`}
                     </LiquidButton>
                 </form>
             </div>

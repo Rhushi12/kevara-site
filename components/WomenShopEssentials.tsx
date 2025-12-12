@@ -8,6 +8,7 @@ import EditableText from "@/components/admin/EditableText";
 import ProductPickerModal from "@/components/admin/ProductPickerModal";
 import AddProductChoiceModal from "@/components/admin/AddProductChoiceModal";
 import CreateProductModal from "@/components/admin/CreateProductModal";
+import CarouselArrowButton from "@/components/ui/CarouselArrowButton";
 import { Plus } from "lucide-react";
 
 interface WomenShopEssentialsProps {
@@ -251,34 +252,30 @@ export default function WomenShopEssentials({ data = {}, isEditMode = false, onU
             {/* Products Carousel */}
             <div className="relative">
                 {/* Navigation Arrows */}
-                {activeTab.products && activeTab.products.length > 4 && (
+                {activeTab.products && activeTab.products.length > 0 && (
                     <>
-                        <button
+                        <CarouselArrowButton
+                            direction="left"
                             onClick={() => {
                                 const container = document.getElementById('products-carousel');
                                 if (container) {
                                     container.scrollBy({ left: -300, behavior: 'smooth' });
                                 }
                             }}
-                            className="absolute left-0 top-1/2 -translate-y-1/2 z-40 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all hidden md:flex items-center justify-center"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <polyline points="15 18 9 12 15 6"></polyline>
-                            </svg>
-                        </button>
-                        <button
+                            className="absolute left-0 top-1/2 -translate-y-1/2 z-40 -translate-x-1/2"
+                            aria-label="Previous"
+                        />
+                        <CarouselArrowButton
+                            direction="right"
                             onClick={() => {
                                 const container = document.getElementById('products-carousel');
                                 if (container) {
                                     container.scrollBy({ left: 300, behavior: 'smooth' });
                                 }
                             }}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 z-40 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all hidden md:flex items-center justify-center"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <polyline points="9 18 15 12 9 6"></polyline>
-                            </svg>
-                        </button>
+                            className="absolute right-0 top-1/2 -translate-y-1/2 z-40 translate-x-1/2"
+                            aria-label="Next"
+                        />
                     </>
                 )}
 

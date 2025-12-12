@@ -69,22 +69,23 @@ export default function LookbookFeature({
     return (
         <section className="py-24 bg-[#FDFBF7] overflow-hidden">
             <div className="container mx-auto px-4">
-                <div className="relative max-w-6xl mx-auto">
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-                        {/* Image Section (Span 8) */}
+                <div className="relative max-w-[1374px] mx-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-0 items-center">
+                        {/* Image Section (Span 8 - approx 949px) */}
                         <motion.div
-                            initial={{ opacity: 0, x: -50 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.8 }}
-                            className="md:col-span-8 relative h-[600px] w-full"
+                            initial={{ clipPath: "inset(0 100% 0 0)" }}
+                            whileInView={{ clipPath: "inset(0 0 0 0)" }}
+                            viewport={{ once: true, amount: 0 }}
+                            transition={{ duration: 0.5, ease: [0.64, 0, 0.78, 0] }}
+                            className="md:col-span-8 relative h-[700px] w-full"
                         >
                             {image ? (
                                 <Image
                                     src={image}
                                     alt={(title || "").replace(/<br\s*\/?>/gi, " ")}
                                     fill
-                                    className="object-cover"
+                                    className="object-cover object-right"
+                                    priority
                                 />
                             ) : (
                                 <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
@@ -101,7 +102,7 @@ export default function LookbookFeature({
                             )}
                         </motion.div>
 
-                        {/* Floating Card Section (Span 4, but overlapping) */}
+                        {/* Floating Card Section (Span 4) */}
                         <motion.div
                             initial={{ opacity: 0, y: 50 }}
                             whileInView={{ opacity: 1, y: 0 }}
@@ -109,14 +110,14 @@ export default function LookbookFeature({
                             transition={{ duration: 0.8, delay: 0.2 }}
                             className="md:col-span-4 md:-ml-24 z-10"
                         >
-                            <div className="bg-[#F5F2EB] p-12 md:p-16 shadow-lg">
-                                <span className="block text-xs font-bold tracking-[0.2em] text-slate-500 uppercase mb-4">
+                            <div className="bg-[#0E4D55] p-12 md:p-16 shadow-lg rounded-md">
+                                <span className="block text-xs font-bold tracking-[0.2em] text-white uppercase mb-4">
                                     {isEditMode ? (
                                         <EditableText
                                             value={subtitle}
                                             onSave={(val) => updateField("subtitle", val)}
                                             isAdmin={true}
-                                            className="bg-transparent border-b border-gray-300 w-full"
+                                            className="bg-transparent border-b border-white/30 w-full text-white"
                                         />
                                     ) : (
                                         subtitle
@@ -128,14 +129,14 @@ export default function LookbookFeature({
                                             value={title}
                                             onSave={(val) => updateField("title", val)}
                                             isAdmin={true}
-                                            className="text-4xl font-lora text-slate-900 leading-tight bg-transparent border-b border-gray-300 w-full"
+                                            multiline={true}
+                                            className="text-4xl font-lora text-white leading-tight bg-transparent border-b border-gray-300 w-full"
                                         />
                                     </div>
                                 ) : (
-                                    <h2
-                                        className="text-4xl font-lora text-slate-900 mb-8 leading-tight"
-                                        dangerouslySetInnerHTML={{ __html: title }}
-                                    />
+                                    <h2 className="text-4xl font-lora text-white mb-4 leading-tight whitespace-pre-line">
+                                        {title.replace(/<br\s*\/?>/gi, "\n")}
+                                    </h2>
                                 )}
 
                                 {isEditMode ? (
@@ -156,7 +157,10 @@ export default function LookbookFeature({
                                         />
                                     </div>
                                 ) : (
-                                    <LiquidButton href={cta_link}>
+                                    <LiquidButton
+                                        href={cta_link}
+                                        className="bg-white text-[#0E4D55] border border-[#0E4D55] hover:bg-[#0E4D55] hover:text-white"
+                                    >
                                         {cta_text}
                                     </LiquidButton>
                                 )}

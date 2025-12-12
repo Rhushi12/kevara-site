@@ -9,9 +9,10 @@ import { Product } from "@/lib/store";
 
 interface ProductCardProps {
     product: Product;
+    imageAspectRatio?: string;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, imageAspectRatio = "aspect-[3/4]" }: ProductCardProps) {
     const { openQuickView } = useQuickViewStore();
 
     if (!product?.node) return null;
@@ -50,7 +51,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     return (
         <div className="group/card relative flex flex-col h-full">
             {/* Image/Video Container */}
-            <div className="relative w-full overflow-hidden bg-gray-100 aspect-[3/4] rounded-lg">
+            <div className={`relative w-full overflow-hidden bg-gray-100 ${imageAspectRatio} rounded-lg`}>
                 <Link href={`/products/${productSlug}`} className="block w-full h-full">
 
                     {/* Video Layer - Plays by default, hides on hover */}
@@ -123,31 +124,27 @@ export default function ProductCard({ product }: ProductCardProps) {
             </div>
 
             {/* Product Info */}
-            <div className="mt-4 space-y-2">
+            <div className="mt-4 space-y-2 text-center">
                 <Link href={`/products/${productSlug}`}>
-                    <h3 className="text-lg font-lora text-gray-900 group-hover/card:text-slate-900 transition-colors">
+                    <h3 className="text-lg font-normal font-figtree text-gray-900 group-hover/card:text-slate-900 transition-colors">
                         {title}
                     </h3>
                 </Link>
 
-                {/* Color Swatches */}
-                <div className="flex gap-2">
-                    {colors.map((color, idx) => (
-                        <div
-                            key={idx}
-                            className="w-4 h-4 rounded-full border border-gray-200"
-                            style={{ backgroundColor: getColorHex(color) }}
-                            title={color}
-                        />
-                    ))}
-                </div>
-
-                <p className="text-sm font-figtree text-gray-600">
+                {/* Price */}
+                <p className="text-sm font-figtree text-black">
                     {new Intl.NumberFormat("en-IN", {
                         style: "currency",
                         currency: currency,
                     }).format(parseFloat(price))}
                 </p>
+
+                {/* Color Count */}
+                {colors.length > 0 && (
+                    <p className="text-sm text-gray-500 font-figtree">
+                        {colors.length} {colors.length === 1 ? 'color' : 'colors'} available
+                    </p>
+                )}
             </div>
         </div>
     );

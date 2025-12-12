@@ -11,6 +11,10 @@ import LookbookFeature from "@/components/LookbookFeature";
 import FeaturedProduct from "@/components/FeaturedProduct";
 import CollectionGrid from "@/components/CollectionGrid";
 import { PageContent, PageSection } from "@/types/page-editor";
+import PremiumPreloader from "@/components/PremiumPreloader";
+import UnderConstruction from "@/components/UnderConstruction";
+import AdminPageBuilder from "@/components/admin/AdminPageBuilder";
+import { Trash2 } from "lucide-react";
 
 // Default Content for New Collections
 const DEFAULT_COLLECTION_CONTENT: PageContent = {
@@ -49,6 +53,8 @@ export default function CollectionPage() {
     const [content, setContent] = useState<PageContent>(DEFAULT_COLLECTION_CONTENT);
     const [isEditMode, setIsEditMode] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [notFound, setNotFound] = useState(false);
     const [loading, setLoading] = useState(true);
 
     // Fetch Page Content
@@ -61,10 +67,15 @@ export default function CollectionPage() {
                     const data = await res.json();
                     if (data && data.sections && data.sections.length > 0) {
                         setContent(data);
+                    } else {
+                        setNotFound(true);
                     }
+                } else {
+                    setNotFound(true);
                 }
             } catch (error) {
                 console.error("Failed to fetch page content:", error);
+                setNotFound(true);
             } finally {
                 setLoading(false);
             }
@@ -92,6 +103,26 @@ export default function CollectionPage() {
         }
     };
 
+    // Delete Page
+    const deletePage = async () => {
+        if (!confirm("Are you sure you want to delete this page? This action cannot be undone.")) return;
+
+        setIsDeleting(true);
+        try {
+            const res = await fetch(`/api/builder/content?handle=${slug}`, {
+                method: "DELETE",
+            });
+            if (!res.ok) throw new Error("Failed to delete");
+            alert("Page deleted successfully!");
+            window.location.reload();
+        } catch (error) {
+            console.error("Failed to delete:", error);
+            alert("Failed to delete page.");
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     // Update Section Helper
     const updateSection = useCallback((sectionId: string, newSettings: any) => {
         setContent((prev) => ({
@@ -104,7 +135,16 @@ export default function CollectionPage() {
         }));
     }, []);
 
-    if (loading) return <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">Loading...</div>;
+    if (loading) return <PremiumPreloader />;
+
+    // 404 Handling: Admin vs User
+    if (notFound || !content) {
+        if (isAdmin) {
+            return <AdminPageBuilder slug={slug} />;
+        } else {
+            return <UnderConstruction />;
+        }
+    }
 
     return (
         <main className="min-h-screen bg-[#FDFBF7]">
@@ -120,6 +160,14 @@ export default function CollectionPage() {
                                 className="bg-gray-800 text-white px-6 py-3 rounded-full shadow-lg hover:bg-gray-700 transition-colors"
                             >
                                 Cancel
+                            </button>
+                            <button
+                                onClick={deletePage}
+                                disabled={isDeleting}
+                                className="bg-red-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                            >
+                                <Trash2 size={18} />
+                                {isDeleting ? "Deleting..." : "Delete"}
                             </button>
                             <button
                                 onClick={saveChanges}
@@ -206,11 +254,34 @@ function FeaturedProductWrapper({ section, isEditMode, onUpdate }: { section: Pa
     const handle = (section.settings as any).product_handle;
 
     useEffect(() => {
+        const fetchRandom = () => {
+            fetch('/api/products')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.products && data.products.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * data.products.length);
+                        setProduct(data.products[randomIndex].node);
+                    }
+                })
+                .catch(err => console.error("Failed to fetch random product", err));
+        };
+
         if (handle) {
             fetch(`/api/products/${handle}`)
                 .then(res => res.json())
-                .then(data => setProduct(data.product))
-                .catch(err => console.error("Failed to fetch featured product", err));
+                .then(data => {
+                    if (data.product) {
+                        setProduct(data.product);
+                    } else {
+                        fetchRandom();
+                    }
+                })
+                .catch(err => {
+                    console.error("Failed to fetch featured product", err);
+                    fetchRandom();
+                });
+        } else {
+            fetchRandom();
         }
     }, [handle]);
 
@@ -218,6 +289,7 @@ function FeaturedProductWrapper({ section, isEditMode, onUpdate }: { section: Pa
         <FeaturedProduct
             product={product}
             isEditMode={isEditMode}
+            onUpdate={onUpdate}
         />
     );
 }

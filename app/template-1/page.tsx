@@ -6,11 +6,13 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import HeroSlider from "@/components/HeroSlider";
 import WomenShopEssentials from "@/components/WomenShopEssentials";
+import { Trash2 } from "lucide-react";
 import LookbookFeature from "@/components/LookbookFeature";
 import FeaturedProduct from "@/components/FeaturedProduct";
 import CollectionGrid from "@/components/CollectionGrid";
 import SizeGuidePanel from "@/components/SizeGuidePanel";
 import { PageContent, PageSection } from "@/types/page-editor";
+import PremiumPreloader from "@/components/PremiumPreloader";
 
 // Default Initial Content (if empty)
 import { TEMPLATE_1 } from "@/lib/templates";
@@ -23,6 +25,7 @@ export default function Template1Page() {
     const [content, setContent] = useState<PageContent>(DEFAULT_CONTENT);
     const [isEditMode, setIsEditMode] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [loading, setLoading] = useState(true);
 
     // Fetch Page Content
@@ -82,6 +85,26 @@ export default function Template1Page() {
         }
     };
 
+    // Delete Page
+    const deletePage = async () => {
+        if (!confirm("Are you sure you want to delete this page? This action cannot be undone.")) return;
+
+        setIsDeleting(true);
+        try {
+            const res = await fetch("/api/builder/content?handle=template-1", {
+                method: "DELETE",
+            });
+            if (!res.ok) throw new Error("Failed to delete");
+            alert("Page deleted successfully!");
+            window.location.reload(); // Reload to reset state
+        } catch (error) {
+            console.error("Failed to delete:", error);
+            alert("Failed to delete page.");
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     // Update Section Helper
     const updateSection = useCallback((sectionId: string, newSettings: any) => {
         setContent((prev) => ({
@@ -94,7 +117,7 @@ export default function Template1Page() {
         }));
     }, []);
 
-    if (loading) return <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">Loading...</div>;
+    if (loading) return <PremiumPreloader />;
 
     return (
         <main className="min-h-screen bg-[#FDFBF7]">
@@ -111,6 +134,14 @@ export default function Template1Page() {
                                 className="bg-gray-800 text-white px-6 py-3 rounded-full shadow-lg hover:bg-gray-700 transition-colors"
                             >
                                 Cancel
+                            </button>
+                            <button
+                                onClick={deletePage}
+                                disabled={isDeleting}
+                                className="bg-red-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                            >
+                                <Trash2 size={18} />
+                                {isDeleting ? "Deleting..." : "Delete"}
                             </button>
                             <button
                                 onClick={saveChanges}
@@ -174,9 +205,9 @@ export default function Template1Page() {
                         return (
                             <CollectionGrid
                                 key={section.id}
-                                data={(section.settings as any).items || []}
+                                data={section.settings as any}
                                 isEditMode={isEditMode}
-                                onUpdate={(newItems) => updateSection(section.id, { items: newItems })}
+                                onUpdate={(newData) => updateSection(section.id, newData)}
                             />
                         );
                     default:
@@ -200,6 +231,17 @@ function FeaturedProductWrapper({ section, isEditMode, onUpdate }: { section: Pa
                 .then(res => res.json())
                 .then(data => setProduct(data.product))
                 .catch(err => console.error("Failed to fetch featured product", err));
+        } else {
+            // Fetch random product if no handle is selected
+            fetch('/api/products')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.products && data.products.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * data.products.length);
+                        setProduct(data.products[randomIndex].node);
+                    }
+                })
+                .catch(err => console.error("Failed to fetch random product", err));
         }
     }, [handle]);
 

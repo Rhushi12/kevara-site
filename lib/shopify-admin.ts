@@ -1,21 +1,14 @@
 
+import { Buffer } from 'buffer';
+import sharp from 'sharp';
+
 const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || process.env.SHOPIFY_STORE_DOMAIN;
 const accessToken = process.env.SHOPIFY_ADMIN_TOKEN;
 
-import fs from 'fs';
-import path from 'path';
-import { extractMediaGids } from './save-page-data';
-
-const DEBUG_LOG_PATH = path.resolve(process.cwd(), 'backend-debug.log');
+import { extractMediaGids } from './shopify-utils';
 
 function logDebug(message: string, data?: any) {
-  const timestamp = new Date().toISOString();
-  const logMessage = `[${timestamp}] ${message} ${data ? JSON.stringify(data, null, 2) : ''}\n`;
-  try {
-    fs.appendFileSync(DEBUG_LOG_PATH, logMessage);
-  } catch (e) {
-    console.error("Failed to write to debug log", e);
-  }
+  console.log(`[DEBUG] ${message}`, data ? JSON.stringify(data, null, 2) : '');
 }
 
 // Exported fetch function for admin API
@@ -93,27 +86,196 @@ async function upsertMetaobject(type: string, handle: string, fields: any[]) {
   return result.metaobjectUpsert.metaobject.id;
 }
 
-// 1. UPLOAD FILE TO SHOPIFY FILES API
-// 1. UPLOAD FILE TO SHOPIFY FILES API
-export async function uploadFileToShopify(file: File) {
-  const resourceUrl = await stageAndUploadFile(file);
+// ============================================================================
+// FILE UPLOAD SYSTEM - Clean Implementation
+// ============================================================================
 
-  // Step C: Create the File Record in Shopify
-  const fileCreateQuery = `
+/**
+ * Detect MIME type from file extension if not provided
+ */
+function getMimeType(file: { name: string; type?: string }): string {
+  if (file.type && file.type !== "application/octet-stream") {
+    return file.type;
+  }
+
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  const mimeMap: Record<string, string> = {
+    'png': 'image/png',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'webp': 'image/webp',
+    'gif': 'image/gif',
+    'mp4': 'video/mp4',
+    'webm': 'video/webm',
+    'mov': 'video/quicktime',
+  };
+
+  return mimeMap[ext || ''] || 'application/octet-stream';
+}
+
+/**
+ * Get resource type for Shopify staging
+ */
+function getResourceType(mimeType: string): 'IMAGE' | 'VIDEO' | 'FILE' {
+  if (mimeType.startsWith('image/')) return 'IMAGE';
+  if (mimeType.startsWith('video/')) return 'VIDEO';
+  return 'FILE';
+}
+
+/**
+ * Convert File to Buffer for upload, resizing large images
+ * Shopify has a 20MP limit, so we resize to max 4000x4000 (~16MP)
+ */
+async function fileToBuffer(file: any): Promise<{ buffer: Buffer; mimeType: string }> {
+  let buffer: Buffer;
+  let mimeType = getMimeType(file);
+
+  if (typeof file.arrayBuffer === 'function') {
+    const arrayBuffer = await file.arrayBuffer();
+    buffer = Buffer.from(arrayBuffer);
+  } else if (file.buffer && Buffer.isBuffer(file.buffer)) {
+    buffer = file.buffer;
+  } else {
+    throw new Error('Cannot convert file to buffer - unsupported file type');
+  }
+
+  // Log original file signature
+  const signature = buffer.slice(0, 16).toString('hex');
+  console.log(`[Upload] File "${file.name}" signature (first 16 bytes): ${signature}`);
+
+  // Only resize images, not videos
+  if (mimeType.startsWith('image/') && !mimeType.includes('gif')) {
+    try {
+      const image = sharp(buffer);
+      const metadata = await image.metadata();
+
+      console.log(`[Upload] Image dimensions: ${metadata.width}x${metadata.height}`);
+
+      const MAX_DIMENSION = 4000; // 4000x4000 = 16MP, well under 20MP limit
+
+      if (metadata.width && metadata.height &&
+        (metadata.width > MAX_DIMENSION || metadata.height > MAX_DIMENSION)) {
+        console.log(`[Upload] Resizing image from ${metadata.width}x${metadata.height}...`);
+
+        const resizedBuffer = await image
+          .resize(MAX_DIMENSION, MAX_DIMENSION, {
+            fit: 'inside',
+            withoutEnlargement: true
+          })
+          .jpeg({ quality: 85 }) // Convert to JPEG for consistency
+          .toBuffer();
+
+        buffer = resizedBuffer;
+        mimeType = 'image/jpeg'; // After resize, it's JPEG
+
+        console.log(`[Upload] Resized to max ${MAX_DIMENSION}px, new size: ${buffer.length} bytes`);
+      }
+    } catch (err) {
+      console.error('[Upload] Failed to resize image, uploading original:', err);
+      // Continue with original if resize fails
+    }
+  }
+
+  return { buffer, mimeType };
+}
+
+/**
+ * Stage a file for upload to Shopify's GCS
+ */
+async function stageFileForUpload(fileSize: number, mimeType: string, filename: string): Promise<{ url: string; resourceUrl: string }> {
+  const resourceType = getResourceType(mimeType);
+
+  const mutation = `
+    mutation stagedUploadsCreate($input: [StagedUploadInput!]!) {
+      stagedUploadsCreate(input: $input) {
+        stagedTargets {
+          url
+          resourceUrl
+          parameters {
+            name
+            value
+          }
+        }
+        userErrors {
+          field
+          message
+        }
+      }
+    }
+  `;
+
+
+  const variables = {
+    input: [{
+      resource: resourceType,
+      filename: filename,
+      mimeType: mimeType,
+      fileSize: String(fileSize),
+      httpMethod: 'PUT',
+    }]
+  };
+
+  console.log('[Upload] Staging file:', { filename, fileSize, mimeType, resourceType });
+
+  const data = await shopifyFetch(mutation, variables);
+
+  if (data.stagedUploadsCreate.userErrors?.length > 0) {
+    const errors = data.stagedUploadsCreate.userErrors.map((e: any) => e.message).join(', ');
+    throw new Error(`Staging failed: ${errors}`);
+  }
+
+  const target = data.stagedUploadsCreate.stagedTargets[0];
+  if (!target) {
+    throw new Error('No staged target returned from Shopify');
+  }
+
+  return { url: target.url, resourceUrl: target.resourceUrl };
+}
+
+/**
+ * Upload file buffer to GCS using the staged URL
+ */
+async function uploadToGCS(url: string, buffer: Buffer, mimeType: string): Promise<void> {
+  console.log('[Upload] Uploading to GCS:', { size: buffer.length, mimeType });
+
+  const response = await fetch(url, {
+    method: 'PUT',
+    body: buffer as unknown as BodyInit,
+    headers: {
+      'Content-Type': mimeType,
+      'Content-Length': String(buffer.length),
+    },
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    console.error('[Upload] GCS upload failed:', text);
+    throw new Error(`GCS upload failed: ${response.status} - ${text}`);
+  }
+
+  console.log('[Upload] GCS upload successful');
+}
+
+/**
+ * Create file record in Shopify Files
+ */
+async function createFileRecord(resourceUrl: string, mimeType: string): Promise<string> {
+  const contentType = getResourceType(mimeType);
+
+  const mutation = `
     mutation fileCreate($files: [FileCreateInput!]!) {
       fileCreate(files: $files) {
         files {
           id
           fileStatus
-          ... on GenericFile {
-            url
-          }
           ... on MediaImage {
+            id
             image {
               url
             }
           }
           ... on Video {
+            id
             sources {
               url
             }
@@ -127,26 +289,58 @@ export async function uploadFileToShopify(file: File) {
     }
   `;
 
-  const isVideo = file.type.startsWith("video/");
-  const contentType = isVideo ? "VIDEO" : (file.type.startsWith("image/") ? "IMAGE" : "FILE");
-
-  const fileVariables = {
+  const variables = {
     files: [{
       originalSource: resourceUrl,
-      contentType: contentType
+      contentType: contentType,
     }]
   };
 
-  const fileData = await shopifyFetch(fileCreateQuery, fileVariables);
+  console.log('[Upload] Creating file record:', { resourceUrl, contentType });
 
-  if (fileData.fileCreate.userErrors.length > 0) {
-    console.error("File Create Errors:", fileData.fileCreate.userErrors);
-    const errorMessages = fileData.fileCreate.userErrors.map((e: any) => e.message).join(", ");
-    throw new Error(`Failed to create file record in Shopify: ${errorMessages}`);
+  const data = await shopifyFetch(mutation, variables);
+
+  if (data.fileCreate.userErrors?.length > 0) {
+    const errors = data.fileCreate.userErrors.map((e: any) => e.message).join(', ');
+    throw new Error(`File creation failed: ${errors}`);
   }
 
-  return fileData.fileCreate.files[0].id;
+  const createdFile = data.fileCreate.files[0];
+  if (!createdFile) {
+    throw new Error('No file returned from fileCreate mutation');
+  }
+
+  console.log('[Upload] File created:', { id: createdFile.id, status: createdFile.fileStatus });
+
+  return createdFile.id;
 }
+
+/**
+ * Main function: Upload a file to Shopify and return its GID
+ * This is the primary export used by the product creation flow
+ */
+export async function uploadFileToShopify(file: any): Promise<string> {
+  console.log('[Upload] Starting upload for:', file.name);
+
+  // 1. Convert file to buffer (may resize if image is too large)
+  const { buffer, mimeType } = await fileToBuffer(file);
+  console.log('[Upload] Converted to buffer, size:', buffer.length, 'mimeType:', mimeType);
+
+  // 2. Stage the upload
+  const { url, resourceUrl } = await stageFileForUpload(buffer.length, mimeType, file.name);
+  console.log('[Upload] Staged, uploading to:', url.substring(0, 50) + '...');
+
+  // 3. Upload to GCS
+  await uploadToGCS(url, buffer, mimeType);
+
+  // 4. Create file record in Shopify
+  const fileId = await createFileRecord(resourceUrl, mimeType);
+  console.log('[Upload] Complete! File ID:', fileId);
+
+  return fileId;
+}
+
+
 
 // Helper: Poll for File URL
 export async function pollForFileUrl(fileId: string, maxAttempts = 10, interval = 1000): Promise<string | null> {
@@ -174,7 +368,6 @@ export async function pollForFileUrl(fileId: string, maxAttempts = 10, interval 
     if (node) {
       if (node.url) return node.url;
       if (node.image?.url) return node.image.url;
-      if (node.fileStatus === 'FAILED') throw new Error("File processing failed");
     }
 
     await new Promise(resolve => setTimeout(resolve, interval));
@@ -183,72 +376,18 @@ export async function pollForFileUrl(fileId: string, maxAttempts = 10, interval 
   return null;
 }
 
-// Helper: Stage and Upload to GCS
-async function stageAndUploadFile(file: File) {
-  // Step A: Request Staged Upload
-  const stagedUploadQuery = `
-    mutation stagedUploadsCreate($input: [StagedUploadInput!]!) {
-      stagedUploadsCreate(input: $input) {
-        stagedTargets {
-          url
-          resourceUrl
-          parameters {
-            name
-            value
-          }
-        }
-        userErrors {
-          field
-          message
-        }
-      }
-    }
-  `;
-
-  const isVideo = file.type.startsWith("video/");
-  const resourceType = isVideo ? "VIDEO" : (file.type.startsWith("image/") ? "IMAGE" : "FILE");
-
-  const stagedVariables = {
-    input: [{
-      resource: resourceType,
-      filename: file.name,
-      mimeType: file.type,
-      httpMethod: "POST",
-    }]
-  };
-
-  const stagedData = await shopifyFetch(stagedUploadQuery, stagedVariables);
-
-  if (stagedData.stagedUploadsCreate.userErrors.length > 0) {
-    console.error("Staged Upload Errors:", stagedData.stagedUploadsCreate.userErrors);
-    const errorMessages = stagedData.stagedUploadsCreate.userErrors.map((e: any) => e.message).join(", ");
-    throw new Error(`Failed to create staged upload: ${errorMessages}`);
-  }
-
-  const target = stagedData.stagedUploadsCreate.stagedTargets[0];
-
-  // Step B: Upload to the Signed URL (Google Cloud Storage)
-  const formData = new FormData();
-  target.parameters.forEach((p: any) => formData.append(p.name, p.value));
-  formData.append("file", file);
-
-  const uploadRes = await fetch(target.url, {
-    method: "POST",
-    body: formData,
-  });
-
-  if (!uploadRes.ok) {
-    console.error("GCS Upload Failed:", await uploadRes.text());
-    throw new Error("Failed to upload file to storage");
-  }
-
-  return target.resourceUrl;
-}
 
 // 9. CREATE PRODUCT
-export async function createProduct(data: { title: string; description: string; price: string; images: File[] }) {
-  // 1. Upload all images to get resource URLs
-  const imageUrls = await Promise.all(data.images.map(file => stageAndUploadFile(file)));
+export async function createProduct(data: { title: string; description: string; price: string; images: any[] }) {
+  // 1. Upload all images using the new upload system
+  const uploadPromises = data.images.map(async (file) => {
+    const { buffer, mimeType } = await fileToBuffer(file);
+    const { url, resourceUrl } = await stageFileForUpload(buffer.length, mimeType, file.name);
+    await uploadToGCS(url, buffer, mimeType);
+    return resourceUrl;
+  });
+  const imageUrls = await Promise.all(uploadPromises);
+
   // 2. Create Product (without variants initially)
   const createMutation = `
     mutation productCreate($input: ProductInput!, $media: [CreateMediaInput!]) {
@@ -315,16 +454,8 @@ export async function createProduct(data: { title: string; description: string; 
   }
 
   const product = createResult.productCreate.product;
-  const defaultVariantId = product.variants?.edges[0]?.node?.id;
-  console.log(`[createProduct] Created product ${product.id}. Default Variant ID: ${defaultVariantId}`);
-
-  // Price is already set during creation, no need for separate update.
-
 
   // 4. Return Optimistic Data Immediately
-  // We don't wait for Shopify to process images or price updates fully.
-  // We manually construct the response to make the UI feel instant.
-
   const optimisticProduct = {
     ...product,
     priceRange: {
@@ -333,9 +464,6 @@ export async function createProduct(data: { title: string; description: string; 
         currencyCode: product.priceRange?.minVariantPrice?.currencyCode || "INR"
       }
     },
-    // Images might not be ready in the 'product' object yet if they are processing,
-    // but we can try to return what we have or just trust the UI to handle the loading state.
-    // Actually, the 'createResult' already returns the product with images linked (even if processing).
   };
 
   return optimisticProduct;
@@ -444,7 +572,6 @@ export async function getHeroSlides(prefix: string = "") {
     return slides.filter((slide: any) => slide.handle.startsWith(prefix));
   }
 
-  // Default behavior: return slides that DON'T start with specific prefixes (like 'women-') if no prefix requested
   return slides.filter((slide: any) => !slide.handle.startsWith("women-"));
 }
 
@@ -493,7 +620,6 @@ export async function getGlobalMenu() {
 
   if (!menuJson) return null;
 
-  // Replace image GIDs with URLs in the JSON, but keep the ID for updates
   if (menuJson.menu_tabs) {
     menuJson.menu_tabs.forEach((tab: any) => {
       if (tab.carousel) {
@@ -501,7 +627,7 @@ export async function getGlobalMenu() {
           if (imageMap[img.src]) {
             const mapped = imageMap[img.src];
             img.src = mapped.url;
-            img.imageId = mapped.id; // Store GID for updates
+            img.imageId = mapped.id;
           }
         });
         if (!tab.images) {
@@ -525,17 +651,14 @@ export async function getGlobalMenu() {
 
 // 5. UPDATE GLOBAL MENU
 export async function updateGlobalMenu(menuTabs: any[]) {
-  // 1. Extract all image IDs using the helper
   const allFileIds = extractMediaGids(menuTabs);
-
-  // 2. Prepare JSON for storage
-  const cleanTabs = JSON.parse(JSON.stringify(menuTabs)); // Deep copy
+  const cleanTabs = JSON.parse(JSON.stringify(menuTabs));
 
   cleanTabs.forEach((tab: any) => {
     if (tab.carousel) {
       tab.carousel.forEach((img: any) => {
         if (img.imageId) {
-          img.src = img.imageId; // Restore GID
+          img.src = img.imageId;
         }
         delete img.imageId;
       });
@@ -573,12 +696,7 @@ export async function updateGlobalMenu(menuTabs: any[]) {
       fields: [
         { key: "menu_structure_json", value: JSON.stringify(finalJson) },
         { key: "all_menu_images", value: JSON.stringify(allFileIds) }
-      ],
-      capabilities: {
-        publishable: {
-          status: "ACTIVE"
-        }
-      }
+      ]
     }
   };
 
@@ -643,7 +761,6 @@ export async function getCollectionPage(handle: string) {
     collectionGrid: []
   };
 
-  // 1. Try to read from the new "content_json" field (Unified Storage)
   const contentJsonField = metaobject.fields.find((f: any) => f.key === "content_json");
   if (contentJsonField && contentJsonField.value) {
     try {
@@ -655,11 +772,9 @@ export async function getCollectionPage(handle: string) {
       };
     } catch (e) {
       console.error("Failed to parse content_json for handle:", handle, e);
-      // Fallback to legacy fields if parsing fails
     }
   }
 
-  // 2. Fallback: Read from legacy individual fields (Backward Compatibility)
   metaobject.fields.forEach((field: any) => {
     if (field.key === "banner" && field.reference) {
       result.banner = parseMetaobjectFields(field.reference.fields);
@@ -686,12 +801,41 @@ export async function getCollectionPage(handle: string) {
   return result;
 }
 
+export async function updateCollectionPage(handle: string, data: any) {
+  const mutation = `
+    mutation upsertMetaobject($handle: MetaobjectHandleInput!, $metaobject: MetaobjectUpsertInput!) {
+      metaobjectUpsert(handle: $handle, metaobject: $metaobject) {
+        metaobject {
+          id
+          handle
+        }
+        userErrors {
+          field
+          message
+        }
+      }
+    }
+  `;
+
+  const variables = {
+    handle: { type: "collection_page_layout", handle: handle },
+    metaobject: {
+      fields: [
+        { key: "content_json", value: JSON.stringify(data) }
+      ]
+    }
+  };
+
+  const result = await shopifyFetch(mutation, variables);
+  return result;
+}
+
 function parseMetaobjectFields(fields: any[]) {
   return fields.reduce((acc: any, field: any) => {
     acc[field.key] = field.value;
     if (field.reference) {
       if (field.reference.image?.url) {
-        acc[`image`] = field.reference.image.url; // Override 'image' (GID) with URL for frontend
+        acc[`image`] = field.reference.image.url;
         acc[`image_url`] = field.reference.image.url;
       }
       if (field.reference.id) {
@@ -782,7 +926,6 @@ export async function getProductByHandle(handle: string) {
   return data.productByHandle;
 }
 
-// 8. GET CATEGORY PAGE (for Women's Shop Essentials etc)
 export async function getCategoryPage(handle: string) {
   const query = `
     query getCategoryPage($handle: String!) {
@@ -830,194 +973,98 @@ export async function getCategoryPage(handle: string) {
     if (field.key === "hero_slide" && field.reference) {
       result.hero_slide = parseMetaobjectFields(field.reference.fields);
     }
-    // Add other sections as needed
   });
 
   return result;
 }
 
-// 9. GET PAGE CONTENT (Generic)
-export async function getPageContent(handle: string) {
+// 9. GET PAGE CONTENT (by slug stored in content_json)
+export async function getPageContent(slug: string) {
+  // Query all page_content metaobjects and find the one with matching slug
   const query = `
-    query getPageContent($handle: String!) {
-      metaobjectByHandle(handle: { type: "page_content", handle: $handle }) {
-        id
-        handle
-        fields {
-          key
-          value
+    query getPagesBySlug {
+      metaobjects(type: "page_content", first: 100) {
+        edges {
+          node {
+            id
+            handle
+            fields {
+              key
+              value
+              reference {
+                ... on MediaImage {
+                  id
+                  image {
+                    url
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
   `;
 
-  const data = await shopifyFetch(query, { handle });
-  const metaobject = data.metaobjectByHandle;
+  const data = await shopifyFetch(query, {});
+  const edges = data.metaobjects?.edges || [];
 
-  if (!metaobject) {
-    console.log("getPageContent: No metaobject found for handle:", handle);
-    return null;
-  }
+  // Find the page with matching slug in content_json
+  for (const edge of edges) {
+    const metaobject = edge.node;
+    const fields = parseMetaobjectFields(metaobject.fields);
 
-  // Parse the content_json field
-  const contentJsonField = metaobject.fields.find((f: any) => f.key === "content_json");
-  if (contentJsonField && contentJsonField.value) {
-    try {
-      return JSON.parse(contentJsonField.value);
-    } catch (e) {
-      console.error("Failed to parse content_json for handle:", handle, e);
-      return null;
+    // Check if content_json contains matching slug
+    if (fields.content_json) {
+      try {
+        const parsed = JSON.parse(fields.content_json);
+        if (parsed.slug === slug) {
+          return {
+            ...parsed,
+            metaobject_handle: metaobject.handle,
+            metaobject_id: metaobject.id
+          };
+        }
+      } catch (e) {
+        console.error('[getPageContent] Failed to parse content_json for handle:', metaobject.handle);
+      }
+    }
+
+    // Also check metaobject handle directly for legacy support
+    if (metaobject.handle === slug) {
+      if (fields.content_json) {
+        try {
+          const parsed = JSON.parse(fields.content_json);
+          return {
+            ...parsed,
+            metaobject_handle: metaobject.handle,
+            metaobject_id: metaobject.id
+          };
+        } catch (e) { }
+      }
+      return {
+        ...fields,
+        metaobject_handle: metaobject.handle,
+        metaobject_id: metaobject.id
+      };
     }
   }
 
   return null;
 }
 
-// 7. UPDATE COLLECTION PAGE LAYOUT
-export async function updateCollectionPage(handle: string, data: any) {
-  // 1. Upsert Banner
-  const bannerHandle = `${handle}-banner`;
-  const bannerFields = [
-    { key: "heading", value: data.banner?.heading },
-    { key: "subheading", value: data.banner?.subheading },
-    { key: "text_color", value: data.banner?.textColor || "#ffffff" },
-    { key: "overlay_opacity", value: String(data.banner?.overlayOpacity || 0) },
-    { key: "height", value: data.banner?.height || "medium" },
-    { key: "text_alignment", value: data.banner?.textAlignment || "center" }
-  ];
-  if (data.banner?.image_id) bannerFields.push({ key: "image", value: data.banner.image_id });
-  const bannerId = await upsertMetaobject("page_banner", bannerHandle, bannerFields);
-
-  // 2. Upsert Windows
-  const window1Handle = `${handle}-window-1`;
-  const window1Fields = [
-    { key: "heading", value: data.window1?.heading },
-    { key: "subheading", value: data.window1?.subheading },
-    { key: "link_text", value: data.window1?.linkText },
-    { key: "link_url", value: data.window1?.linkUrl },
-    { key: "text_color", value: data.window1?.textColor || "#ffffff" },
-    { key: "overlay_opacity", value: String(data.window1?.overlayOpacity || 0) }
-  ];
-  if (data.window1?.image_id) window1Fields.push({ key: "image", value: data.window1.image_id });
-  const window1Id = await upsertMetaobject("page_window", window1Handle, window1Fields);
-
-  const window2Handle = `${handle}-window-2`;
-  const window2Fields = [
-    { key: "heading", value: data.window2?.heading },
-    { key: "subheading", value: data.window2?.subheading },
-    { key: "link_text", value: data.window2?.linkText },
-    { key: "link_url", value: data.window2?.linkUrl },
-    { key: "text_color", value: data.window2?.textColor || "#ffffff" },
-    { key: "overlay_opacity", value: String(data.window2?.overlayOpacity || 0) }
-  ];
-  if (data.window2?.image_id) window2Fields.push({ key: "image", value: data.window2.image_id });
-  const window2Id = await upsertMetaobject("page_window", window2Handle, window2Fields);
-
-  // 3. Upsert Product Grid
-  const gridHandle = `${handle}-grid`;
-  const gridFields = [
-    { key: "heading", value: data.products?.heading },
-    { key: "subheading", value: data.products?.subheading },
-    { key: "products_json", value: JSON.stringify(data.products?.products || []) }
-  ];
-  const gridId = await upsertMetaobject("product_grid_section", gridHandle, gridFields);
-
-  // 4. Upsert Focal Section
-  const focalHandle = `${handle}-focal`;
-  const focalFields = [
-    { key: "heading", value: data.focalSection?.heading },
-    { key: "subheading", value: data.focalSection?.subheading },
-    { key: "text_color", value: data.focalSection?.textColor || "#000000" },
-    { key: "text_position", value: data.focalSection?.textPosition || "center" },
-    { key: "overlay_opacity", value: String(data.focalSection?.overlayOpacity || 0) },
-    { key: "height", value: data.focalSection?.height || "medium" }
-  ];
-  if (data.focalSection?.image_id) focalFields.push({ key: "image", value: data.focalSection.image_id });
-  const focalId = await upsertMetaobject("focal_section", focalHandle, focalFields);
-
-  // 5. Upsert Collection Grid
-  const collectionGridIds = await Promise.all((data.collectionGrid || []).map(async (item: any, index: number) => {
-    const itemHandle = `${handle}-grid-${index}`;
-    const itemFields = [
-      { key: "heading", value: item.heading },
-      { key: "subheading", value: item.subheading },
-      { key: "link", value: item.link }
-    ];
-    if (item.image_id) itemFields.push({ key: "image", value: item.image_id });
-    return await upsertMetaobject("collection_grid_item", itemHandle, itemFields);
-  }));
-
-  // 6. Link to Collection Page Layout
-  const fields = [
-    { key: "banner", value: bannerId },
-    { key: "window_1", value: window1Id },
-    { key: "window_2", value: window2Id },
-    { key: "product_grid", value: gridId },
-    { key: "focal_section", value: focalId },
-    { key: "collection_grid", value: JSON.stringify(collectionGridIds) },
-  ];
-
-  const mutation = `
-    mutation upsertMetaobject($handle: MetaobjectHandleInput!, $metaobject: MetaobjectUpsertInput!) {
-      metaobjectUpsert(handle: $handle, metaobject: $metaobject) {
-        metaobject {
-          id
-          handle
-        }
-        userErrors {
-          field
-          message
-        }
-      }
-    }
-  `;
-
-  const variables = {
-    handle: { type: "collection_page_layout", handle: handle },
-    metaobject: {
-      fields: fields,
-      capabilities: {
-        publishable: {
-          status: "ACTIVE"
-        }
-      }
-    }
-  };
-
-  const result = await shopifyFetch(mutation, variables);
-
-  if (result.metaobjectUpsert.userErrors.length > 0) {
-    console.error("Error updating collection page:", result.metaobjectUpsert.userErrors);
-    throw new Error("Failed to update collection page: " + JSON.stringify(result.metaobjectUpsert.userErrors));
-  }
-
+// 10. GET PAGE CONTENT BY SLUG (with metaobject ID)
+export async function getPageContentBySlug(slug: string) {
+  const result = await getPageContent(slug);
   return result;
 }
 
-// 8. UPDATE CATEGORY PAGE (Generic)
-export async function updateCategoryPage(handle: string, data: any) {
-  // 1. Upsert Hero Slide
-  let heroSlideId = null;
-  if (data.hero_slide) {
-    const heroHandle = `${handle}-hero`;
-    heroSlideId = await updateHeroSlide(heroHandle, data.hero_slide);
-  }
-
-  // 2. Link to Category Page
-  const fields = [];
-  if (heroSlideId) {
-    fields.push({ key: "hero_slide", value: heroSlideId });
-  }
-
-  // Add other sections if needed, for now just hero slide is common
-
+// 11. DELETE PAGE CONTENT
+export async function deletePageContent(metaobjectId: string) {
   const mutation = `
-    mutation upsertMetaobject($handle: MetaobjectHandleInput!, $metaobject: MetaobjectUpsertInput!) {
-      metaobjectUpsert(handle: $handle, metaobject: $metaobject) {
-        metaobject {
-          id
-          handle
-        }
+    mutation metaobjectDelete($id: ID!) {
+      metaobjectDelete(id: $id) {
+        deletedId
         userErrors {
           field
           message
@@ -1026,24 +1073,12 @@ export async function updateCategoryPage(handle: string, data: any) {
     }
   `;
 
-  const variables = {
-    handle: { type: "category_page", handle: handle },
-    metaobject: {
-      fields: fields,
-      capabilities: {
-        publishable: {
-          status: "ACTIVE"
-        }
-      }
-    }
-  };
+  const result = await shopifyFetch(mutation, { id: metaobjectId });
 
-  const result = await shopifyFetch(mutation, variables);
-
-  if (result.metaobjectUpsert.userErrors.length > 0) {
-    console.error("Error updating category page:", result.metaobjectUpsert.userErrors);
-    throw new Error("Failed to update category page: " + JSON.stringify(result.metaobjectUpsert.userErrors));
+  if (result.metaobjectDelete.userErrors.length > 0) {
+    const errors = result.metaobjectDelete.userErrors.map((e: any) => e.message).join(', ');
+    throw new Error(`Failed to delete page content: ${errors}`);
   }
 
-  return result;
+  return result.metaobjectDelete.deletedId;
 }

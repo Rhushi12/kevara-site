@@ -69,12 +69,14 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
                         {/* Product Info */}
                         <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-shrink">
                             <div className="relative w-12 h-16 bg-gray-100 overflow-hidden rounded-lg hidden md:block flex-shrink-0">
-                                <Image
-                                    src={product.image}
-                                    alt={product.title}
-                                    fill
-                                    className="object-cover"
-                                />
+                                {product.image ? (
+                                    <Image
+                                        src={product.image}
+                                        alt={product.title}
+                                        fill
+                                        className="object-cover"
+                                    />
+                                ) : null}
                             </div>
                             <div className="min-w-0">
                                 <h3 className="text-sm font-lora text-slate-900 font-medium truncate">

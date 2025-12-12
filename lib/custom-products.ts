@@ -1,3 +1,5 @@
+import { pollForFileUrl } from './shopify-admin';
+
 const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || process.env.SHOPIFY_STORE_DOMAIN;
 const accessToken = process.env.SHOPIFY_ADMIN_TOKEN;
 
@@ -100,8 +102,59 @@ export interface CustomProductInput {
   status?: string;
 }
 
+// Helper to bulk resolve GIDs to URLs
+async function resolveImageGids(gids: string[]) {
+  if (gids.length === 0) return {};
+
+  // Deduplicate
+  const uniqueGids = Array.from(new Set(gids));
+
+  const query = `
+    query GetMediaImages($ids: [ID!]!) {
+      nodes(ids: $ids) {
+        ... on MediaImage {
+          id
+          image {
+            url
+          }
+        }
+        ... on Video {
+          id
+          sources {
+             url
+             mimeType
+          }
+        }
+      }
+    }
+  `;
+
+  try {
+    const data = await shopifyFetch(query, { ids: uniqueGids });
+    const map: Record<string, string> = {};
+    if (data.nodes) {
+      data.nodes.forEach((node: any) => {
+        if (node) {
+          if (node.image?.url) map[node.id] = node.image.url;
+          else if (node.sources && node.sources.length > 0) map[node.id] = node.sources[0].url;
+        }
+      });
+    }
+    return map;
+  } catch (error) {
+    console.error("Failed to resolve image GIDs:", error);
+    return {};
+  }
+}
+
 // Create a custom product in metaobjects
 export async function createCustomProduct(data: CustomProductInput) {
+  console.log('🔥🔥🔥 [createCustomProduct] UPDATED CODE IS RUNNING! 🔥🔥🔥');
+  console.log(`[createCustomProduct] Input data:`, {
+    title: data.title,
+    imageGidsCount: data.imageGids?.length || 0
+  });
+
   const handle = generateProductHandle();
   const slug = slugify(data.title);
 
@@ -153,8 +206,76 @@ export async function createCustomProduct(data: CustomProductInput) {
 
   console.log(`[createCustomProduct] Product created with ID: ${metaobjectId}`);
 
-  // Return the newly created product
-  return getCustomProductByHandle(handle);
+  // Poll for image URLs to ensure they're ready before returning
+  let imageUrls: string[] = [];
+  if (data.imageGids && data.imageGids.length > 0) {
+    console.log(`[createCustomProduct] Polling for ${data.imageGids.length} image URLs in parallel...`);
+
+    // Concurrently poll for all URLs
+    const pollResults = await Promise.all(data.imageGids.map(async (gid) => {
+      try {
+        const url = await pollForFileUrl(gid, 30, 1000);
+        if (url) {
+          console.log(`[createCustomProduct] Got URL for ${gid}: ${url}`);
+          return url;
+        }
+      } catch (error) {
+        console.error(`[createCustomProduct] Failed to get URL for ${gid}:`, error);
+      }
+      return null;
+    }));
+
+    imageUrls = pollResults.filter((url): url is string => url !== null);
+
+    // Save the polled URLs back to the metaobject so they persist
+    if (imageUrls.length > 0) {
+      console.log(`[createCustomProduct] Saving ${imageUrls.length} image URLs to metaobject...`);
+      try {
+        await upsertMetaobject("custom_product", handle, [
+          ...fields,
+          { key: "image_urls", value: JSON.stringify(imageUrls) }
+        ]);
+      } catch (error) {
+        console.error(`[createCustomProduct] Failed to save image URLs:`, error);
+      }
+    }
+  }
+
+  // Return the product with the polled image URLs for immediate display
+  return {
+    id: metaobjectId,
+    handle,
+    slug,
+    title: data.title,
+    descriptionHtml: data.description || "",
+    priceRange: {
+      minVariantPrice: {
+        amount: data.price,
+        currencyCode: data.currency || "INR"
+      }
+    },
+    images: {
+      edges: imageUrls.map(url => ({
+        node: {
+          url,
+          altText: data.title
+        }
+      }))
+    },
+    variants: {
+      edges: [{
+        node: {
+          id: `variant_${handle}`,
+          title: "Default"
+        }
+      }]
+    },
+    colors: data.colors || [],
+    sizes: data.sizes || [],
+    relatedProducts: [],
+    video: null,
+    status: data.status || "ACTIVE"
+  };
 }
 
 // Get all custom products
@@ -201,12 +322,51 @@ export async function getCustomProducts() {
   const result = await shopifyFetch(query);
   const metaobjects = result.metaobjects.edges;
 
-  // Transform metaobjects to product format
-  return metaobjects.map((edge: any) => transformMetaobjectToProduct(edge.node));
+  // 1. First Pass: Transform to products, but capture missing GIDs
+  const products = metaobjects.map((edge: any) => transformMetaobjectToProduct(edge.node));
+
+  // 2. Identify Missing URLs
+  const gidsToResolve: string[] = [];
+  products.forEach((p: any) => {
+    if ((!p.node.images.edges || p.node.images.edges.length === 0) && p._params?.imageGids && p._params.imageGids.length > 0) {
+      gidsToResolve.push(...p._params.imageGids);
+    }
+  });
+
+  // 3. Resolve Missing GIDs if any
+  let resolvedMap: Record<string, string> = {};
+  if (gidsToResolve.length > 0) {
+    console.log(`[getCustomProducts] Resolving ${gidsToResolve.length} missing image GIDs...`);
+    resolvedMap = await resolveImageGids(gidsToResolve);
+  }
+
+  // 4. Fill in missing URLs
+  products.forEach((p: any) => {
+    if ((!p.node.images.edges || p.node.images.edges.length === 0) && p._params?.imageGids) {
+      const recoveredUrls: string[] = [];
+      p._params.imageGids.forEach((gid: string) => {
+        if (resolvedMap[gid]) {
+          recoveredUrls.push(resolvedMap[gid]);
+        }
+      });
+
+      if (recoveredUrls.length > 0) {
+        p.node.images.edges = recoveredUrls.map(url => ({
+          node: { url, altText: p.node.title }
+        }));
+      }
+    }
+    // Clean up internal params
+    delete p._params;
+  });
+
+  return products;
 }
 
 // Helper to transform metaobject to product format
 function transformMetaobjectToProduct(metaobject: any) {
+  let rawImageGids: string[] = [];
+
   const fields = metaobject.fields.reduce((acc: any, field: any) => {
     acc[field.key] = field.value;
 
@@ -219,7 +379,6 @@ function transformMetaobjectToProduct(metaobject: any) {
     if (field.key === 'video' && field.references) {
       const videoNode = field.references.edges[0]?.node;
       if (videoNode && videoNode.sources) {
-        // Prefer .mp4 or .m3u8, usually sources[0] is good
         acc.videoUrl = videoNode.sources[0]?.url;
       }
     }
@@ -232,13 +391,41 @@ function transformMetaobjectToProduct(metaobject: any) {
   const sizes = fields.sizes ? JSON.parse(fields.sizes) : [];
   const relatedProducts = fields.related_products ? JSON.parse(fields.related_products) : [];
 
-  // Use imageUrls from references if available, otherwise parse from JSON
-  const imageUrls = fields.imageUrls || (fields.images ? JSON.parse(fields.images) : []);
+  // Extract image URLs with priority:
+  let imageUrls = [];
+
+  if (fields.image_urls) {
+    try {
+      imageUrls = JSON.parse(fields.image_urls);
+    } catch (e) {
+      console.warn('[transformMetaobjectToProduct] Failed to parse image_urls:', e);
+    }
+  }
+
+  if (imageUrls.length === 0 && fields.imageUrls) {
+    imageUrls = fields.imageUrls;
+  }
+
+  if (imageUrls.length === 0 && fields.images) {
+    try {
+      const parsed = JSON.parse(fields.images);
+      // Capture GIDs for fallback resolution
+      rawImageGids = parsed.filter((item: string) => item && typeof item === 'string' && item.startsWith('gid://'));
+
+      // Filter to only include actual URLs (not GIDs) for direct usage
+      const directUrls = parsed.filter((item: string) =>
+        item && typeof item === 'string' && !item.startsWith('gid://') && item.startsWith('http')
+      );
+      if (directUrls.length > 0) imageUrls = directUrls;
+
+    } catch (e) {
+      console.warn('[transformMetaobjectToProduct] Failed to parse images JSON:', e);
+    }
+  }
 
   // Validate and regenerate slug if corrupted or invalid
   let validSlug = fields.slug;
   if (!validSlug || validSlug.length < 3) {
-    console.warn(`[transformMetaobjectToProduct] Invalid slug "${validSlug}" for product "${fields.title}", regenerating...`);
     validSlug = slugify(fields.title || fields.product_id);
   }
 
@@ -276,6 +463,10 @@ function transformMetaobjectToProduct(metaobject: any) {
       relatedProducts,
       video: fields.videoUrl || null,
       status: fields.status
+    },
+    // Attach internal params for getCustomProducts to use if needed
+    _params: {
+      imageGids: rawImageGids
     }
   };
 }
@@ -294,6 +485,56 @@ export async function getCustomProductBySlug(slug: string) {
   const products = await getCustomProducts();
   const product = products.find((p: any) => p.node.slug === slug || p.node.handle === slug);
   return product ? product.node : null;
+}
+
+// Update an existing custom product
+export interface UpdateCustomProductInput {
+  handle: string; // Required - the product_id
+  title?: string;
+  description?: string;
+  price?: string;
+  currency?: string;
+  colors?: Array<{ name: string; hex: string }>;
+  sizes?: string[];
+  status?: string;
+}
+
+export async function updateCustomProduct(data: UpdateCustomProductInput) {
+  console.log(`[updateCustomProduct] Updating product: ${data.handle}`);
+
+  const fields: { key: string; value: string }[] = [];
+
+  // Only add fields that are provided
+  if (data.title !== undefined) {
+    fields.push({ key: "title", value: data.title });
+  }
+  if (data.description !== undefined) {
+    fields.push({ key: "description", value: data.description });
+  }
+  if (data.price !== undefined) {
+    fields.push({ key: "price", value: data.price });
+  }
+  if (data.currency !== undefined) {
+    fields.push({ key: "currency", value: data.currency });
+  }
+  if (data.colors !== undefined) {
+    fields.push({ key: "colors", value: JSON.stringify(data.colors) });
+  }
+  if (data.sizes !== undefined) {
+    fields.push({ key: "sizes", value: JSON.stringify(data.sizes) });
+  }
+  if (data.status !== undefined) {
+    fields.push({ key: "status", value: data.status });
+  }
+
+  if (fields.length === 0) {
+    throw new Error("No fields provided for update");
+  }
+
+  const metaobjectId = await upsertMetaobject("custom_product", data.handle, fields);
+  console.log(`[updateCustomProduct] Product updated with ID: ${metaobjectId}`);
+
+  return { success: true, id: metaobjectId };
 }
 
 // Update related products for a custom product

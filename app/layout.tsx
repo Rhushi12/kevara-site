@@ -3,6 +3,7 @@ import { Figtree, Lora } from "next/font/google";
 import "./globals.css";
 import MobileBottomBar from "@/components/MobileBottomBar";
 import QuickViewPanel from "@/components/QuickViewPanel";
+import SearchPanel from "@/components/SearchPanel";
 import ToastNotification from "@/components/admin/ToastNotification";
 
 const figtree = Figtree({
@@ -35,6 +36,7 @@ export default function RootLayout({
         <AuthProvider>
           {children}
           <QuickViewPanel />
+          <SearchPanel />
           <MobileBottomBar />
           <ToastNotification />
         </AuthProvider>

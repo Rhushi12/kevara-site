@@ -12,12 +12,14 @@ import ImageUploadModal from "@/components/admin/ImageUploadModal";
 
 import MobileMenu from "@/components/MobileMenu";
 import MenuCarousel from "./MenuCarousel";
+import { useSearchStore } from "@/components/SearchPanel";
 
 export default function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
     const { user, logout, isAdmin } = useAuth();
     const [menuData, setMenuData] = useState(MENU_DATA);
+    const { openSearch } = useSearchStore();
 
     // New State for Edit Mode and Image Upload
     const [isEditMode, setIsEditMode] = useState(false);
@@ -254,7 +256,7 @@ export default function Navbar() {
     };
 
     const hoverLineClass =
-        "relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:w-full after:bg-[#006D77] after:origin-bottom-right after:scale-x-0 hover:after:origin-bottom-left hover:after:scale-x-100 after:transition-transform after:duration-300 after:ease-out";
+        "relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:w-full after:bg-white after:origin-bottom-right after:scale-x-0 hover:after:origin-bottom-left hover:after:scale-x-100 after:transition-transform after:duration-300 after:ease-out";
 
     const containerVariants = {
         hidden: { opacity: 0, y: -10 },
@@ -299,7 +301,7 @@ export default function Navbar() {
                 )}
             </AnimatePresence>
 
-            <nav className="sticky top-0 left-0 right-0 z-50 bg-[#FDFBF7] text-slate-900 border-b border-gray-100/50">
+            <nav className="sticky top-0 left-0 right-0 z-50 bg-[#0E4D55] text-white border-b border-white/10 transition-all duration-300">
                 <div className="container mx-auto px-4 h-16 md:h-20 flex items-center justify-between relative">
                     {/* Mobile Left: Menu + Search */}
                     <div className="flex md:hidden items-center gap-4">
@@ -309,7 +311,7 @@ export default function Navbar() {
                         >
                             <Menu size={24} />
                         </button>
-                        <button>
+                        <button onClick={openSearch}>
                             <Search size={20} />
                         </button>
                     </div>
@@ -353,9 +355,9 @@ export default function Navbar() {
                             <Image
                                 src="/aesthetic-logo.png"
                                 alt="Kevara Logo"
-                                width={120}
-                                height={40}
-                                className="h-8 md:h-10 w-auto object-contain"
+                                width={110}
+                                height={37}
+                                className="w-[90px] md:w-[110px] h-auto object-contain brightness-0 invert"
                                 priority
                             />
                         </Link>
@@ -363,48 +365,46 @@ export default function Navbar() {
 
                     {/* Right: Icons */}
                     <div className="flex items-center gap-6">
-                        {/* Template 1 Link */}
-                        <Link href="/template-1" className="hidden md:block text-sm font-medium hover:text-[#006D77] transition-colors">
-                            Template 1
-                        </Link>
-
                         {/* Login / Account */}
                         {!user ? (
-                            <Link href="/login" className="hidden md:block text-sm font-medium hover:text-[#006D77] transition-colors">
+                            <Link href="/login" className="hidden md:block text-sm font-medium hover:text-white/80 transition-colors">
                                 Login
                             </Link>
                         ) : (
                             <div className="hidden md:flex items-center gap-4">
-                                <span className="text-sm text-gray-600">Hi, {user.displayName?.split(' ')[0] || 'User'}</span>
+                                <span className="text-sm text-white/90">Hi, {user.displayName?.split(' ')[0] || 'User'}</span>
                                 {isAdmin && (
                                     <div className="flex items-center gap-3">
-                                        <Link href="/admin" className="text-sm font-medium text-[#006D77] hover:underline">
+                                        <Link href="/admin" className="text-sm font-medium text-white hover:underline">
                                             Admin
                                         </Link>
                                         <button
                                             onClick={() => setIsEditMode(!isEditMode)}
                                             className={`text-xs px-2 py-1 rounded border transition-colors ${isEditMode
-                                                ? "bg-[#006D77] text-white border-[#006D77]"
-                                                : "bg-transparent text-gray-500 border-gray-300 hover:border-[#006D77] hover:text-[#006D77]"
+                                                ? "bg-white text-[#006D77] border-white"
+                                                : "bg-transparent text-white/80 border-white/50 hover:border-white hover:text-white"
                                                 }`}
                                         >
                                             {isEditMode ? "Done Editing" : "Edit Menu"}
                                         </button>
                                     </div>
                                 )}
-                                <button onClick={() => logout()} className="text-sm font-medium hover:text-[#006D77] transition-colors">
+                                <button onClick={() => logout()} className="text-sm font-medium hover:text-white/80 transition-colors">
                                     Logout
                                 </button>
                             </div>
                         )}
 
-                        <button className="hidden md:block hover:opacity-70 transition-opacity">
+                        <button
+                            onClick={openSearch}
+                            className="hidden md:block hover:opacity-70 transition-opacity"
+                        >
                             <Search size={20} />
                         </button>
                         {isAdmin && (
                             <Link href="/cart" className="hover:opacity-70 transition-opacity relative">
                                 <ShoppingBag size={20} />
-                                <span className="absolute -top-1 -right-1 bg-slate-900 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
+                                <span className="absolute -top-1 -right-1 bg-white text-[#006D77] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
                                     0
                                 </span>
                             </Link>
@@ -425,14 +425,21 @@ export default function Navbar() {
                             onMouseLeave={() => !isEditMode && setActiveMenuId(null)}
                             className="absolute top-full left-0 right-0 bg-white shadow-sm border-t border-gray-100 z-50"
                         >
-                            <div className="max-w-7xl mx-auto px-8 py-12">
+                            <div className="max-w-7xl mx-auto h-[355px] px-12 py-[48px]">
                                 {/* MIXED LAYOUT (Women / Men) */}
                                 {activeMenuItem.shopify_layout_type === "mixed" && (
-                                    <div className="grid grid-cols-12 gap-8">
-                                        {/* Left: Links (Span 3 - 25%) */}
-                                        <div className="col-span-3 flex flex-col gap-8 max-h-[60vh] overflow-y-auto overscroll-contain pr-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+                                    <div className="flex h-full gap-16">
+                                        {/* Left: Columns Container - Grid 3 per row with scroll */}
+                                        <div
+                                            className="grid grid-cols-3 gap-x-12 gap-y-6 shrink-0 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] content-start"
+                                            style={{ width: '430px' }}
+                                        >
                                             {activeMenuItem.columns?.map((col, colIdx) => (
-                                                <motion.div key={colIdx} variants={itemVariants} className="relative group/col">
+                                                <motion.div
+                                                    key={colIdx}
+                                                    variants={itemVariants}
+                                                    className="relative group/col"
+                                                >
                                                     <div className="flex items-center justify-between mb-4">
                                                         {isAdmin && isEditMode ? (
                                                             <div className="flex items-center gap-2">
@@ -440,7 +447,7 @@ export default function Navbar() {
                                                                     value={col.title}
                                                                     onSave={(newVal) => handleUpdateColumnTitle(activeMenuItem.id, colIdx, newVal)}
                                                                     isAdmin={true}
-                                                                    className="text-xs font-bold uppercase tracking-widest text-[#006D77]"
+                                                                    className="text-xs font-bold uppercase tracking-widest text-slate-900"
                                                                 />
                                                                 <button
                                                                     onClick={() => handleDeleteColumn(activeMenuItem.id, colIdx)}
@@ -450,7 +457,7 @@ export default function Navbar() {
                                                                 </button>
                                                             </div>
                                                         ) : (
-                                                            <h3 className="text-xs font-bold uppercase tracking-widest text-[#006D77]">
+                                                            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-900">
                                                                 {col.title}
                                                             </h3>
                                                         )}
@@ -508,21 +515,23 @@ export default function Navbar() {
                                             {isAdmin && isEditMode && (
                                                 <button
                                                     onClick={() => handleAddColumn(activeMenuItem.id)}
-                                                    className="text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-[#006D77] border border-dashed border-gray-300 p-4 rounded text-center hover:border-[#006D77] transition-colors"
+                                                    className="text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-[#006D77] border border-dashed border-gray-300 p-4 rounded text-center hover:border-[#006D77] transition-colors shrink-0"
                                                 >
-                                                    + Add Category
+                                                    + Add
                                                 </button>
                                             )}
                                         </div>
 
-                                        {/* Right: Images (Span 9 - 75%) */}
-                                        <div className="col-span-9">
+                                        {/* Right: Images Carousel (flex-1 takes remaining space) */}
+                                        <div className="flex-1 overflow-hidden">
                                             {activeMenuItem.images && (
                                                 <MenuCarousel
                                                     images={activeMenuItem.images}
                                                     isAdmin={isAdmin && isEditMode}
                                                     onDelete={(idx) => handleDeleteImage(activeMenuItem.id, idx)}
                                                     onAdd={() => handleAddImage(activeMenuItem.id)}
+                                                    imageWidth={180}
+                                                    imageHeight={225}
                                                 />
                                             )}
                                         </div>
@@ -531,11 +540,14 @@ export default function Navbar() {
 
                                 {/* VISUAL LAYOUT (About) */}
                                 {activeMenuItem.shopify_layout_type === "visual" && (
-                                    <div className="grid grid-cols-3 gap-8">
+                                    <div className="flex gap-8 justify-center">
                                         {activeMenuItem.images?.map((img, idx) => (
                                             <motion.div key={idx} variants={itemVariants}>
                                                 <Link href={img.href} className="group block text-center">
-                                                    <div className="relative h-80 w-full overflow-hidden mb-4">
+                                                    <div
+                                                        className="relative overflow-hidden mb-4 rounded-sm"
+                                                        style={{ width: '180px', height: '225px' }}
+                                                    >
                                                         <Image
                                                             src={img.src}
                                                             alt={img.label}
@@ -544,7 +556,7 @@ export default function Navbar() {
                                                         />
                                                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
                                                     </div>
-                                                    <h3 className="text-xl font-lora text-slate-900 group-hover:underline underline-offset-4 decoration-1">
+                                                    <h3 className="text-xs font-geist uppercase tracking-[0.2em] text-slate-900">
                                                         {img.label}
                                                     </h3>
                                                 </Link>

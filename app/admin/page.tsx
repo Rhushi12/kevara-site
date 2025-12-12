@@ -119,6 +119,27 @@ export default function AdminPage() {
                     </p>
                     <MenuEditor />
                 </div>
+
+                <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 max-w-4xl mt-8">
+                    <h2 className="text-xl font-bold mb-4">Product Management</h2>
+                    <p className="text-gray-600 mb-6">
+                        Manage your product catalog.
+                    </p>
+                    <div className="flex gap-4">
+                        <a
+                            href="/admin/products/import"
+                            className="px-6 py-3 bg-black text-white font-medium rounded-lg hover:bg-gray-800 inline-flex items-center gap-2"
+                        >
+                            Bulk Upload Products
+                        </a>
+                        <a
+                            href="/admin/products/new"
+                            className="px-6 py-3 border border-gray-300 text-black font-medium rounded-lg hover:bg-gray-50 inline-flex items-center gap-2"
+                        >
+                            Create Single Product
+                        </a>
+                    </div>
+                </div>
             </div>
 
             <Footer />

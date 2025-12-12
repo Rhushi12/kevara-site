@@ -9,6 +9,7 @@ interface EditableTextProps {
     isAdmin: boolean;
     className?: string;
     as?: "span" | "h1" | "h2" | "h3" | "p" | "div";
+    multiline?: boolean;
     placeholder?: string;
 }
 
@@ -19,10 +20,11 @@ export default function EditableText({
     className,
     as: Component = "span",
     placeholder,
+    multiline = false,
 }: EditableTextProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [tempValue, setTempValue] = useState(value || "");
-    const inputRef = useRef<HTMLInputElement>(null);
+    const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
     useEffect(() => {
         setTempValue(value || "");
@@ -43,7 +45,18 @@ export default function EditableText({
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Enter") {
-            handleSave();
+            if (multiline) {
+                if (e.ctrlKey || e.metaKey) {
+                    // Ctrl+Enter or Cmd+Enter to save in multiline
+                    e.preventDefault();
+                    handleSave();
+                }
+                // Otherwise let Enter insert newline
+            } else if (!e.shiftKey) {
+                // In single line, Enter saves (unless Shift+Enter)
+                e.preventDefault();
+                handleSave();
+            }
         } else if (e.key === "Escape") {
             setIsEditing(false);
             setTempValue(value);
@@ -51,9 +64,26 @@ export default function EditableText({
     };
 
     if (isAdmin && isEditing) {
+        if (multiline) {
+            return (
+                <textarea
+                    ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+                    value={tempValue}
+                    onChange={(e) => setTempValue(e.target.value)}
+                    onBlur={handleSave}
+                    onKeyDown={handleKeyDown}
+                    className={cn(
+                        "bg-white text-black border border-[#006D77] rounded px-1 outline-none min-w-[50px] font-inherit w-full",
+                        className
+                    )}
+                    onClick={(e) => e.stopPropagation()}
+                    rows={4}
+                />
+            );
+        }
         return (
             <input
-                ref={inputRef}
+                ref={inputRef as React.RefObject<HTMLInputElement>}
                 value={tempValue}
                 onChange={(e) => setTempValue(e.target.value)}
                 onBlur={handleSave}

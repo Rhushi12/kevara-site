@@ -4,6 +4,7 @@ import { getCustomProducts } from '@/lib/custom-products';
 export async function GET() {
     try {
         const products = await getCustomProducts(); // Fetch all custom products
+        // Force rebuild 2
         return NextResponse.json({ products });
     } catch (error) {
         console.error("Failed to fetch products:", error);

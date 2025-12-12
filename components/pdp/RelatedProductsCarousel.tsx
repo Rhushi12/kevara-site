@@ -6,6 +6,7 @@ import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import ProductCard from "@/components/ProductCard";
+import CarouselArrowButton from "@/components/ui/CarouselArrowButton";
 
 interface Product {
     handle: string;
@@ -119,20 +120,19 @@ export default function RelatedProductsCarousel({ products }: RelatedProductsCar
                 </div>
 
                 {/* Navigation Arrows (Visible on Hover) */}
-                <button
+                {/* Navigation Arrows */}
+                <CarouselArrowButton
+                    direction="left"
                     onClick={() => scroll("left")}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white/90 p-3 rounded-full shadow-lg text-slate-900 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-[#006D77] hover:text-white z-10 disabled:opacity-0"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-40 hidden md:flex -translate-x-1/2"
                     aria-label="Scroll Left"
-                >
-                    <ChevronLeft size={24} />
-                </button>
-                <button
+                />
+                <CarouselArrowButton
+                    direction="right"
                     onClick={() => scroll("right")}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white/90 p-3 rounded-full shadow-lg text-slate-900 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-[#006D77] hover:text-white z-10"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-40 hidden md:flex translate-x-1/2"
                     aria-label="Scroll Right"
-                >
-                    <ChevronRight size={24} />
-                </button>
+                />
             </div>
         </div>
     );

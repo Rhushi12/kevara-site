@@ -21,16 +21,23 @@ export async function POST(request: Request) {
         const colors = colorsJson ? JSON.parse(colorsJson) : undefined;
         const sizes = sizesJson ? JSON.parse(sizesJson) : undefined;
 
-        // Upload all images to Shopify Files and get their GIDs
-        const imageGids: string[] = [];
 
-        for (const file of files) {
-            if (file instanceof File && file.size > 0) {
-                console.log(`[API] Uploading image: ${file.name}`);
-                const gid = await uploadFileToShopify(file);
-                imageGids.push(gid);
-            }
-        }
+        // Upload all images to Shopify Files in parallel
+        const validFiles = files.filter(f => f instanceof File && f.size > 0);
+        console.log(`[API] Received ${files.length} files, ${validFiles.length} valid`);
+
+        // Log each file's details for debugging
+        validFiles.forEach((file, i) => {
+            console.log(`[API] File ${i}: name="${file.name}", type="${file.type}", size=${file.size}, hasArrayBuffer=${typeof file.arrayBuffer === 'function'}`);
+        });
+
+        // Use Promise.all to upload concurrently
+        const imageGids = await Promise.all(validFiles.map(async (file, index) => {
+            console.log(`[API] Uploading file ${index + 1}/${validFiles.length}: ${file.name}`);
+            const gid = await uploadFileToShopify(file);
+            console.log(`[API] File ${index + 1} uploaded, GID: ${gid}`);
+            return gid;
+        }));
 
         // Upload video if provided
         let videoGid: string | undefined;
@@ -38,6 +45,7 @@ export async function POST(request: Request) {
             console.log(`[API] Uploading video: ${videoFile.name}`);
             videoGid = await uploadFileToShopify(videoFile);
         }
+
 
         console.log(`[API] Uploaded ${imageGids.length} images and ${videoGid ? 1 : 0} video. Creating custom product...`);
 

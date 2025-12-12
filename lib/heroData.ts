@@ -6,6 +6,9 @@ export interface HeroSlide {
     subheading: string;
     buttonText: string;
     link: string;
+    alignment?: "left" | "center" | "right";
+    secondaryButtonText?: string;
+    secondaryButtonLink?: string;
 }
 
 export const HERO_SLIDES: HeroSlide[] = [
@@ -16,6 +19,9 @@ export const HERO_SLIDES: HeroSlide[] = [
         subheading: "Elevate your everyday comfort with our new collection.",
         buttonText: "Shop Now",
         link: "/collections/all",
+        alignment: "left",
+        secondaryButtonText: "",
+        secondaryButtonLink: ""
     },
     {
         id: 2,
@@ -24,6 +30,9 @@ export const HERO_SLIDES: HeroSlide[] = [
         subheading: "Discover versatile pieces designed for effortless style.",
         buttonText: "View Lookbook",
         link: "/pages/lookbook",
+        alignment: "left",
+        secondaryButtonText: "",
+        secondaryButtonLink: ""
     },
     {
         id: 3,
@@ -32,5 +41,8 @@ export const HERO_SLIDES: HeroSlide[] = [
         subheading: "Crafted with care for you and the planet.",
         buttonText: "Learn More",
         link: "/pages/sustainability",
+        alignment: "left",
+        secondaryButtonText: "",
+        secondaryButtonLink: ""
     },
 ];

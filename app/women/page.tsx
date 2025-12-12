@@ -10,6 +10,7 @@ import LookbookFeature from "@/components/LookbookFeature";
 import FeaturedProduct from "@/components/FeaturedProduct";
 import CollectionGrid from "@/components/CollectionGrid";
 import { PageContent, PageSection } from "@/types/page-editor";
+import PremiumPreloader from "@/components/PremiumPreloader";
 
 // Default Initial Content (if empty)
 import { TEMPLATE_1 } from "@/lib/templates";
@@ -76,7 +77,7 @@ export default function WomenPage() {
         }));
     }, []);
 
-    if (loading) return <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">Loading...</div>;
+    if (loading) return <PremiumPreloader />;
 
     return (
         <main className="min-h-screen bg-[#FDFBF7]">
@@ -185,11 +186,34 @@ function FeaturedProductWrapper({ section, isEditMode, onUpdate }: { section: Pa
     const handle = (section.settings as any).product_handle;
 
     useEffect(() => {
+        const fetchRandom = () => {
+            fetch('/api/products')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.products && data.products.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * data.products.length);
+                        setProduct(data.products[randomIndex].node);
+                    }
+                })
+                .catch(err => console.error("Failed to fetch random product", err));
+        };
+
         if (handle) {
             fetch(`/api/products/${handle}`)
                 .then(res => res.json())
-                .then(data => setProduct(data.product))
-                .catch(err => console.error("Failed to fetch featured product", err));
+                .then(data => {
+                    if (data.product) {
+                        setProduct(data.product);
+                    } else {
+                        fetchRandom();
+                    }
+                })
+                .catch(err => {
+                    console.error("Failed to fetch featured product", err);
+                    fetchRandom();
+                });
+        } else {
+            fetchRandom();
         }
     }, [handle]);
 
