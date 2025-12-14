@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, orderBy, getDocs, limit, Timestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 interface UserData {
     uid: string;

@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, getCountFromServer } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 export default function DashboardStats() {
     const [totalUsers, setTotalUsers] = useState<number | null>(null);
