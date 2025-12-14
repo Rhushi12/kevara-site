@@ -60,38 +60,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
 
-            // Sync user to Firestore
-            const { doc, setDoc, getDoc, serverTimestamp } = await import("firebase/firestore");
-            const { db } = await import("@/lib/firebase");
-
-            const userRef = doc(db, "users", user.uid);
-            const userSnap = await getDoc(userRef);
-
-            if (!userSnap.exists()) {
-                await setDoc(userRef, {
-                    uid: user.uid,
+            // Sync to Shopify
+            await fetch('/api/auth/shopify-sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                     email: user.email,
                     displayName: user.displayName,
-                    photoURL: user.photoURL,
-                    createdAt: serverTimestamp(),
-                    lastLogin: serverTimestamp(),
-                    role: user.email === "rhushimanumehta@gmail.com" ? "admin" : "user"
-                });
-            } else {
-                await setDoc(userRef, {
-                    lastLogin: serverTimestamp(),
-                    email: user.email,
-                    displayName: user.displayName,
-                    photoURL: user.photoURL,
-                }, { merge: true });
-            }
+                    uid: user.uid
+                })
+            });
 
         } catch (error: any) {
             console.error("Error signing in with Google", error);
             if (error.code === 'auth/unauthorized-domain') {
                 alert(`Configuration Error: This domain (${window.location.hostname}) is not authorized in Firebase. \n\nPlease go to Firebase Console -> Authentication -> Settings -> Authorized Domains and add this domain.`);
             } else if (error.code === 'auth/popup-closed-by-user') {
-                // Ignore, user just closed it
+                // Ignore
             } else {
                 alert(`Login Failed: ${error.message}`);
             }
@@ -104,18 +89,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const result = await createUserWithEmailAndPassword(auth, email, pass);
             await updateProfile(result.user, { displayName: name });
 
-            // Sync new user to Firestore
-            const { doc, setDoc, serverTimestamp } = await import("firebase/firestore");
-            const { db } = await import("@/lib/firebase");
-
-            await setDoc(doc(db, "users", result.user.uid), {
-                uid: result.user.uid,
-                email: email,
-                displayName: name,
-                photoURL: null,
-                createdAt: serverTimestamp(),
-                lastLogin: serverTimestamp(),
-                role: "user"
+            // Sync to Shopify
+            await fetch('/api/auth/shopify-sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: email,
+                    displayName: name,
+                    uid: result.user.uid
+                })
             });
         } catch (error) {
             console.error("Signup failed", error);
@@ -127,15 +109,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
             const result = await signInWithEmailAndPassword(auth, email, pass);
 
-            // Sync login time
-            const { doc, setDoc, serverTimestamp } = await import("firebase/firestore");
-            const { db } = await import("@/lib/firebase");
-
-            await setDoc(doc(db, "users", result.user.uid), {
-                lastLogin: serverTimestamp(),
-                email: email, // ensure email is up to date
-                displayName: result.user.displayName // ensure name is up to date
-            }, { merge: true });
+            // Sync to Shopify (Updates existing or creates if missing)
+            await fetch('/api/auth/shopify-sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: email,
+                    displayName: result.user.displayName,
+                    uid: result.user.uid
+                })
+            });
 
         } catch (error) {
             console.error("Email login failed", error);
