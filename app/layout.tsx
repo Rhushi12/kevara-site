@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Figtree, Lora } from "next/font/google";
 import "./globals.css";
 import QuickViewPanel from "@/components/QuickViewPanel";
@@ -18,6 +18,13 @@ const lora = Lora({
 export const metadata: Metadata = {
   title: "Kevara - Timeless Elegance",
   description: "High-end fashion for the modern era.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 import { AuthProvider } from "@/context/AuthContext";

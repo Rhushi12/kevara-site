@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
-import Image from "next/image";
+import PremiumImageLoader from "@/components/ui/PremiumImageLoader";
 import EditableText from "@/components/admin/EditableText";
 import { authUpload } from "@/lib/auth-client";
 
@@ -110,7 +110,7 @@ export default function ScrollFadeBanner({ data = {}, isEditMode = false, onUpda
                 <motion.div
                     className={`relative group/left w-full overflow-hidden ${singleImageOnMobile ? "h-[60vh] md:h-[528px]" : "h-[528px]"}`}
                 >
-                    <Image
+                    <PremiumImageLoader
                         src={image}
                         alt={heading}
                         fill
@@ -148,7 +148,7 @@ export default function ScrollFadeBanner({ data = {}, isEditMode = false, onUpda
                 <motion.div
                     className={`relative group/right w-full overflow-hidden ${singleImageOnMobile ? "hidden md:block md:h-[528px]" : "block h-[528px]"}`}
                 >
-                    <Image
+                    <PremiumImageLoader
                         src={image2}
                         alt={heading}
                         fill

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import PremiumImageLoader from "@/components/ui/PremiumImageLoader";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import EditableText from "@/components/admin/EditableText";
@@ -84,7 +85,7 @@ export default function EssentialsHero({ data = {}, isEditMode = false, onUpdate
                             viewport={{ once: true }}
                             transition={{ duration: 0.8, ease: [0.7, 0, 0.84, 0] }}
                         >
-                            <Image
+                            <PremiumImageLoader
                                 src={image}
                                 alt={heading}
                                 fill

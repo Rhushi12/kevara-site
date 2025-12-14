@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import ImageWithLoader from "@/components/ui/ImageWithLoader";
+
 import { Eye, ShoppingBag } from "lucide-react";
 import LiquidButton from "@/components/ui/LiquidButton";
 import { useQuickViewStore } from "@/lib/store";
@@ -70,7 +72,7 @@ export default function ProductCard({ product, imageAspectRatio = "aspect-[3/4]"
 
                     {/* Primary Image */}
                     {imageUrl && (
-                        <Image
+                        <ImageWithLoader
                             src={imageUrl}
                             alt={altText}
                             fill
@@ -81,7 +83,7 @@ export default function ProductCard({ product, imageAspectRatio = "aspect-[3/4]"
 
                     {/* Secondary Image */}
                     {!video && secondImageUrl && (
-                        <Image
+                        <ImageWithLoader
                             src={secondImageUrl}
                             alt={altText}
                             fill

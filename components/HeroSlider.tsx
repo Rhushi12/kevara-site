@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import PremiumImageLoader from "@/components/ui/PremiumImageLoader";
 import { HERO_SLIDES } from "@/lib/heroData";
 import LiquidButton from "@/components/ui/LiquidButton";
 
@@ -190,7 +191,7 @@ export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, o
                         {/* Image Layer */}
                         <div className="relative w-full h-full">
                             {activeSlide.image && typeof activeSlide.image === 'string' && activeSlide.image.trim() !== "" ? (
-                                <Image
+                                <PremiumImageLoader
                                     src={activeSlide.image}
                                     alt={activeSlide.heading || "Hero Slide"}
                                     fill

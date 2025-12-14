@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import PremiumImageLoader from "@/components/ui/PremiumImageLoader";
 import { Upload } from "lucide-react";
 import EditableText from "@/components/admin/EditableText";
 import { authUpload } from "@/lib/auth-client";
@@ -125,7 +126,7 @@ export default function FocalOnYou({
                             key={item.id}
                             className="relative overflow-hidden bg-gray-100 group w-24 h-24 md:w-[166px] md:h-[166px] rounded-lg"
                         >
-                            <Image
+                            <PremiumImageLoader
                                 src={item.image}
                                 alt="Instagram look"
                                 fill

@@ -63,6 +63,8 @@ function SearchPageContent() {
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         if (searchInput.trim()) {
+            // Use replace to update current search without adding to history stack repeatedly
+            // or push if you want history. Let's use push as standard.
             router.push(`/search?q=${encodeURIComponent(searchInput.trim())}`);
         }
     };
@@ -184,6 +186,7 @@ function SearchPageContent() {
                             />
                             <button
                                 type="submit"
+                                onClick={handleSearch}
                                 className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#006D77] transition-colors"
                             >
                                 <Search size={20} className="md:w-[22px] md:h-[22px]" />
@@ -282,7 +285,7 @@ function SearchPageContent() {
                         {/* Product Grid */}
                         <div>
                             {displayedProducts.length > 0 ? (
-                                <div className="grid grid-cols-2 md:grid-cols-[repeat(3,314px)] justify-center gap-4 md:gap-6">
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 justify-center gap-4 md:gap-6">
                                     {displayedProducts.map((product, index) => (
                                         <ProductCard
                                             key={product.node.id || index}

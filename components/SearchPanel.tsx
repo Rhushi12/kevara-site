@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { X, Search, ChevronDown, ChevronUp } from "lucide-react";
 import Image from "next/image";
+import ImageWithLoader from "@/components/ui/ImageWithLoader";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { create } from "zustand";
@@ -201,7 +203,7 @@ export default function SearchPanel() {
             onClick={closeSearch}
         >
             {/* Pre-layers for staggered effect */}
-            <div ref={preLayersRef} className="absolute inset-y-0 right-0 w-[480px] pointer-events-none overflow-hidden z-20">
+            <div ref={preLayersRef} className="absolute inset-y-0 right-0 w-full md:w-[480px] pointer-events-none overflow-hidden z-20">
                 <div className="search-prelayer absolute inset-0 bg-[#006D77] z-10" />
                 <div className="search-prelayer absolute inset-0 bg-[#FDFBF7] z-20" />
             </div>
@@ -209,9 +211,10 @@ export default function SearchPanel() {
             {/* Main Panel */}
             <div
                 ref={panelRef}
-                className="absolute inset-y-0 right-0 w-[480px] bg-white shadow-2xl z-30 flex flex-col"
+                className="absolute inset-y-0 right-0 w-full md:w-[480px] bg-white shadow-2xl z-30 flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >
+
                 <div ref={contentRef} className="flex flex-col h-full">
                     {/* Header */}
                     <div className="search-content-item flex justify-between items-center p-6 border-b border-gray-100">
@@ -318,8 +321,8 @@ export default function SearchPanel() {
                                 <p>No products found for "{searchQuery}"</p>
                             </div>
                         ) : (
-                            <div className="space-y-4">
-                                <p className="text-sm text-gray-500 mb-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <p className="text-sm text-gray-500 col-span-2 mb-2">
                                     {filteredProducts.length} result{filteredProducts.length !== 1 ? "s" : ""} found
                                 </p>
                                 {filteredProducts.slice(0, 8).map((product) => {
@@ -333,23 +336,23 @@ export default function SearchPanel() {
                                         <button
                                             key={handle}
                                             onClick={() => handleProductClick(productSlug)}
-                                            className="flex gap-4 w-full text-left hover:bg-gray-50 p-2 rounded-lg transition-colors group"
+                                            className="group flex flex-col text-left hover:bg-gray-50 p-2 rounded-lg transition-colors"
                                         >
-                                            <div className="relative w-16 h-20 bg-gray-100 rounded-sm overflow-hidden shrink-0">
+                                            <div className="relative w-full aspect-[3/4] bg-gray-100 rounded-sm overflow-hidden mb-3">
                                                 {imageUrl && (
-                                                    <Image
+                                                    <ImageWithLoader
                                                         src={imageUrl}
                                                         alt={title}
                                                         fill
-                                                        className="object-cover group-hover:scale-105 transition-transform"
+                                                        className="object-cover group-hover:scale-105 transition-transform duration-700"
                                                     />
                                                 )}
                                             </div>
-                                            <div className="flex-1 min-w-0">
+                                            <div className="min-w-0">
                                                 <h4 className="text-sm font-medium text-slate-900 truncate group-hover:text-[#006D77] transition-colors">
                                                     {title}
                                                 </h4>
-                                                <p className="text-sm text-slate-600 mt-1">
+                                                <p className="text-sm text-slate-600 mt-1 font-medium">
                                                     {new Intl.NumberFormat("en-IN", {
                                                         style: "currency",
                                                         currency: currency,
@@ -363,12 +366,13 @@ export default function SearchPanel() {
                                 {filteredProducts.length > 8 && (
                                     <button
                                         onClick={handleSearch}
-                                        className="w-full py-3 text-sm font-medium text-[#006D77] hover:text-[#005a63] transition-colors text-center"
+                                        className="col-span-2 w-full py-3 text-sm font-medium text-[#006D77] hover:text-[#005a63] transition-colors text-center border-t border-gray-100 mt-2"
                                     >
                                         View all {filteredProducts.length} results →
                                     </button>
                                 )}
                             </div>
+
                         )}
                     </div>
 
