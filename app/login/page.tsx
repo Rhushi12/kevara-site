@@ -7,12 +7,14 @@ import Link from "next/link";
 // Let's keep it clean but functional.
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
 export default function LoginPage() {
-    const { signInWithGoogle, user } = useAuth();
+    const { signInWithGoogle, signInWithEmail, user } = useAuth();
     const router = useRouter();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         if (user) {
@@ -32,6 +34,37 @@ export default function LoginPage() {
     const handleSkip = () => {
         localStorage.setItem("hasVisited", "true");
         router.push("/");
+    };
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setError("");
+        setLoading(true);
+
+        const formData = new FormData(e.currentTarget);
+        const email = formData.get("email") as string;
+        const password = formData.get("password") as string;
+
+        if (!email || !password) {
+            setError("Please fill in all fields");
+            setLoading(false);
+            return;
+        }
+
+        try {
+            await signInWithEmail(email, password);
+            localStorage.setItem("hasVisited", "true");
+            // router.push("/"); // AuthContext listener will handle redirect
+        } catch (err: any) {
+            console.error(err);
+            if (err.code === 'auth/invalid-credential') {
+                setError("Invalid email or password.");
+            } else {
+                setError("Login failed. Please try again.");
+            }
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -94,13 +127,21 @@ export default function LoginPage() {
                             </div>
                         </div>
 
-                        <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+                        {error && (
+                            <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-md border border-red-100">
+                                {error}
+                            </div>
+                        )}
+
+                        <form className="space-y-4" onSubmit={handleSubmit}>
                             <input
+                                name="email"
                                 type="email"
                                 placeholder="Email address"
                                 className="w-full bg-white border border-gray-200 px-4 py-3.5 text-slate-900 placeholder:text-gray-400 focus:outline-none focus:border-[#0E4D55] transition-colors rounded-sm"
                             />
                             <input
+                                name="password"
                                 type="password"
                                 placeholder="Password"
                                 className="w-full bg-white border border-gray-200 px-4 py-3.5 text-slate-900 placeholder:text-gray-400 focus:outline-none focus:border-[#0E4D55] transition-colors rounded-sm"
@@ -111,9 +152,11 @@ export default function LoginPage() {
                                 </Link>
                             </div>
                             <button
-                                className="w-full bg-[#0E4D55] text-white py-3.5 rounded-sm font-medium hover:bg-[#0A3A40] transition-colors shadow-lg shadow-[#0E4D55]/10 mt-2"
+                                type="submit"
+                                disabled={loading}
+                                className="w-full bg-[#0E4D55] text-white py-3.5 rounded-sm font-medium hover:bg-[#0A3A40] transition-colors shadow-lg shadow-[#0E4D55]/10 mt-2 disabled:opacity-50"
                             >
-                                Sign In
+                                {loading ? "Signing In..." : "Sign In"}
                             </button>
                         </form>
                     </div>

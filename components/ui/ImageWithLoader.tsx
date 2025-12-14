@@ -3,20 +3,23 @@
 import { useState } from "react";
 import Image, { ImageProps } from "next/image";
 
-export default function ImageWithLoader({ className, ...props }: ImageProps) {
+interface ImageWithLoaderProps extends ImageProps {
+    skipFadeIn?: boolean;
+}
+
+export default function ImageWithLoader({ className, skipFadeIn = false, ...props }: ImageWithLoaderProps) {
     const [isLoading, setIsLoading] = useState(true);
 
     return (
         <>
             {isLoading && (
-                <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10">
-                    <div className="w-8 h-8 border-2 border-gray-200 border-t-[#006D77] rounded-full animate-spin" />
+                <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10 transition-opacity duration-300">
+                    {/* Spinner or empty, the bg covers it */}
                 </div>
             )}
             <Image
                 {...props}
-                className={`${className || ""} transition-opacity duration-500 ${isLoading ? "opacity-0" : "opacity-100"
-                    }`}
+                className={`${className || ""} ${!skipFadeIn ? `transition-opacity duration-500 ${isLoading ? "opacity-0" : "opacity-100"}` : ""}`}
                 onLoad={() => setIsLoading(false)}
             />
         </>

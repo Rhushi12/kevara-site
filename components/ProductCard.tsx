@@ -87,6 +87,7 @@ export default function ProductCard({ product, imageAspectRatio = "aspect-[3/4]"
                             src={secondImageUrl}
                             alt={altText}
                             fill
+                            skipFadeIn={true}
                             className="object-cover object-center absolute inset-0 opacity-0 transition-opacity duration-500 group-hover/card:opacity-100 z-20"
                             sizes="(max-width: 768px) 50vw, 25vw"
                         />

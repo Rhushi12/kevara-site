@@ -6,11 +6,13 @@ import Footer from "@/components/Footer";
 import LiquidButton from "@/components/ui/LiquidButton";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function SignupPage() {
-    const { signInWithGoogle, user } = useAuth();
+    const { signInWithGoogle, signUpWithEmail, user } = useAuth();
     const router = useRouter();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         if (user) {
@@ -23,6 +25,40 @@ export default function SignupPage() {
             await signInWithGoogle();
         } catch (error) {
             console.error("Signup failed", error);
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setError("");
+        setLoading(true);
+
+        const formData = new FormData(e.currentTarget);
+        const firstName = formData.get("firstName") as string;
+        const lastName = formData.get("lastName") as string;
+        const email = formData.get("email") as string;
+        const password = formData.get("password") as string;
+
+        if (!firstName || !lastName || !email || !password) {
+            setError("Please fill in all fields");
+            setLoading(false);
+            return;
+        }
+
+        try {
+            await signUpWithEmail(email, password, `${firstName} ${lastName}`);
+            router.push("/");
+        } catch (err: any) {
+            console.error(err);
+            if (err.code === 'auth/email-already-in-use') {
+                setError("Email already in use. Try logging in.");
+            } else if (err.code === 'auth/weak-password') {
+                setError("Password should be at least 6 characters.");
+            } else {
+                setError("Failed to create account. Please try again.");
+            }
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -57,41 +93,56 @@ export default function SignupPage() {
                         </div>
                     </div>
 
-                    <form className="space-y-6">
+                    {error && (
+                        <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-md border border-red-100">
+                            {error}
+                        </div>
+                    )}
+
+                    <form className="space-y-6" onSubmit={handleSubmit}>
                         <div>
                             <input
+                                name="firstName"
                                 type="text"
                                 placeholder="First Name"
+                                required
                                 className="w-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-slate-900 placeholder:text-gray-400 focus:outline-none focus:border-[#006D77] transition-colors"
                             />
                         </div>
                         <div>
                             <input
+                                name="lastName"
                                 type="text"
                                 placeholder="Last Name"
+                                required
                                 className="w-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-slate-900 placeholder:text-gray-400 focus:outline-none focus:border-[#006D77] transition-colors"
                             />
                         </div>
                         <div>
                             <input
+                                name="email"
                                 type="email"
                                 placeholder="Email"
+                                required
                                 className="w-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-slate-900 placeholder:text-gray-400 focus:outline-none focus:border-[#006D77] transition-colors"
                             />
                         </div>
                         <div>
                             <input
+                                name="password"
                                 type="password"
                                 placeholder="Password"
+                                required
                                 className="w-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-slate-900 placeholder:text-gray-400 focus:outline-none focus:border-[#006D77] transition-colors"
                             />
                         </div>
 
                         <LiquidButton
                             type="submit"
-                            className="w-full bg-[#006D77] text-white py-3 font-medium hover:bg-[#005a63]"
+                            disabled={loading}
+                            className="w-full bg-[#006D77] text-white py-3 font-medium hover:bg-[#005a63] disabled:opacity-50"
                         >
-                            Create my account
+                            {loading ? "Creating account..." : "Create my account"}
                         </LiquidButton>
                     </form>
 

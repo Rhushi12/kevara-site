@@ -6,7 +6,10 @@ import {
     User,
     GoogleAuthProvider,
     signInWithPopup,
-    signOut
+    signOut,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    updateProfile
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
@@ -15,6 +18,8 @@ interface AuthContextType {
     loading: boolean;
     isAdmin: boolean;
     signInWithGoogle: () => Promise<void>;
+    signUpWithEmail: (email: string, pass: string, name: string) => Promise<void>;
+    signInWithEmail: (email: string, pass: string) => Promise<void>;
     logout: () => Promise<void>;
 }
 
@@ -23,6 +28,8 @@ const AuthContext = createContext<AuthContextType>({
     loading: true,
     isAdmin: false,
     signInWithGoogle: async () => { },
+    signUpWithEmail: async () => { },
+    signInWithEmail: async () => { },
     logout: async () => { },
 });
 
@@ -92,6 +99,50 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    const signUpWithEmail = async (email: string, pass: string, name: string) => {
+        try {
+            const result = await createUserWithEmailAndPassword(auth, email, pass);
+            await updateProfile(result.user, { displayName: name });
+
+            // Sync new user to Firestore
+            const { doc, setDoc, serverTimestamp } = await import("firebase/firestore");
+            const { db } = await import("@/lib/firebase");
+
+            await setDoc(doc(db, "users", result.user.uid), {
+                uid: result.user.uid,
+                email: email,
+                displayName: name,
+                photoURL: null,
+                createdAt: serverTimestamp(),
+                lastLogin: serverTimestamp(),
+                role: "user"
+            });
+        } catch (error) {
+            console.error("Signup failed", error);
+            throw error;
+        }
+    };
+
+    const signInWithEmail = async (email: string, pass: string) => {
+        try {
+            const result = await signInWithEmailAndPassword(auth, email, pass);
+
+            // Sync login time
+            const { doc, setDoc, serverTimestamp } = await import("firebase/firestore");
+            const { db } = await import("@/lib/firebase");
+
+            await setDoc(doc(db, "users", result.user.uid), {
+                lastLogin: serverTimestamp(),
+                email: email, // ensure email is up to date
+                displayName: result.user.displayName // ensure name is up to date
+            }, { merge: true });
+
+        } catch (error) {
+            console.error("Email login failed", error);
+            throw error;
+        }
+    };
+
     const logout = async () => {
         try {
             await signOut(auth);
@@ -103,7 +154,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, isAdmin, signInWithGoogle, logout }}>
+        <AuthContext.Provider value={{ user, loading, isAdmin, signInWithGoogle, signUpWithEmail, signInWithEmail, logout }}>
             {children}
         </AuthContext.Provider>
     );
