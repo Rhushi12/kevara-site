@@ -11,16 +11,12 @@ export default function DashboardStats() {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                // Fetch Users Count
-                const usersColl = collection(db, "users");
-                const usersSnapshot = await getCountFromServer(usersColl);
-                setTotalUsers(usersSnapshot.data().count);
-
-                // Fetch Products Count from Shopify (via API)
+                // Fetch Stats from API (Products + Users from Shopify)
                 const statsRes = await fetch('/api/admin/stats');
                 if (statsRes.ok) {
                     const statsData = await statsRes.json();
                     setProductCount(statsData.productCount);
+                    setTotalUsers(statsData.customerCount);
                 }
             } catch (error) {
                 console.error("Error fetching stats:", error);
