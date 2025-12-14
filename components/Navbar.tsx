@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, ShoppingBag, Menu, X } from "lucide-react";
+import { Search, ShoppingBag, Menu, X, User } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
@@ -364,33 +364,48 @@ export default function Navbar() {
                     {/* Right: Icons */}
                     <div className="flex items-center gap-6">
                         {/* Login / Account */}
+                        {/* Login / Account */}
                         {!user ? (
-                            <Link href="/login" className="hidden md:block text-sm font-medium hover:text-white/80 transition-colors">
-                                Login
-                            </Link>
+                            <>
+                                {/* Desktop: Text Link */}
+                                <Link href="/login" className="hidden md:block text-sm font-medium hover:text-white/80 transition-colors">
+                                    Login
+                                </Link>
+                                {/* Mobile: User Icon */}
+                                <Link href="/login" className="block md:hidden text-white hover:text-white/80 transition-colors">
+                                    <User size={24} />
+                                </Link>
+                            </>
                         ) : (
-                            <div className="hidden md:flex items-center gap-4">
-                                <span className="text-sm text-white/90">Hi, {user.displayName?.split(' ')[0] || 'User'}</span>
-                                {isAdmin && (
-                                    <div className="flex items-center gap-3">
-                                        <Link href="/admin" className="text-sm font-medium text-white hover:underline">
-                                            Admin
-                                        </Link>
-                                        <button
-                                            onClick={() => setIsEditMode(!isEditMode)}
-                                            className={`text-xs px-2 py-1 rounded border transition-colors ${isEditMode
-                                                ? "bg-white text-[#006D77] border-white"
-                                                : "bg-transparent text-white/80 border-white/50 hover:border-white hover:text-white"
-                                                }`}
-                                        >
-                                            {isEditMode ? "Done Editing" : "Edit Menu"}
-                                        </button>
-                                    </div>
-                                )}
-                                <button onClick={() => logout()} className="text-sm font-medium hover:text-white/80 transition-colors">
-                                    Logout
-                                </button>
-                            </div>
+                            <>
+                                {/* Desktop: Detailed Menu */}
+                                <div className="hidden md:flex items-center gap-4">
+                                    <span className="text-sm text-white/90">Hi, {user.displayName?.split(' ')[0] || 'User'}</span>
+                                    {isAdmin && (
+                                        <div className="flex items-center gap-3">
+                                            <Link href="/admin" className="text-sm font-medium text-white hover:underline">
+                                                Admin
+                                            </Link>
+                                            <button
+                                                onClick={() => setIsEditMode(!isEditMode)}
+                                                className={`text-xs px-2 py-1 rounded border transition-colors ${isEditMode
+                                                    ? "bg-white text-[#006D77] border-white"
+                                                    : "bg-transparent text-white/80 border-white/50 hover:border-white hover:text-white"
+                                                    }`}
+                                            >
+                                                {isEditMode ? "Done Editing" : "Edit Menu"}
+                                            </button>
+                                        </div>
+                                    )}
+                                    <button onClick={() => logout()} className="text-sm font-medium hover:text-white/80 transition-colors">
+                                        Logout
+                                    </button>
+                                </div>
+                                {/* Mobile: User Icon (Access Account) */}
+                                <Link href="/account" className="block md:hidden text-white hover:text-white/80 transition-colors">
+                                    <User size={24} />
+                                </Link>
+                            </>
                         )}
 
                         <button
