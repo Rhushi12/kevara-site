@@ -197,6 +197,8 @@ export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, o
                                     fill
                                     className="object-cover"
                                     priority
+                                    quality={100}
+                                    sizes="100vw"
                                 />
                             ) : (
                                 <div className="w-full h-full bg-gray-800 flex items-center justify-center text-gray-500">
