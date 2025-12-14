@@ -16,11 +16,12 @@ export default function DashboardStats() {
                 const usersSnapshot = await getCountFromServer(usersColl);
                 setTotalUsers(usersSnapshot.data().count);
 
-                // Fetch Products Count
-                // We typically seed products into 'products' collection in AdminPage
-                const productsColl = collection(db, "products");
-                const productsSnapshot = await getCountFromServer(productsColl);
-                setProductCount(productsSnapshot.data().count);
+                // Fetch Products Count from Shopify (via API)
+                const statsRes = await fetch('/api/admin/stats');
+                if (statsRes.ok) {
+                    const statsData = await statsRes.json();
+                    setProductCount(statsData.productCount);
+                }
             } catch (error) {
                 console.error("Error fetching stats:", error);
             }
