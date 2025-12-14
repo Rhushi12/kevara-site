@@ -119,7 +119,7 @@ export default function SalesSplit({ data, isEditMode = false, onUpdate }: Sales
             )}
 
             <div
-                className="flex md:grid gap-4 md:gap-8 overflow-x-auto pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory scrollbar-hide"
+                className="flex md:grid gap-4 md:gap-8 overflow-x-auto pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory scrollbar-hide max-w-[100vw]"
                 style={{
                     gridTemplateColumns: `repeat(${cards.length}, 1fr)`
                 }}

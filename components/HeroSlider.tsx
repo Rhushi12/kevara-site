@@ -187,6 +187,19 @@ export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, o
                         initial="initial"
                         animate="animate"
                         exit="exit"
+                        drag="x"
+                        dragConstraints={{ left: 0, right: 0 }}
+                        dragElastic={0.2}
+                        onDragEnd={(e, { offset, velocity }) => {
+                            const swipe = Math.abs(offset.x) * velocity.x;
+                            const swipeConfidenceThreshold = 10000;
+                            if (swipe < -swipeConfidenceThreshold) {
+                                nextSlide();
+                            } else if (swipe > swipeConfidenceThreshold) {
+                                setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+                            }
+                        }}
+                        style={{ x: 0 }} // Ensure no residual transform
                     >
                         {/* Image Layer */}
                         <div className="relative w-full h-full">
