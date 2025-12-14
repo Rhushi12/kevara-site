@@ -1,16 +1,16 @@
 import { shopifyFetch } from './shopify-admin';
 
 export interface CustomerInput {
-    firstName?: string;
-    lastName?: string;
-    email: string;
-    phone?: string;
-    acceptsMarketing?: boolean;
+  firstName?: string;
+  lastName?: string;
+  email: string;
+  phone?: string;
+  acceptsMarketing?: boolean;
 }
 
 // 1. CREATE CUSTOMER
 export async function createShopifyCustomer(input: CustomerInput) {
-    const mutation = `
+  const mutation = `
     mutation customerCreate($input: CustomerInput!) {
       customerCreate(input: $input) {
         customer {
@@ -27,40 +27,40 @@ export async function createShopifyCustomer(input: CustomerInput) {
     }
   `;
 
-    const variables = {
-        input: {
-            email: input.email,
-            firstName: input.firstName,
-            lastName: input.lastName,
-            phone: input.phone,
-            emailMarketingConsent: {
-                marketingState: input.acceptsMarketing ? "SUBSCRIBED" : "NOT_SUBSCRIBED",
-                marketingOptInLevel: "SINGLE_OPT_IN"
-            },
-            tags: ["lead_from_website"]
-        }
-    };
+  const variables = {
+    input: {
+      email: input.email,
+      firstName: input.firstName,
+      lastName: input.lastName,
+      phone: input.phone,
+      emailMarketingConsent: {
+        marketingState: input.acceptsMarketing ? "SUBSCRIBED" : "NOT_SUBSCRIBED",
+        marketingOptInLevel: "SINGLE_OPT_IN"
+      },
+      tags: ["lead_from_website"]
+    }
+  };
 
-    const result = await shopifyFetch(mutation, variables);
+  const result = await shopifyFetch(mutation, variables);
 
-    if (result.customerCreate.userErrors.length > 0) {
-        // If email already exists, we should try to return that customer instead of failing
-        const emailError = result.customerCreate.userErrors.find((e: any) => e.message.includes("taken"));
-        if (emailError) {
-            console.log(`[createShopifyCustomer] Email ${input.email} already exists. Fetching existing customer.`);
-            return await getCustomerByEmail(input.email);
-        }
-
-        console.error("Error creating customer:", result.customerCreate.userErrors);
-        throw new Error("Failed to create customer: " + JSON.stringify(result.customerCreate.userErrors));
+  if (result.customerCreate.userErrors.length > 0) {
+    // If email already exists, we should try to return that customer instead of failing
+    const emailError = result.customerCreate.userErrors.find((e: any) => e.message.includes("taken"));
+    if (emailError) {
+      console.log(`[createShopifyCustomer] Email ${input.email} already exists. Fetching existing customer.`);
+      return await getCustomerByEmail(input.email);
     }
 
-    return result.customerCreate.customer;
+    console.error("Error creating customer:", result.customerCreate.userErrors);
+    throw new Error("Failed to create customer: " + JSON.stringify(result.customerCreate.userErrors));
+  }
+
+  return result.customerCreate.customer;
 }
 
 // 2. GET CUSTOMER BY EMAIL
 export async function getCustomerByEmail(email: string) {
-    const query = `
+  const query = `
     query getCustomer($query: String!) {
       customers(first: 1, query: $query) {
         edges {
@@ -74,7 +74,7 @@ export async function getCustomerByEmail(email: string) {
               amount
               currencyCode
             }
-            ordersCount
+            numberOfOrders
             tags
           }
         }
@@ -82,18 +82,18 @@ export async function getCustomerByEmail(email: string) {
     }
   `;
 
-    const result = await shopifyFetch(query, { query: `email:${email}` });
+  const result = await shopifyFetch(query, { query: `email:${email}` });
 
-    if (result.customers.edges.length === 0) {
-        return null;
-    }
+  if (result.customers.edges.length === 0) {
+    return null;
+  }
 
-    return result.customers.edges[0].node;
+  return result.customers.edges[0].node;
 }
 
 // 3. GET ALL CUSTOMERS (For Admin Dashboard)
 export async function getShopifyCustomers(limit = 50) {
-    const query = `
+  const query = `
     query getCustomers($first: Int!) {
       customers(first: $first, sortKey: UPDATED_AT, reverse: true) {
         edges {
@@ -107,7 +107,7 @@ export async function getShopifyCustomers(limit = 50) {
               amount
               currencyCode
             }
-            ordersCount
+            numberOfOrders
             tags
             lastOrder {
               createdAt
@@ -118,16 +118,16 @@ export async function getShopifyCustomers(limit = 50) {
     }
   `;
 
-    const result = await shopifyFetch(query, { first: limit });
+  const result = await shopifyFetch(query, { first: limit });
 
-    return result.customers.edges.map((edge: any) => edge.node);
+  return result.customers.edges.map((edge: any) => edge.node);
 }
 
 // 4. UPDATE CUSTOMER (e.g. on login to update last seen or simplified sync)
 // Note: Shopify doesn't have a "last login" field we can easily write to without Metafields.
 // For now we will just rely on "updatedAt" which changes on any update.
 export async function updateShopifyCustomer(id: string, input: Partial<CustomerInput>) {
-    const mutation = `
+  const mutation = `
     mutation customerUpdate($input: CustomerInput!) {
       customerUpdate(input: $input) {
         customer {
@@ -141,13 +141,13 @@ export async function updateShopifyCustomer(id: string, input: Partial<CustomerI
     }
   `;
 
-    const variables = {
-        input: {
-            id: id,
-            ...input
-        }
-    };
+  const variables = {
+    input: {
+      id: id,
+      ...input
+    }
+  };
 
-    const result = await shopifyFetch(mutation, variables);
-    return result.customerUpdate.customer;
+  const result = await shopifyFetch(mutation, variables);
+  return result.customerUpdate.customer;
 }
