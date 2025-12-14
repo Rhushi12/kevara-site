@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import EditableText from "@/components/admin/EditableText";
 import { useState } from "react";
 import { Upload } from "lucide-react";
+import { authUpload } from "@/lib/auth-client";
 
 interface AboutUsSectionProps {
     data?: {
@@ -48,10 +49,7 @@ export default function AboutUsSection({ data = {}, isEditMode = false, onUpdate
         formData.append('file', file);
 
         try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await authUpload('/api/upload', formData);
 
             if (res.ok) {
                 const data = await res.json();
@@ -66,117 +64,21 @@ export default function AboutUsSection({ data = {}, isEditMode = false, onUpdate
     };
 
     return (
-        <section className="relative h-[669px] overflow-hidden">
-            {/* Split Background: 70% Teal (Left) / 30% Cream (Right) - INVERTED */}
-            <div className="absolute inset-0 flex">
-                <div className="w-[70%] bg-[#003840]" />
-                <div className="w-[30%] bg-warm-cream" />
+        <section className="relative w-full overflow-hidden flex flex-col md:block md:h-[669px]">
+            {/* Split Background: Mobile (Top Cream/Bottom Teal) vs Desktop (Left Teal/Right Cream) */}
+            <div className="absolute inset-0 flex flex-col md:flex-row">
+                <div className="h-[60%] md:h-full md:w-[70%] bg-[#003840] order-2 md:order-1" />
+                <div className="h-[40%] md:h-full md:w-[30%] bg-warm-cream order-1 md:order-2" />
             </div>
 
             {/* Content Container */}
-            <div className="container mx-auto px-4 h-full relative z-10">
-                <div className="flex items-center justify-center h-full">
+            <div className="container mx-auto px-4 h-full relative z-10 flex flex-col md:block">
+                <div className="flex flex-col md:flex-row items-center justify-center h-full pt-12 md:pt-0">
 
-                    {/* Text Content (Centered on Teal Background - Left Side) - INVERTED */}
-                    <div className="absolute left-0 w-[calc(100%-616px-107px)] text-center text-white flex items-center justify-center h-full">
-                        <div className="px-8 max-w-2xl mx-auto">
-                            <motion.div
-                                initial="hidden"
-                                whileInView="visible"
-                                viewport={{ once: true }}
-                                variants={{
-                                    hidden: {},
-                                    visible: {
-                                        transition: {
-                                            staggerChildren: 0.15
-                                        }
-                                    }
-                                }}
-                                className="max-w-2xl mx-auto"
-                            >
-                                {/* Small Subheading (Figtree) */}
-                                <motion.div variants={fadeInUp} className="mb-6">
-                                    {isEditMode ? (
-                                        <EditableText
-                                            value={label}
-                                            onSave={(val) => updateField("label", val)}
-                                            isAdmin={true}
-                                            className="text-[13px] font-semibold tracking-[0.2em] uppercase text-white/90 font-figtree bg-white/10 border-b border-white/30 px-2 py-1 inline-block"
-                                        />
-                                    ) : (
-                                        <p className="text-[13px] font-semibold tracking-[0.2em] uppercase text-white/90 font-figtree">
-                                            {label}
-                                        </p>
-                                    )}
-                                </motion.div>
-
-                                {/* Heading (Lora) */}
-                                <motion.div variants={fadeInUp} className="mb-8">
-                                    {isEditMode ? (
-                                        <EditableText
-                                            value={heading}
-                                            onSave={(val) => updateField("heading", val)}
-                                            isAdmin={true}
-                                            className="text-[36px] font-lora leading-tight text-white bg-white/10 border-b border-white/30 px-2 py-1 inline-block"
-                                        />
-                                    ) : (
-                                        <h2 className="text-[36px] font-lora leading-tight text-white">
-                                            {heading}
-                                        </h2>
-                                    )}
-                                </motion.div>
-
-                                {/* Description */}
-                                <motion.div variants={fadeInUp} className="mb-10">
-                                    {isEditMode ? (
-                                        <EditableText
-                                            value={description}
-                                            onSave={(val) => updateField("description", val)}
-                                            isAdmin={true}
-                                            className="text-[15px] leading-relaxed font-figtree text-white/85 max-w-xl mx-auto bg-white/10 border-b border-white/30 px-2 py-1"
-                                            multiline={true}
-                                        />
-                                    ) : (
-                                        <p className="text-[15px] leading-relaxed font-figtree text-white/85 max-w-xl mx-auto">
-                                            {description}
-                                        </p>
-                                    )}
-                                </motion.div>
-
-                                {/* Button */}
-                                <motion.div variants={fadeInUp}>
-                                    {isEditMode ? (
-                                        <div className="space-y-2 inline-block">
-                                            <EditableText
-                                                value={buttonText}
-                                                onSave={(val) => updateField("buttonText", val)}
-                                                isAdmin={true}
-                                                className="bg-white text-[#003840] px-10 py-4 rounded-sm font-bold text-[13px] tracking-[0.2em] uppercase hover:bg-gray-100 transition-all hover:shadow-lg inline-block border border-white/30 font-figtree"
-                                            />
-                                            <EditableText
-                                                value={buttonLink}
-                                                onSave={(val) => updateField("buttonLink", val)}
-                                                isAdmin={true}
-                                                className="block text-[10px] text-white/60 bg-white/10 border-b border-white/30 px-2 py-1 mt-2 font-figtree"
-                                            />
-                                        </div>
-                                    ) : (
-                                        <Link
-                                            href={buttonLink}
-                                            className="bg-white text-[#003840] px-10 py-4 rounded-sm font-bold text-[13px] tracking-[0.2em] uppercase hover:bg-gray-100 transition-all hover:shadow-lg inline-block font-figtree"
-                                        >
-                                            {buttonText}
-                                        </Link>
-                                    )}
-                                </motion.div>
-                            </motion.div>
-                        </div>
-                    </div>
-
-                    {/* Floating Image (Right Side) - INVERTED */}
-                    <div className="absolute right-[107px] top-1/2 -translate-y-1/2 z-20">
+                    {/* Floating Image (Right Side on Desktop, Top on Mobile) */}
+                    <div className="relative md:absolute md:right-[107px] md:top-1/2 md:-translate-y-1/2 z-20 mb-8 md:mb-0 order-1 md:order-2">
                         <motion.div
-                            className="relative w-[509px] h-[509px] shadow-2xl overflow-hidden rounded-sm"
+                            className="relative w-[300px] h-[300px] md:w-[509px] md:h-[509px] shadow-2xl overflow-hidden rounded-sm mx-auto"
                             initial={{ clipPath: 'inset(0 100% 0 0)' }} // Hide from right
                             whileInView={{ clipPath: 'inset(0 0 0 0)' }} // Reveal left to right
                             viewport={{ once: true }}
@@ -228,6 +130,102 @@ export default function AboutUsSection({ data = {}, isEditMode = false, onUpdate
                                 </div>
                             )}
                         </motion.div>
+                    </div>
+
+                    {/* Text Content (Left Side on Desktop, Bottom on Mobile) */}
+                    <div className="relative md:absolute md:left-0 w-full md:w-[calc(100%-616px-107px)] text-center text-white flex items-center justify-center pb-12 md:pb-0 md:h-full order-2 md:order-1">
+                        <div className="px-4 md:px-8 max-w-2xl mx-auto">
+                            <motion.div
+                                initial="hidden"
+                                whileInView="visible"
+                                viewport={{ once: true }}
+                                variants={{
+                                    hidden: {},
+                                    visible: {
+                                        transition: {
+                                            staggerChildren: 0.15
+                                        }
+                                    }
+                                }}
+                                className="max-w-2xl mx-auto"
+                            >
+                                {/* Small Subheading (Figtree) */}
+                                <motion.div variants={fadeInUp} className="mb-4 md:mb-6">
+                                    {isEditMode ? (
+                                        <EditableText
+                                            value={label}
+                                            onSave={(val) => updateField("label", val)}
+                                            isAdmin={true}
+                                            className="text-[11px] md:text-[13px] font-semibold tracking-[0.2em] uppercase text-white/90 font-figtree bg-white/10 border-b border-white/30 px-2 py-1 inline-block"
+                                        />
+                                    ) : (
+                                        <p className="text-[11px] md:text-[13px] font-semibold tracking-[0.2em] uppercase text-white/90 font-figtree">
+                                            {label}
+                                        </p>
+                                    )}
+                                </motion.div>
+
+                                {/* Heading (Lora) */}
+                                <motion.div variants={fadeInUp} className="mb-6 md:mb-8">
+                                    {isEditMode ? (
+                                        <EditableText
+                                            value={heading}
+                                            onSave={(val) => updateField("heading", val)}
+                                            isAdmin={true}
+                                            className="text-[28px] md:text-[36px] font-lora leading-tight text-white bg-white/10 border-b border-white/30 px-2 py-1 inline-block"
+                                        />
+                                    ) : (
+                                        <h2 className="text-[28px] md:text-[36px] font-lora leading-tight text-white">
+                                            {heading}
+                                        </h2>
+                                    )}
+                                </motion.div>
+
+                                {/* Description */}
+                                <motion.div variants={fadeInUp} className="mb-8 md:mb-10">
+                                    {isEditMode ? (
+                                        <EditableText
+                                            value={description}
+                                            onSave={(val) => updateField("description", val)}
+                                            isAdmin={true}
+                                            className="text-[13px] md:text-[15px] leading-relaxed font-figtree text-white/85 max-w-xl mx-auto bg-white/10 border-b border-white/30 px-2 py-1"
+                                            multiline={true}
+                                        />
+                                    ) : (
+                                        <p className="text-[13px] md:text-[15px] leading-relaxed font-figtree text-white/85 max-w-xl mx-auto">
+                                            {description}
+                                        </p>
+                                    )}
+                                </motion.div>
+
+                                {/* Button */}
+                                <motion.div variants={fadeInUp}>
+                                    {isEditMode ? (
+                                        <div className="space-y-2 inline-block">
+                                            <EditableText
+                                                value={buttonText}
+                                                onSave={(val) => updateField("buttonText", val)}
+                                                isAdmin={true}
+                                                className="bg-white text-[#003840] px-8 md:px-10 py-3 md:py-4 rounded-sm font-bold text-[11px] md:text-[13px] tracking-[0.2em] uppercase hover:bg-gray-100 transition-all hover:shadow-lg inline-block border border-white/30 font-figtree"
+                                            />
+                                            <EditableText
+                                                value={buttonLink}
+                                                onSave={(val) => updateField("buttonLink", val)}
+                                                isAdmin={true}
+                                                className="block text-[10px] text-white/60 bg-white/10 border-b border-white/30 px-2 py-1 mt-2 font-figtree"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <Link
+                                            href={buttonLink}
+                                            className="bg-white text-[#003840] px-8 md:px-10 py-3 md:py-4 rounded-sm font-bold text-[11px] md:text-[13px] tracking-[0.2em] uppercase hover:bg-gray-100 transition-all hover:shadow-lg inline-block font-figtree"
+                                        >
+                                            {buttonText}
+                                        </Link>
+                                    )}
+                                </motion.div>
+                            </motion.div>
+                        </div>
                     </div>
 
                 </div>

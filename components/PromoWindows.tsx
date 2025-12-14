@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import EditableText from "@/components/admin/EditableText";
+import { authUpload } from "@/lib/auth-client";
 
 interface PromoWindowsProps {
     data?: {
@@ -64,10 +65,7 @@ export default function PromoWindows({ data = {}, isEditMode = false, onUpdate }
         formData.append('file', file);
 
         try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await authUpload('/api/upload', formData);
 
             if (res.ok) {
                 const data = await res.json();
@@ -93,7 +91,7 @@ export default function PromoWindows({ data = {}, isEditMode = false, onUpdate }
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.1 }}
-                    className="relative w-full md:max-w-[482px] aspect-[4/5] md:aspect-auto md:h-[320px] rounded-sm overflow-hidden group mx-auto"
+                    className="relative w-full md:max-w-[482px] h-[210px] md:h-[320px] rounded-sm overflow-hidden group mx-auto"
                 >
                     {/* Background Image */}
                     <Image
@@ -128,39 +126,39 @@ export default function PromoWindows({ data = {}, isEditMode = false, onUpdate }
                     )}
 
                     {/* Content */}
-                    <div className="absolute inset-0 px-6 py-12 md:px-[55px] md:py-[104px] flex flex-col items-start bg-transparent">
+                    <div className="absolute inset-0 px-6 py-8 md:px-[55px] md:py-[104px] flex flex-col justify-center items-start text-left bg-black/20 md:bg-transparent">
                         {isEditMode ? (
                             <>
                                 <EditableText
                                     value={window.subtitle}
                                     onSave={(val) => updateWindow(index, "subtitle", val)}
                                     isAdmin={true}
-                                    className="text-[13px] font-semibold text-white font-sans tracking-[1px] leading-[16px] mb-4 uppercase bg-white/10 border-b border-white/30 px-2 py-1"
+                                    className="text-[11px] md:text-[13px] font-semibold text-white font-sans tracking-[1px] leading-[16px] mb-2 md:mb-4 uppercase bg-white/10 border-b border-white/30 px-2 py-1"
                                 />
                                 <EditableText
                                     value={window.title}
                                     onSave={(val) => updateWindow(index, "title", val)}
                                     isAdmin={true}
-                                    className="text-[30px] font-lora text-white tracking-[-0.7px] leading-[34px] my-6 bg-white/10 border-b border-white/30 px-2 py-1"
+                                    className="text-[24px] md:text-[30px] font-lora text-white tracking-[-0.7px] leading-[34px] my-3 md:my-6 bg-white/10 border-b border-white/30 px-2 py-1"
                                 />
                                 <EditableText
                                     value={window.linkText}
                                     onSave={(val) => updateWindow(index, "linkText", val)}
                                     isAdmin={true}
-                                    className="text-[13px] font-semibold text-white font-sans tracking-[1px] leading-[23.4px] mt-4 uppercase underline hover:no-underline bg-white/10 border-b border-white/30 px-2 py-1 w-fit"
+                                    className="text-[11px] md:text-[13px] font-semibold text-white font-sans tracking-[1px] leading-[23.4px] mt-2 md:mt-4 uppercase underline hover:no-underline bg-white/10 border-b border-white/30 px-2 py-1 w-fit"
                                 />
                             </>
                         ) : (
                             <>
-                                <p className="text-[13px] font-semibold text-white font-sans tracking-[1px] leading-[16px] mb-4 uppercase">
+                                <p className="text-[11px] md:text-[13px] font-semibold text-white font-sans tracking-[1px] leading-[16px] mb-2 md:mb-4 uppercase shadow-sm">
                                     {window.subtitle}
                                 </p>
-                                <h3 className="text-[30px] font-lora text-white tracking-[-0.7px] leading-[34px] my-6">
+                                <h3 className="text-[24px] md:text-[30px] font-lora text-white tracking-[-0.7px] leading-[34px] my-3 md:my-6 shadow-sm">
                                     {window.title}
                                 </h3>
                                 <Link
                                     href={window.link}
-                                    className="text-[13px] font-semibold text-white font-sans tracking-[1px] leading-[23.4px] mt-4 uppercase underline hover:no-underline transition-all inline-block group-hover:translate-x-1"
+                                    className="text-[11px] md:text-[13px] font-semibold text-white font-sans tracking-[1px] leading-[23.4px] mt-2 md:mt-4 uppercase underline hover:no-underline transition-all inline-block group-hover:translate-x-1 shadow-sm"
                                 >
                                     {window.linkText}
                                 </Link>

@@ -16,6 +16,10 @@ import AdminPageBuilder from "@/components/admin/AdminPageBuilder";
 import ShopByOccasion from "@/components/ShopByOccasion";
 import CleanGrid from "@/components/CleanGrid";
 import ShopCategory from "@/components/ShopCategory";
+import ScrollFadeBanner from "@/components/ScrollFadeBanner";
+import PromoWindows from "@/components/PromoWindows";
+import EssentialsHero from "@/components/EssentialsHero";
+import FeaturedIn from "@/components/FeaturedIn";
 
 import SalesSplit from "@/components/SalesSplit";
 import EditorialSection from "@/components/EditorialSection";
@@ -26,6 +30,8 @@ import Features from "@/components/Features";
 import AboutUsSection from "@/components/AboutUsSection";
 import { PageContent, PageSection } from "@/types/page-editor";
 import { Trash2 } from "lucide-react";
+import Template2Renderer from "@/components/renderers/Template2Renderer";
+import Template3Renderer from "@/components/renderers/Template3Renderer";
 
 interface PageRendererProps {
     slug: string;
@@ -47,9 +53,16 @@ export default function PageRenderer({ slug }: PageRendererProps) {
         if (!slug) return;
         async function fetchContent() {
             try {
-                const res = await fetch(`/api/builder/content?handle=${slug}`);
+                const res = await fetch(`/api/builder/content?handle=${slug}`, { cache: 'no-store' });
                 if (res.ok) {
                     const data = await res.json();
+
+                    // DEBUG: Log the received data
+                    console.log(`[PageRenderer] Fetched content for '${slug}':`, data);
+                    console.log(`[PageRenderer] Sections:`, data?.sections);
+                    if (data?.sections) {
+                        console.log(`[PageRenderer] Section types:`, data.sections.map((s: any) => s?.type));
+                    }
 
                     // Handle Redirects
                     if (data.type === "redirect" && data.target) {
@@ -60,9 +73,11 @@ export default function PageRenderer({ slug }: PageRendererProps) {
                     if (data && data.sections && data.sections.length > 0) {
                         setContent(data);
                     } else {
+                        console.log(`[PageRenderer] No sections found, setting notFound`);
                         setNotFound(true);
                     }
                 } else {
+                    console.log(`[PageRenderer] Fetch failed with status:`, res.status);
                     setNotFound(true);
                 }
             } catch (error) {
@@ -142,6 +157,17 @@ export default function PageRenderer({ slug }: PageRendererProps) {
         }
     }
 
+    // New Template Renderers
+    // Check if the content specifies a template type that requires a specialized renderer
+    if (content.template_type === 'template2') {
+        return <Template2Renderer content={content} slug={slug} />;
+    }
+
+    if (content.template_type === 'template3') {
+        return <Template3Renderer content={content} slug={slug} />;
+    }
+
+    // Default Renderer (Template 1 logic / Generic Section Loop)
     return (
         <main className="min-h-screen bg-[#FDFBF7]">
             <Navbar />
@@ -288,6 +314,42 @@ export default function PageRenderer({ slug }: PageRendererProps) {
                     case "about_us":
                         return (
                             <AboutUsSection
+                                key={section.id}
+                                data={section.settings as any}
+                                isEditMode={isEditMode}
+                                onUpdate={(newSettings) => updateSection(section.id, newSettings)}
+                            />
+                        );
+                    case "scroll_banner":
+                        return (
+                            <ScrollFadeBanner
+                                key={section.id}
+                                data={section.settings as any}
+                                isEditMode={isEditMode}
+                                onUpdate={(newSettings) => updateSection(section.id, newSettings)}
+                            />
+                        );
+                    case "promo_windows":
+                        return (
+                            <PromoWindows
+                                key={section.id}
+                                data={section.settings as any}
+                                isEditMode={isEditMode}
+                                onUpdate={(newSettings) => updateSection(section.id, newSettings)}
+                            />
+                        );
+                    case "essentials_hero":
+                        return (
+                            <EssentialsHero
+                                key={section.id}
+                                data={section.settings as any}
+                                isEditMode={isEditMode}
+                                onUpdate={(newSettings) => updateSection(section.id, newSettings)}
+                            />
+                        );
+                    case "featured_in":
+                        return (
+                            <FeaturedIn
                                 key={section.id}
                                 data={section.settings as any}
                                 isEditMode={isEditMode}

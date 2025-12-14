@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShieldCheck } from "lucide-react";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 const tabs = [
     { id: "description", label: "Description" },
@@ -49,7 +50,7 @@ export default function ProductTabs({ description }: { description?: string }) {
                             className="space-y-4 text-slate-600 font-light leading-relaxed"
                         >
                             {description ? (
-                                <div dangerouslySetInnerHTML={{ __html: description }} />
+                                <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(description) }} />
                             ) : (
                                 <>
                                     <p>

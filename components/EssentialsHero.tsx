@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import EditableText from "@/components/admin/EditableText";
 import { useState } from "react";
 import { Upload } from "lucide-react";
+import { authUpload } from "@/lib/auth-client";
 
 interface EssentialsHeroProps {
     data?: {
@@ -48,10 +49,7 @@ export default function EssentialsHero({ data = {}, isEditMode = false, onUpdate
         formData.append('file', file);
 
         try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await authUpload('/api/upload', formData);
 
             if (res.ok) {
                 const data = await res.json();

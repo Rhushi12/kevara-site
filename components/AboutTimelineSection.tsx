@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Upload, Plus, X } from "lucide-react";
 import EditableText from "@/components/admin/EditableText";
+import { authUpload } from "@/lib/auth-client";
 
 interface TimelineItem {
     image: string;
@@ -98,10 +99,7 @@ export default function AboutTimelineSection({ data = {}, isEditMode = false, on
         formData.append('file', file);
 
         try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await authUpload('/api/upload', formData);
 
             if (res.ok) {
                 const uploadData = await res.json();
@@ -218,8 +216,8 @@ export default function AboutTimelineSection({ data = {}, isEditMode = false, on
     const progressPercent = items.length > 1 ? (activeIndex / (items.length - 1)) * 100 : 0;
 
     return (
-        <section className="w-full flex justify-center mt-[60px] md:mt-[80px]">
-            <div className="w-full max-w-[1374px] px-4">
+        <section className="w-full mt-[60px] md:mt-[80px]">
+            <div className="w-full max-w-[1500px] mx-auto px-4">
                 {/* Section Heading */}
                 <div className="text-center mb-[36px] md:mb-[48px]">
                     {isEditMode ? (

@@ -1,7 +1,8 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -10,11 +11,26 @@ import WomenShopEssentials from "@/components/WomenShopEssentials"; // Reusing g
 import LookbookFeature from "@/components/LookbookFeature";
 import FeaturedProduct from "@/components/FeaturedProduct";
 import CollectionGrid from "@/components/CollectionGrid";
+import ScrollFadeBanner from "@/components/ScrollFadeBanner";
+import PromoWindows from "@/components/PromoWindows";
+import EssentialsHero from "@/components/EssentialsHero";
+import FeaturedIn from "@/components/FeaturedIn";
 import { PageContent, PageSection } from "@/types/page-editor";
 import PremiumPreloader from "@/components/PremiumPreloader";
 import UnderConstruction from "@/components/UnderConstruction";
 import AdminPageBuilder from "@/components/admin/AdminPageBuilder";
 import { Trash2 } from "lucide-react";
+
+// Dynamic imports for template renderers
+const Template2Renderer = dynamic(() => import("@/components/renderers/Template2Renderer"), {
+    loading: () => <PremiumPreloader />,
+    ssr: false
+});
+
+const Template3Renderer = dynamic(() => import("@/components/renderers/Template3Renderer"), {
+    loading: () => <PremiumPreloader />,
+    ssr: false
+});
 
 // Default Content for New Collections
 const DEFAULT_COLLECTION_CONTENT: PageContent = {
@@ -49,6 +65,7 @@ export default function CollectionPage() {
     const params = useParams();
     const slug = params?.slug as string;
     const { isAdmin } = useAuth();
+    const router = useRouter();
 
     const [content, setContent] = useState<PageContent>(DEFAULT_COLLECTION_CONTENT);
     const [isEditMode, setIsEditMode] = useState(false);
@@ -65,6 +82,10 @@ export default function CollectionPage() {
                 const res = await fetch(`/api/builder/content?handle=${slug}`);
                 if (res.ok) {
                     const data = await res.json();
+
+                    // DEBUG: Log template type
+                    console.log(`[CollectionPage] Loaded content for '${slug}', template_type:`, data?.template_type);
+
                     if (data && data.sections && data.sections.length > 0) {
                         setContent(data);
                     } else {
@@ -146,6 +167,16 @@ export default function CollectionPage() {
         }
     }
 
+    // Template-based routing: Use full template layouts for template2/template3
+    if (content.template_type === 'template2') {
+        return <Template2Renderer content={content} slug={slug} />;
+    }
+
+    if (content.template_type === 'template3') {
+        return <Template3Renderer content={content} slug={slug} />;
+    }
+
+    // Default collection page layout for other content
     return (
         <main className="min-h-screen bg-[#FDFBF7]">
             <Navbar />
@@ -236,6 +267,42 @@ export default function CollectionPage() {
                                 data={(section.settings as any).items || []}
                                 isEditMode={isEditMode}
                                 onUpdate={(newItems) => updateSection(section.id, { items: newItems })}
+                            />
+                        );
+                    case "scroll_banner":
+                        return (
+                            <ScrollFadeBanner
+                                key={section.id}
+                                data={section.settings as any}
+                                isEditMode={isEditMode}
+                                onUpdate={(newSettings) => updateSection(section.id, newSettings)}
+                            />
+                        );
+                    case "promo_windows":
+                        return (
+                            <PromoWindows
+                                key={section.id}
+                                data={section.settings as any}
+                                isEditMode={isEditMode}
+                                onUpdate={(newSettings) => updateSection(section.id, newSettings)}
+                            />
+                        );
+                    case "essentials_hero":
+                        return (
+                            <EssentialsHero
+                                key={section.id}
+                                data={section.settings as any}
+                                isEditMode={isEditMode}
+                                onUpdate={(newSettings) => updateSection(section.id, newSettings)}
+                            />
+                        );
+                    case "featured_in":
+                        return (
+                            <FeaturedIn
+                                key={section.id}
+                                data={section.settings as any}
+                                isEditMode={isEditMode}
+                                onUpdate={(newSettings) => updateSection(section.id, newSettings)}
                             />
                         );
                     default:

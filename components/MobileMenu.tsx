@@ -169,30 +169,32 @@ export default function MobileMenu({ isOpen, onClose, menuItems }: MobileMenuPro
                                                                 </div>
                                                             ))}
 
-                                                            {/* Images Grid */}
+                                                            {/* Images Carousel */}
                                                             {item.images && (
-                                                                <div className="grid grid-cols-2 gap-3 mt-6">
-                                                                    {item.images.map((img, idx) => (
-                                                                        <Link
-                                                                            key={idx}
-                                                                            href={img.href}
-                                                                            onClick={onClose}
-                                                                            className="group block"
-                                                                        >
-                                                                            <div className="relative aspect-[3/4] w-full overflow-hidden bg-gray-100 rounded mb-2">
-                                                                                <Image
-                                                                                    src={img.src}
-                                                                                    alt={img.label}
-                                                                                    fill
-                                                                                    className="object-cover"
-                                                                                    sizes="40vw"
-                                                                                />
-                                                                            </div>
-                                                                            <span className="text-[10px] font-bold tracking-widest uppercase text-slate-900">
-                                                                                {img.label}
-                                                                            </span>
-                                                                        </Link>
-                                                                    ))}
+                                                                <div className="mt-6 -mx-6">
+                                                                    <div className="flex gap-3 overflow-x-auto px-6 snap-x snap-mandatory scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+                                                                        {item.images.map((img, idx) => (
+                                                                            <Link
+                                                                                key={idx}
+                                                                                href={img.href}
+                                                                                onClick={onClose}
+                                                                                className="group block flex-shrink-0 snap-start"
+                                                                            >
+                                                                                <div className="relative w-32 h-40 overflow-hidden bg-gray-100 rounded mb-2">
+                                                                                    <Image
+                                                                                        src={img.src}
+                                                                                        alt={img.label}
+                                                                                        fill
+                                                                                        className="object-cover"
+                                                                                        sizes="128px"
+                                                                                    />
+                                                                                </div>
+                                                                                <span className="text-[10px] font-bold tracking-widest uppercase text-slate-900">
+                                                                                    {img.label}
+                                                                                </span>
+                                                                            </Link>
+                                                                        ))}
+                                                                    </div>
                                                                 </div>
                                                             )}
                                                         </div>

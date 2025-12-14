@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 
 interface EditableTextProps {
@@ -8,6 +8,7 @@ interface EditableTextProps {
     onSave: (newValue: string) => void;
     isAdmin: boolean;
     className?: string;
+    style?: CSSProperties;
     as?: "span" | "h1" | "h2" | "h3" | "p" | "div";
     multiline?: boolean;
     placeholder?: string;
@@ -18,6 +19,7 @@ export default function EditableText({
     onSave,
     isAdmin,
     className,
+    style,
     as: Component = "span",
     placeholder,
     multiline = false,
@@ -76,6 +78,7 @@ export default function EditableText({
                         "bg-white text-black border border-[#006D77] rounded px-1 outline-none min-w-[50px] font-inherit w-full",
                         className
                     )}
+                    style={style}
                     onClick={(e) => e.stopPropagation()}
                     rows={4}
                 />
@@ -92,6 +95,7 @@ export default function EditableText({
                     "bg-white text-black border border-[#006D77] rounded px-1 outline-none min-w-[50px] font-inherit",
                     className
                 )}
+                style={style}
                 onClick={(e) => e.stopPropagation()} // Prevent triggering parent clicks
             />
         );
@@ -110,6 +114,7 @@ export default function EditableText({
                 isAdmin && "cursor-pointer hover:bg-[#006D77]/10 hover:outline hover:outline-1 hover:outline-[#006D77] rounded px-0.5 transition-colors",
                 className
             )}
+            style={style}
         >
             {value || (isAdmin && placeholder ? <span className="text-gray-400 italic">{placeholder}</span> : value)}
         </Component>

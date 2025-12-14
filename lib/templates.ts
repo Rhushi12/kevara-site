@@ -1,6 +1,7 @@
 import { PageContent } from "@/types/page-editor";
 
 export const TEMPLATE_1: PageContent = {
+    template_type: 'template1',
     sections: [
         {
             id: "hero-1",
@@ -56,6 +57,7 @@ export const TEMPLATE_1: PageContent = {
 };
 
 export const TEMPLATE_2: PageContent = {
+    template_type: 'template2',
     sections: [
         {
             id: "banner-1",
@@ -120,6 +122,7 @@ export const TEMPLATE_2: PageContent = {
 };
 
 export const TEMPLATE_3: PageContent = {
+    template_type: 'template3',
     sections: [
         {
             id: "banner-3",
@@ -128,6 +131,13 @@ export const TEMPLATE_3: PageContent = {
                 image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop",
                 heading: "NEW COLLECTION",
                 subheading: "Discover the latest trends"
+            }
+        },
+        {
+            id: "category-carousel-3",
+            type: "category_carousel",
+            settings: {
+                categories: []
             }
         },
         {
@@ -152,6 +162,15 @@ export const TEMPLATE_3: PageContent = {
                         linkText: "Explore"
                     }
                 ]
+            }
+        },
+        {
+            id: "focal-on-you-3",
+            type: "focal_on_you",
+            settings: {
+                heading: "Focal on you",
+                subheading: "Share your looks on Instagram with #minimumfocal",
+                items: []
             }
         },
         {

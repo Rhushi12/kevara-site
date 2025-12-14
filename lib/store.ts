@@ -16,7 +16,7 @@ export interface Product {
             edges: {
                 node: {
                     url: string;
-                    altText: string;
+                    altText?: string;
                 };
             }[];
         };

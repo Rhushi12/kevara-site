@@ -157,14 +157,14 @@ function SearchPageContent() {
                 style={{ backgroundColor: '#E8F5F3' }}
             >
                 <div
-                    className="w-full flex flex-col items-center justify-center px-6"
+                    className="w-full flex flex-col items-center justify-center px-4 md:px-6 py-10 md:py-0"
                     style={{
                         maxWidth: '1374px',
-                        height: '334px'
+                        minHeight: '200px'
                     }}
                 >
                     {/* Results Heading */}
-                    <h1 className="text-[42px] font-lora text-[#1a1a1a] mb-8">
+                    <h1 className="text-[28px] md:text-[42px] font-lora text-[#1a1a1a] mb-6 md:mb-8 text-center">
                         {urlSearch ? (
                             <>Results for "<span className="italic">{urlSearch}</span>"</>
                         ) : (
@@ -180,20 +180,20 @@ function SearchPageContent() {
                                 value={searchInput}
                                 onChange={(e) => setSearchInput(e.target.value)}
                                 placeholder="Search..."
-                                className="w-full px-5 py-4 pr-14 bg-white border border-gray-200 text-[#1a1a1a] text-base font-figtree focus:outline-none focus:border-[#006D77] transition-colors"
+                                className="w-full px-4 md:px-5 py-3 md:py-4 pr-12 md:pr-14 bg-white border border-gray-200 text-[#1a1a1a] text-sm md:text-base font-figtree focus:outline-none focus:border-[#006D77] transition-colors"
                             />
                             <button
                                 type="submit"
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#006D77] transition-colors"
+                                className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#006D77] transition-colors"
                             >
-                                <Search size={22} />
+                                <Search size={20} className="md:w-[22px] md:h-[22px]" />
                             </button>
                         </div>
                     </form>
 
                     {/* Tabs */}
-                    <div className="flex gap-8 mt-8">
-                        <button className="text-sm font-bold uppercase tracking-widest text-[#1a1a1a] pb-2 border-b-2 border-[#1a1a1a]">
+                    <div className="flex gap-6 md:gap-8 mt-6 md:mt-8">
+                        <button className="text-xs md:text-sm font-bold uppercase tracking-widest text-[#1a1a1a] pb-2 border-b-2 border-[#1a1a1a]">
                             Products ({displayedProducts.length})
                         </button>
                     </div>

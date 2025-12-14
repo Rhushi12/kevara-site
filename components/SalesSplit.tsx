@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import EditableText from "@/components/admin/EditableText";
 import SimpleImageUploadModal from "@/components/admin/SimpleImageUploadModal";
+import { authUpload } from "@/lib/auth-client";
 import DimensionBadge from "@/components/admin/DimensionBadge";
 import { Plus, Trash2, Upload } from "lucide-react";
 
@@ -85,10 +86,7 @@ export default function SalesSplit({ data, isEditMode = false, onUpdate }: Sales
             const formData = new FormData();
             formData.append("file", file);
 
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await authUpload('/api/upload', formData);
             const result = await res.json();
 
             if (!result.success) throw new Error("Upload failed");

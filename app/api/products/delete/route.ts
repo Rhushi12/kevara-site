@@ -1,9 +1,14 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { deleteCustomProduct } from '@/lib/custom-products';
 import { removeProductFromAllPages } from '@/lib/remove-product-from-pages';
+import { requireAdmin } from '@/lib/auth';
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
     try {
+        // Check authentication
+        const authError = await requireAdmin(request);
+        if (authError) return authError;
+
         const { id } = await request.json();
 
         if (!id) {

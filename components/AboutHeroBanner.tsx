@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Upload } from "lucide-react";
 import EditableText from "@/components/admin/EditableText";
+import { authUpload } from "@/lib/auth-client";
 
 interface AboutHeroBannerProps {
     data?: {
@@ -39,10 +40,7 @@ export default function AboutHeroBanner({ data = {}, isEditMode = false, onUpdat
         formData.append('file', file);
 
         try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await authUpload('/api/upload', formData);
 
             if (res.ok) {
                 const data = await res.json();
@@ -57,8 +55,8 @@ export default function AboutHeroBanner({ data = {}, isEditMode = false, onUpdat
     };
 
     return (
-        <section className="w-full flex justify-center">
-            <div className="relative w-full max-w-[1374px] h-[400px] md:h-[700px] overflow-hidden">
+        <section className="w-full">
+            <div className="relative w-full h-[400px] md:h-[700px] overflow-hidden">
                 {/* Background Image */}
                 <Image
                     src={image}

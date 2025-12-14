@@ -1,37 +1,7 @@
-import { pollForFileUrl } from './shopify-admin';
+import { pollForFileUrl, shopifyFetch } from './shopify-admin';
 
 const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || process.env.SHOPIFY_STORE_DOMAIN;
 const accessToken = process.env.SHOPIFY_ADMIN_TOKEN;
-
-async function shopifyFetch(query: string, variables: any = {}) {
-  const url = `https://${domain}/admin/api/2024-07/graphql.json`;
-
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Shopify-Access-Token": accessToken!,
-      },
-      body: JSON.stringify({ query, variables }),
-      cache: 'no-store',
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Shopify API Error: ${response.status} ${response.statusText} - ${text}`);
-    }
-
-    const json = await response.json();
-    if (json.errors) {
-      throw new Error("Failed to fetch from Shopify Admin API: " + JSON.stringify(json.errors));
-    }
-    return json.data;
-  } catch (error: any) {
-    console.error("Shopify Fetch Error:", error);
-    throw error;
-  }
-}
 
 async function upsertMetaobject(type: string, handle: string, fields: any[]) {
   const mutation = `

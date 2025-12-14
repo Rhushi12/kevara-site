@@ -38,8 +38,8 @@ export default function AboutStorySection({ data = {}, isEditMode = false, onUpd
     };
 
     return (
-        <section className="w-full flex justify-center mt-[40px] md:mt-[80px] px-4">
-            <div className="w-full max-w-[1374px] min-h-[280px] md:min-h-[336px] flex flex-col items-center">
+        <section className="w-full mt-[40px] md:mt-[80px] px-4">
+            <div className="w-full max-w-[1500px] mx-auto min-h-[280px] md:min-h-[336px] flex flex-col items-center">
                 {/* Heading - max 1000px wide */}
                 <motion.div
                     initial="hidden"

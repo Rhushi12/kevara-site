@@ -7,8 +7,8 @@ import Link from "next/link";
 import CarouselArrowButton from "@/components/ui/CarouselArrowButton";
 import EditableText from "@/components/admin/EditableText";
 import SimpleImageUploadModal from "@/components/admin/SimpleImageUploadModal";
-import DimensionBadge from "@/components/admin/DimensionBadge";
 import { Plus, Trash2, Upload } from "lucide-react";
+import { authUpload } from "@/lib/auth-client";
 
 interface Category {
     id: number | string;
@@ -136,10 +136,7 @@ export default function ShopCategory({ data, isEditMode = false, onUpdate }: Sho
             const formData = new FormData();
             formData.append("file", file);
 
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await authUpload('/api/upload', formData);
             const result = await res.json();
 
             if (!result.success) throw new Error("Upload failed");
@@ -161,7 +158,7 @@ export default function ShopCategory({ data, isEditMode = false, onUpdate }: Sho
 
     return (
         <section className="py-12 md:py-20">
-            <div className="max-w-[1374px] mx-auto bg-[#003B40] min-h-[631px] group/section relative py-[80px]">
+            <div className="w-full bg-[#003B40] min-h-[631px] group/section relative py-[80px]">
                 <div className="container mx-auto h-full flex flex-col justify-center">
                     <div className="flex flex-col items-center justify-center mb-12 relative">
                         <motion.div

@@ -13,6 +13,7 @@ import ImageUploadModal from "@/components/admin/ImageUploadModal";
 import MobileMenu from "@/components/MobileMenu";
 import MenuCarousel from "./MenuCarousel";
 import { useSearchStore } from "@/components/SearchPanel";
+import { authUpload } from "@/lib/auth-client";
 
 export default function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -134,10 +135,7 @@ export default function Navbar() {
             const formData = new FormData();
             formData.append("file", file);
 
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await authUpload('/api/upload', formData);
             const data = await res.json();
 
             if (!data.success) throw new Error("Upload failed");

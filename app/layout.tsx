@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Figtree, Lora } from "next/font/google";
 import "./globals.css";
-import MobileBottomBar from "@/components/MobileBottomBar";
 import QuickViewPanel from "@/components/QuickViewPanel";
 import SearchPanel from "@/components/SearchPanel";
 import ToastNotification from "@/components/admin/ToastNotification";
@@ -37,7 +36,6 @@ export default function RootLayout({
           {children}
           <QuickViewPanel />
           <SearchPanel />
-          <MobileBottomBar />
           <ToastNotification />
         </AuthProvider>
       </body>

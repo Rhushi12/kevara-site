@@ -49,12 +49,12 @@ export default function ProductCard({ product, imageAspectRatio = "aspect-[3/4]"
     if (!productSlug) return null;
 
     return (
-        <div className="group/card relative flex flex-col h-full">
+        <div className="group/card relative flex flex-col h-full text-center">
             {/* Image/Video Container */}
-            <div className={`relative w-full overflow-hidden bg-gray-100 ${imageAspectRatio} rounded-lg`}>
+            <div className={`relative w-full ${imageAspectRatio} mb-3 overflow-hidden bg-gray-100 rounded-sm`}>
                 <Link href={`/products/${productSlug}`} className="block w-full h-full">
 
-                    {/* Video Layer - Plays by default, hides on hover */}
+                    {/* Video Layer */}
                     {video && (
                         <div className="absolute inset-0 z-10 transition-opacity duration-300 group-hover/card:opacity-0">
                             <video
@@ -63,89 +63,87 @@ export default function ProductCard({ product, imageAspectRatio = "aspect-[3/4]"
                                 muted
                                 loop
                                 playsInline
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover object-center"
                             />
                         </div>
                     )}
 
-                    {/* Primary Image - Shows when video is hidden (hover) or if no video */}
+                    {/* Primary Image */}
                     {imageUrl && (
                         <Image
                             src={imageUrl}
                             alt={altText}
                             fill
-                            className={`object-cover transition-transform duration-700 group-hover/card:scale-105 ${video ? 'z-0' : 'z-10'}`}
+                            className={`object-cover object-center transition-transform duration-700 group-hover/card:scale-105 ${video ? 'z-0' : 'z-10'}`}
                             sizes="(max-width: 768px) 50vw, 25vw"
                         />
                     )}
 
-                    {/* Secondary Image (Hover) - Only if NO video */}
+                    {/* Secondary Image */}
                     {!video && secondImageUrl && (
                         <Image
                             src={secondImageUrl}
                             alt={altText}
                             fill
-                            className="object-cover absolute inset-0 opacity-0 transition-opacity duration-500 group-hover/card:opacity-100 z-20"
+                            className="object-cover object-center absolute inset-0 opacity-0 transition-opacity duration-500 group-hover/card:opacity-100 z-20"
                             sizes="(max-width: 768px) 50vw, 25vw"
                         />
                     )}
                 </Link>
 
-                {/* Quick View Button - Desktop */}
-                <div className="hidden md:block absolute bottom-4 left-4 right-4 translate-y-4 opacity-0 transition-all duration-300 group-hover/card:translate-y-0 group-hover/card:opacity-100 z-30">
-                    <LiquidButton
-                        className="w-full bg-white text-slate-900 hover:text-slate-900 py-3 flex flex-col items-center justify-center gap-1 rounded shadow-lg border-none"
-                        variant="secondary"
-                        onClick={(e: React.MouseEvent) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            openQuickView(product);
-                        }}
-                    >
-                        <div className="flex flex-col items-center justify-center w-full h-full">
-                            <ShoppingBag size={18} strokeWidth={1.5} className="mb-1" />
-                            <span className="text-[10px] font-bold tracking-widest uppercase leading-none text-center">Quick View</span>
-                        </div>
-                    </LiquidButton>
-                </div>
+                {/* Sale Badge */}
+                {/* Mock Compare Price Logic: If price < 100, assume it was higher */}
+                {parseFloat(price) < 100 && (
+                    <span className="absolute top-2 left-2 z-20 bg-red-800 text-white text-[10px] px-2 py-1 font-bold uppercase tracking-wide md:text-xs">
+                        Save 50%
+                    </span>
+                )}
 
-                {/* Quick View Button - Mobile */}
+                {/* Quick Add Button */}
                 <button
-                    className="md:hidden absolute bottom-3 right-3 z-30 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg text-slate-900 active:scale-95 transition-transform"
+                    className="absolute bottom-2 right-2 z-30 bg-white p-2 rounded-full shadow-md hover:bg-gray-50 transition-colors"
                     onClick={(e: React.MouseEvent) => {
                         e.preventDefault();
                         e.stopPropagation();
                         openQuickView(product);
                     }}
-                    aria-label="Quick View"
+                    aria-label="Quick Add"
                 >
-                    <ShoppingBag size={20} strokeWidth={1.5} />
+                    <ShoppingBag size={16} strokeWidth={2} className="text-black" />
                 </button>
             </div>
 
             {/* Product Info */}
-            <div className="mt-4 space-y-2 text-center">
-                <Link href={`/products/${productSlug}`}>
-                    <h3 className="text-lg font-normal font-figtree text-gray-900 group-hover/card:text-slate-900 transition-colors">
-                        {title}
-                    </h3>
-                </Link>
+            <Link href={`/products/${productSlug}`} className="w-full">
+                <h3 className="text-sm text-gray-900 font-medium line-clamp-1 md:text-base font-figtree">
+                    {title}
+                </h3>
+            </Link>
 
-                {/* Price */}
-                <p className="text-sm font-figtree text-black">
+            {/* Price */}
+            <div className="flex gap-2 items-center justify-center mt-1">
+                {parseFloat(price) < 100 && (
+                    <span className="text-xs text-red-700 line-through md:text-sm font-figtree">
+                        {new Intl.NumberFormat("en-IN", {
+                            style: "currency",
+                            currency: currency,
+                        }).format(parseFloat(price) * 2)}
+                    </span>
+                )}
+                <span className="text-sm font-semibold text-gray-900 md:text-base font-figtree">
                     {new Intl.NumberFormat("en-IN", {
                         style: "currency",
                         currency: currency,
                     }).format(parseFloat(price))}
-                </p>
-
-                {/* Color Count */}
-                {colors.length > 0 && (
-                    <p className="text-sm text-gray-500 font-figtree">
-                        {colors.length} {colors.length === 1 ? 'color' : 'colors'} available
-                    </p>
-                )}
+                </span>
             </div>
+
+            {/* Color Count */}
+            {colors.length > 0 && (
+                <p className="text-xs text-gray-500 mt-1 md:text-sm font-figtree">
+                    {colors.length} {colors.length === 1 ? 'color' : 'colors'} available
+                </p>
+            )}
         </div>
     );
 }

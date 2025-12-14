@@ -31,6 +31,12 @@ export default function AdminPageBuilder({ slug }: AdminPageBuilderProps) {
                 newContent = JSON.parse(JSON.stringify(TEMPLATE_1));
             }
 
+            // DEBUG: Log what we're about to send
+            console.log(`[AdminPageBuilder] Creating page '${slug}' with template '${templateType}'`);
+            console.log(`[AdminPageBuilder] Content to save:`, newContent);
+            console.log(`[AdminPageBuilder] Sections count:`, newContent?.sections?.length);
+            console.log(`[AdminPageBuilder] Section types:`, newContent?.sections?.map((s: any) => s?.type));
+
             // 2. Save to API
             const res = await fetch("/api/builder/content", {
                 method: "POST",
@@ -38,7 +44,11 @@ export default function AdminPageBuilder({ slug }: AdminPageBuilderProps) {
                 body: JSON.stringify({ handle: slug, data: newContent }),
             });
 
-            if (!res.ok) throw new Error("Failed to create page");
+            if (!res.ok) {
+                const errorText = await res.text();
+                console.error("[AdminPageBuilder] API error:", errorText);
+                throw new Error("Failed to create page");
+            }
 
             // 3. Refresh to load the new page
             alert("Page created successfully! Reloading...");
@@ -116,86 +126,86 @@ export default function AdminPageBuilder({ slug }: AdminPageBuilderProps) {
                 <div className="p-8">
                     {activeTab === "template" ? (
                         <div className="space-y-6">
-                            <div className="grid grid-cols-1 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {/* Template 1 Card */}
-                                <div className="border-2 border-[#006D77] rounded-xl p-6 bg-[#FDFBF7] relative overflow-hidden group cursor-pointer hover:shadow-md transition-all">
-                                    <div className="absolute top-3 right-3 bg-[#006D77] text-white text-xs px-2 py-1 rounded-full">
-                                        Selected
+                                <div
+                                    onClick={() => handleCreateFromTemplate("template1")}
+                                    className="border-2 border-transparent hover:border-[#006D77] rounded-xl p-5 bg-[#FDFBF7] relative overflow-hidden group cursor-pointer hover:shadow-lg transition-all"
+                                >
+                                    <div className="absolute top-2 right-2 bg-[#006D77] text-white text-[10px] px-2 py-0.5 rounded-full">
+                                        Default
                                     </div>
-                                    <h3 className="font-lora text-lg font-semibold mb-2">Template 1</h3>
-                                    <p className="text-sm text-slate-600 mb-4">
-                                        Standard marketing page with Hero Slider, Shop Essentials, Lookbook, and Collection Grid.
+                                    <h3 className="font-lora text-base font-semibold mb-1">Template 1</h3>
+                                    <p className="text-xs text-slate-600 mb-3">
+                                        Marketing page with Hero Slider, Shop Essentials, Lookbook
                                     </p>
-                                    <div className="h-32 bg-gray-200 rounded-lg mb-4 overflow-hidden relative">
-                                        {/* Mini Preview Mockup */}
-                                        <div className="absolute inset-0 bg-slate-300 opacity-20"></div>
-                                        <div className="absolute top-2 left-2 right-2 h-16 bg-white rounded shadow-sm"></div>
-                                        <div className="absolute bottom-2 left-2 w-1/3 h-8 bg-white rounded shadow-sm"></div>
-                                        <div className="absolute bottom-2 right-2 w-1/2 h-8 bg-white rounded shadow-sm"></div>
+                                    <div className="h-20 bg-gray-200 rounded-lg overflow-hidden relative">
+                                        <div className="absolute top-1 left-1 right-1 h-8 bg-white rounded shadow-sm"></div>
+                                        <div className="absolute bottom-1 left-1 w-1/3 h-5 bg-white rounded shadow-sm"></div>
+                                        <div className="absolute bottom-1 right-1 w-1/2 h-5 bg-white rounded shadow-sm"></div>
                                     </div>
                                 </div>
+
                                 {/* Template 2 Card */}
                                 <div
                                     onClick={() => handleCreateFromTemplate("template2")}
-                                    className="border-2 border-transparent hover:border-[#006D77] rounded-xl p-6 bg-[#FDFBF7] relative overflow-hidden group cursor-pointer hover:shadow-md transition-all"
+                                    className="border-2 border-transparent hover:border-[#006D77] rounded-xl p-5 bg-[#FDFBF7] relative overflow-hidden group cursor-pointer hover:shadow-lg transition-all"
                                 >
-                                    <h3 className="font-lora text-lg font-semibold mb-2">Template 2</h3>
-                                    <p className="text-sm text-slate-600 mb-4">
-                                        Collection page with scroll banner, promo windows, product grid, and essentials hero.
+                                    <h3 className="font-lora text-base font-semibold mb-1">Template 2</h3>
+                                    <p className="text-xs text-slate-600 mb-3">
+                                        Collection page with Scroll Banner, Promo Windows, Product Grid
                                     </p>
-                                    <div className="h-32 bg-gray-200 rounded-lg mb-4 overflow-hidden relative">
-                                        <div className="absolute inset-0 bg-slate-300 opacity-20"></div>
-                                        <div className="absolute top-2 left-2 right-2 h-8 bg-white rounded shadow-sm"></div>
-                                        <div className="absolute top-12 left-2 w-1/3 h-16 bg-white rounded shadow-sm"></div>
-                                        <div className="absolute top-12 right-2 w-1/2 h-16 bg-white rounded shadow-sm"></div>
+                                    <div className="h-20 bg-gray-200 rounded-lg overflow-hidden relative">
+                                        <div className="absolute top-1 left-1 right-1 h-6 bg-white rounded shadow-sm"></div>
+                                        <div className="absolute top-8 left-1 w-[45%] h-10 bg-white rounded shadow-sm"></div>
+                                        <div className="absolute top-8 right-1 w-[45%] h-10 bg-white rounded shadow-sm"></div>
                                     </div>
                                 </div>
-                                {/* Homepage Template Card */}
-                                <div
-                                    onClick={() => handleCreateFromTemplate("homepage")}
-                                    className="border-2 border-transparent hover:border-[#006D77] rounded-xl p-6 bg-[#FDFBF7] relative overflow-hidden group cursor-pointer hover:shadow-md transition-all"
-                                >
-                                    <h3 className="font-lora text-lg font-semibold mb-2">Homepage Template</h3>
-                                    <p className="text-sm text-slate-600 mb-4">
-                                        The default homepage layout with all standard sections.
-                                    </p>
-                                    <div className="h-32 bg-gray-200 rounded-lg mb-4 overflow-hidden relative">
-                                        <div className="absolute inset-0 bg-slate-300 opacity-20"></div>
-                                        <div className="absolute top-2 left-2 right-2 h-16 bg-white rounded shadow-sm"></div>
-                                    </div>
-                                </div>
+
                                 {/* Template 3 Card */}
                                 <div
                                     onClick={() => handleCreateFromTemplate("template3")}
-                                    className="border-2 border-transparent hover:border-[#006D77] rounded-xl p-6 bg-[#FDFBF7] relative overflow-hidden group cursor-pointer hover:shadow-md transition-all"
+                                    className="border-2 border-transparent hover:border-[#006D77] rounded-xl p-5 bg-[#FDFBF7] relative overflow-hidden group cursor-pointer hover:shadow-lg transition-all"
                                 >
-                                    <h3 className="font-lora text-lg font-semibold mb-2">Template 3</h3>
-                                    <p className="text-sm text-slate-600 mb-4">
-                                        Modern layout with category carousel, product grid with pagination, and Focal On You Instagram section.
+                                    <div className="absolute top-2 right-2 bg-emerald-500 text-white text-[10px] px-2 py-0.5 rounded-full">
+                                        New
+                                    </div>
+                                    <h3 className="font-lora text-base font-semibold mb-1">Template 3</h3>
+                                    <p className="text-xs text-slate-600 mb-3">
+                                        Category Carousel, Product Grid with Filters, Focal On You
                                     </p>
-                                    <div className="h-32 bg-gray-200 rounded-lg mb-4 overflow-hidden relative">
-                                        <div className="absolute inset-0 bg-slate-300 opacity-20"></div>
-                                        <div className="absolute top-2 left-2 right-2 h-8 bg-white rounded shadow-sm"></div>
-                                        <div className="absolute top-12 left-2 w-1/4 h-12 bg-white rounded shadow-sm"></div>
-                                        <div className="absolute top-12 left-[28%] w-1/4 h-12 bg-white rounded shadow-sm"></div>
-                                        <div className="absolute top-12 right-2 w-1/4 h-12 bg-white rounded shadow-sm"></div>
-                                        <div className="absolute bottom-2 left-2 right-2 h-6 bg-[#E8F5F4] rounded shadow-sm"></div>
+                                    <div className="h-20 bg-gray-200 rounded-lg overflow-hidden relative">
+                                        <div className="absolute top-1 left-1 w-1/4 h-8 bg-white rounded shadow-sm"></div>
+                                        <div className="absolute top-1 left-[27%] w-1/4 h-8 bg-white rounded shadow-sm"></div>
+                                        <div className="absolute top-1 right-1 w-1/4 h-8 bg-white rounded shadow-sm"></div>
+                                        <div className="absolute bottom-1 left-1 right-1 h-6 bg-[#E8F5F4] rounded shadow-sm"></div>
                                     </div>
                                 </div>
-                                {/* Placeholder for future templates */}
-                                <div className="border border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center text-gray-400">
-                                    <span className="text-2xl mb-2">+</span>
-                                    <span className="text-sm">More templates coming soon</span>
+
+                                {/* Homepage Template Card */}
+                                <div
+                                    onClick={() => handleCreateFromTemplate("homepage")}
+                                    className="border-2 border-transparent hover:border-[#006D77] rounded-xl p-5 bg-[#FDFBF7] relative overflow-hidden group cursor-pointer hover:shadow-lg transition-all"
+                                >
+                                    <div className="absolute top-2 right-2 bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-full">
+                                        Full
+                                    </div>
+                                    <h3 className="font-lora text-base font-semibold mb-1">Homepage Template</h3>
+                                    <p className="text-xs text-slate-600 mb-3">
+                                        Full homepage with Hero, Sales, Grid, Video, Testimonials
+                                    </p>
+                                    <div className="h-20 bg-gray-200 rounded-lg overflow-hidden relative">
+                                        <div className="absolute top-1 left-1 right-1 h-10 bg-white rounded shadow-sm"></div>
+                                        <div className="absolute bottom-1 left-1 w-1/3 h-5 bg-[#006D77]/20 rounded shadow-sm"></div>
+                                        <div className="absolute bottom-1 left-[35%] w-1/3 h-5 bg-white rounded shadow-sm"></div>
+                                        <div className="absolute bottom-1 right-1 w-1/4 h-5 bg-white rounded shadow-sm"></div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <button
-                                onClick={() => handleCreateFromTemplate("template1")}
-                                disabled={isSaving}
-                                className="w-full bg-[#006D77] text-white py-4 rounded-lg font-medium shadow-lg hover:bg-[#005a63] transition-colors disabled:opacity-50"
-                            >
-                                {isSaving ? "Creating Page..." : "Create Page from Template 1"}
-                            </button>
+                            <p className="text-xs text-center text-slate-400">
+                                Click any template to create your page instantly
+                            </p>
                         </div>
                     ) : (
                         <div className="space-y-6">

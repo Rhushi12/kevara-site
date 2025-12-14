@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Upload } from "lucide-react";
 import EditableText from "@/components/admin/EditableText";
+import { authUpload } from "@/lib/auth-client";
 
 interface ValueItem {
     image: string;
@@ -79,10 +80,7 @@ export default function SustainabilityValuesSection({
         formData.append('file', file);
 
         try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await authUpload('/api/upload', formData);
 
             if (res.ok) {
                 const uploadData = await res.json();
@@ -97,23 +95,13 @@ export default function SustainabilityValuesSection({
     };
 
     return (
-        <section className="w-full flex justify-center" style={{ marginTop: '80px' }}>
+        <section className="w-full mt-12 md:mt-20">
             <div
-                className="w-full flex flex-col items-center"
-                style={{
-                    maxWidth: '1374px',
-                    minHeight: '1429px'
-                }}
+                className="w-full max-w-[1500px] mx-auto flex flex-col items-center px-4 md:px-0"
             >
                 {/* Header Text Container */}
                 <div
-                    className="flex flex-col items-center text-center"
-                    style={{
-                        width: '800px',
-                        maxWidth: '100%',
-                        paddingLeft: '16px',
-                        paddingRight: '16px'
-                    }}
+                    className="flex flex-col items-center text-center w-full md:w-[800px] px-4"
                 >
                     {/* Small Heading */}
                     {isEditMode ? (
@@ -136,13 +124,13 @@ export default function SustainabilityValuesSection({
                     )}
 
                     {/* Main Heading */}
-                    <div style={{ marginTop: '24px' }}>
+                    <div className="mt-4 md:mt-6">
                         {isEditMode ? (
                             <EditableText
                                 value={mainHeading}
                                 onSave={(val) => updateField("mainHeading", val)}
                                 isAdmin={true}
-                                className="text-[36px] leading-[40px] tracking-[-0.8px] text-[#1a1a1a] font-lora text-center mb-4 bg-gray-100 border-b border-gray-300 px-2 py-1"
+                                className="text-[28px] md:text-[36px] leading-[32px] md:leading-[40px] tracking-[-0.8px] text-[#1a1a1a] font-lora text-center mb-4 bg-gray-100 border-b border-gray-300 px-2 py-1"
                             />
                         ) : (
                             <motion.h2
@@ -150,7 +138,7 @@ export default function SustainabilityValuesSection({
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.6, delay: 0.1, ease: [0.7, 0, 0.84, 0] }}
-                                className="text-[36px] leading-[40px] tracking-[-0.8px] text-[#1a1a1a] font-lora mb-4"
+                                className="text-[28px] md:text-[36px] leading-[32px] md:leading-[40px] tracking-[-0.8px] text-[#1a1a1a] font-lora mb-4"
                             >
                                 {mainHeading}
                             </motion.h2>
@@ -158,14 +146,14 @@ export default function SustainabilityValuesSection({
                     </div>
 
                     {/* Description */}
-                    <div style={{ marginTop: '24px' }}>
+                    <div className="mt-4 md:mt-6">
                         {isEditMode ? (
                             <EditableText
                                 value={description}
                                 onSave={(val) => updateField("description", val)}
                                 isAdmin={true}
                                 multiline={true}
-                                className="text-[15px] leading-[26px] text-[#1a1a1a] font-figtree text-center bg-gray-100 border-b border-gray-300 px-2 py-1"
+                                className="text-[14px] md:text-[15px] leading-[24px] md:leading-[26px] text-[#1a1a1a] font-figtree text-center bg-gray-100 border-b border-gray-300 px-2 py-1"
                             />
                         ) : (
                             <motion.p
@@ -173,8 +161,7 @@ export default function SustainabilityValuesSection({
                                 whileInView={{ opacity: 1 }}
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.6, delay: 0.2 }}
-                                className="text-[15px] leading-[26px] text-[#1a1a1a] font-figtree"
-                                style={{ marginTop: '15px' }}
+                                className="text-[14px] md:text-[15px] leading-[24px] md:leading-[26px] text-[#1a1a1a] font-figtree mt-4"
                             >
                                 {description}
                             </motion.p>
@@ -182,18 +169,10 @@ export default function SustainabilityValuesSection({
                     </div>
                 </div>
 
-                {/* 2x2 Image Grid */}
+                {/* 2x2 Image Grid - becomes 1 column on mobile */}
                 <div
-                    className="grid justify-center"
-                    style={{
-                        maxWidth: '1294px',
-                        width: '100%',
-                        marginTop: '48px',
-                        gridTemplateColumns: 'repeat(2, 396px)',
-                        gridTemplateRows: 'repeat(2, auto)',
-                        gap: '48px 60px',
-                        padding: '0 0 2px'
-                    }}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mt-8 md:mt-12 w-full"
+                    style={{ maxWidth: '852px' }}
                 >
                     {items.map((item, idx) => (
                         <motion.div
@@ -206,8 +185,7 @@ export default function SustainabilityValuesSection({
                         >
                             {/* Image */}
                             <div
-                                className="relative rounded-sm overflow-hidden"
-                                style={{ width: '396px', height: '396px' }}
+                                className="relative rounded-sm overflow-hidden w-full aspect-square"
                             >
                                 <Image
                                     src={item.image}
@@ -241,36 +219,33 @@ export default function SustainabilityValuesSection({
                             </div>
 
                             {/* Heading */}
-                            <div style={{ marginTop: '24px' }}>
+                            <div className="mt-4 md:mt-6">
                                 {isEditMode ? (
                                     <EditableText
                                         value={item.heading}
                                         onSave={(val) => updateItem(idx, "heading", val)}
                                         isAdmin={true}
-                                        className="text-[24px] leading-[28px] tracking-[-0.4px] text-[#1a1a1a] font-lora text-left mb-4 bg-gray-100 border-b border-gray-300 px-2 py-1 w-full"
+                                        className="text-[20px] md:text-[24px] leading-[24px] md:leading-[28px] tracking-[-0.4px] text-[#1a1a1a] font-lora text-left mb-4 bg-gray-100 border-b border-gray-300 px-2 py-1 w-full"
                                     />
                                 ) : (
-                                    <h3 className="text-[24px] leading-[28px] tracking-[-0.4px] text-[#1a1a1a] font-lora text-left mb-4">
+                                    <h3 className="text-[20px] md:text-[24px] leading-[24px] md:leading-[28px] tracking-[-0.4px] text-[#1a1a1a] font-lora text-left mb-2 md:mb-4">
                                         {item.heading}
                                     </h3>
                                 )}
                             </div>
 
                             {/* Description */}
-                            <div style={{ marginTop: '8px' }}>
+                            <div className="mt-2">
                                 {isEditMode ? (
                                     <EditableText
                                         value={item.description}
                                         onSave={(val) => updateItem(idx, "description", val)}
                                         isAdmin={true}
                                         multiline={true}
-                                        className="text-[15px] leading-[26px] text-[#1a1a1a] font-figtree text-left bg-gray-100 border-b border-gray-300 px-2 py-1 w-full"
+                                        className="text-[14px] md:text-[15px] leading-[24px] md:leading-[26px] text-[#1a1a1a] font-figtree text-left bg-gray-100 border-b border-gray-300 px-2 py-1 w-full"
                                     />
                                 ) : (
-                                    <p
-                                        className="text-[15px] leading-[26px] text-[#1a1a1a] font-figtree text-left"
-                                        style={{ marginTop: '15px' }}
-                                    >
+                                    <p className="text-[14px] md:text-[15px] leading-[24px] md:leading-[26px] text-[#1a1a1a] font-figtree text-left">
                                         {item.description}
                                     </p>
                                 )}

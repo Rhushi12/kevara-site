@@ -29,8 +29,8 @@ export default function WomenShopEssentials({ data = {}, isEditMode = false, onU
     const [refreshedData, setRefreshedData] = useState(data);
 
     const {
-        title = "Dress up in the heat",
-        description = "SS21 Series of Comfortable textures. With luxurious, natural-looking makeup, we find reasons for the face. New textures and colors bring new inspiration to your everyday life.",
+        title = "Shop Essentials",
+        description = "",
         items = []
     } = refreshedData;
 
@@ -73,9 +73,8 @@ export default function WomenShopEssentials({ data = {}, isEditMode = false, onU
 
     // Ensure we have at least one tab if empty
     const tabs = items.length > 0 ? items : [
-        { title: "Dresses", products: [] },
-        { title: "Shirts", products: [] },
-        { title: "Shorts", products: [] }
+        { title: "WOMEN", products: [] },
+        { title: "MEN", products: [] }
     ];
 
     const activeTab = tabs[activeTabIndex];
@@ -194,12 +193,15 @@ export default function WomenShopEssentials({ data = {}, isEditMode = false, onU
                 )}
 
                 {/* Toggle */}
-                <div className="flex flex-wrap justify-center gap-8 border-b border-gray-200 max-w-4xl mx-auto relative items-center">
+                <div className="flex justify-center gap-8 mb-6 md:mb-10 border-b border-gray-200 mx-auto max-w-4xl px-4">
                     {tabs.map((tab: any, index: number) => (
                         <div key={index} className="relative group/tab">
                             <button
                                 onClick={() => setActiveTabIndex(index)}
-                                className={`pb-4 text-sm font-bold tracking-widest uppercase transition-colors relative ${activeTabIndex === index ? "text-slate-900" : "text-gray-400 hover:text-gray-600"
+                                className={`pb-2 text-sm font-bold tracking-widest uppercase transition-colors relative
+                                    ${activeTabIndex === index
+                                        ? "border-b-2 border-slate-900 text-slate-900"
+                                        : "text-gray-400 hover:text-gray-600 border-b-2 border-transparent"
                                     }`}
                             >
                                 {isEditMode ? (
@@ -207,17 +209,10 @@ export default function WomenShopEssentials({ data = {}, isEditMode = false, onU
                                         value={tab.title}
                                         onSave={(val) => updateTabTitle(index, val)}
                                         isAdmin={true}
-                                        className="bg-transparent border-b border-gray-300 min-w-[80px] text-center"
+                                        className="bg-transparent min-w-[80px] text-center"
                                     />
                                 ) : (
                                     tab.title
-                                )}
-                                {activeTabIndex === index && (
-                                    <motion.div
-                                        layoutId="activeTabUnderlineWomen"
-                                        className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#006D77]"
-                                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                    />
                                 )}
                             </button>
 
@@ -225,7 +220,7 @@ export default function WomenShopEssentials({ data = {}, isEditMode = false, onU
                             {isEditMode && (
                                 <button
                                     onClick={(e) => handleRemoveTab(index, e)}
-                                    className="absolute -top-2 -right-3 bg-red-100 text-red-500 rounded-full p-1 opacity-0 group-hover/tab:opacity-100 transition-opacity hover:bg-red-200"
+                                    className="absolute -top-4 -right-4 bg-red-100 text-red-500 rounded-full p-1 opacity-0 group-hover/tab:opacity-100 transition-opacity hover:bg-red-200"
                                     title="Remove Tab"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -238,7 +233,7 @@ export default function WomenShopEssentials({ data = {}, isEditMode = false, onU
                     {isEditMode && (
                         <button
                             onClick={handleAddTab}
-                            className="pb-4 text-gray-400 hover:text-[#006D77] transition-colors flex items-center gap-1"
+                            className="pb-2 text-gray-400 hover:text-[#006D77] transition-colors flex items-center gap-1 border-b-2 border-transparent"
                             title="Add New Category"
                         >
                             <Plus size={20} />
@@ -262,7 +257,7 @@ export default function WomenShopEssentials({ data = {}, isEditMode = false, onU
                                     container.scrollBy({ left: -300, behavior: 'smooth' });
                                 }
                             }}
-                            className="absolute left-0 top-1/2 -translate-y-1/2 z-40 -translate-x-1/2"
+                            className="absolute left-0 top-1/2 -translate-y-1/2 z-40 -translate-x-1/2 hidden md:flex"
                             aria-label="Previous"
                         />
                         <CarouselArrowButton
@@ -273,7 +268,7 @@ export default function WomenShopEssentials({ data = {}, isEditMode = false, onU
                                     container.scrollBy({ left: 300, behavior: 'smooth' });
                                 }
                             }}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 z-40 translate-x-1/2"
+                            className="absolute right-0 top-1/2 -translate-y-1/2 z-40 translate-x-1/2 hidden md:flex"
                             aria-label="Next"
                         />
                     </>
@@ -294,7 +289,7 @@ export default function WomenShopEssentials({ data = {}, isEditMode = false, onU
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
                             transition={{ duration: 0.4 }}
-                            className="flex gap-4 md:gap-6 w-max"
+                            className="flex gap-3 md:gap-6 w-max"
                         >
                             {activeTab.products && activeTab.products.length > 0 ? (
                                 activeTab.products.map((product: any, index: number) => (
@@ -303,7 +298,7 @@ export default function WomenShopEssentials({ data = {}, isEditMode = false, onU
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ delay: index * 0.1 }}
-                                        className="w-[280px] md:w-[300px] snap-center shrink-0 relative group/product"
+                                        className="w-[170px] md:w-[300px] snap-center shrink-0 relative group/product"
                                     >
                                         <ProductCard product={{ node: product }} />
                                         {isEditMode && (
@@ -317,7 +312,7 @@ export default function WomenShopEssentials({ data = {}, isEditMode = false, onU
                                     </motion.div>
                                 ))
                             ) : (
-                                <div className="w-full text-center py-12 text-gray-400">
+                                <div className="w-[170px] md:w-[300px] text-center py-12 text-gray-400">
                                     No products found in this collection.
                                 </div>
                             )}
@@ -326,7 +321,7 @@ export default function WomenShopEssentials({ data = {}, isEditMode = false, onU
                             {isEditMode && (
                                 <motion.button
                                     onClick={() => setIsChoiceModalOpen(true)}
-                                    className="w-[280px] md:w-[300px] min-h-[400px] snap-center shrink-0 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:text-[#006D77] hover:border-[#006D77] transition-colors"
+                                    className="w-[170px] md:w-[300px] min-h-[300px] snap-center shrink-0 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:text-[#006D77] hover:border-[#006D77] transition-colors"
                                 >
                                     <Plus size={48} />
                                     <span className="mt-4 font-medium">Add Product</span>

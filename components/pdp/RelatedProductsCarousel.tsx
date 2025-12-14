@@ -1,9 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import ProductCard from "@/components/ProductCard";
 import CarouselArrowButton from "@/components/ui/CarouselArrowButton";
@@ -21,6 +18,7 @@ interface Product {
         edges: {
             node: {
                 url: string;
+                altText?: string;
             };
         }[];
     };

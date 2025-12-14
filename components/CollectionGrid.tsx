@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import EditableText from "@/components/admin/EditableText";
 import SimpleImageUploadModal from "@/components/admin/SimpleImageUploadModal";
 import { useState } from "react";
+import { authUpload } from "@/lib/auth-client";
 
 interface CollectionGridProps {
     data?: {
@@ -68,10 +69,7 @@ export default function CollectionGrid({ data = {}, isEditMode = false, onUpdate
             const formData = new FormData();
             formData.append("file", file);
 
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await authUpload('/api/upload', formData);
             const data = await res.json();
 
             if (!data.success) throw new Error("Upload failed");
@@ -193,15 +191,15 @@ export default function CollectionGrid({ data = {}, isEditMode = false, onUpdate
                     )}
                 </motion.div>
 
-                <div className="w-[1374px] h-[640px] mx-auto px-[107px]">
-                    <div className="grid grid-cols-[560px_560px] gap-[40px] h-full">
+                <div className="w-full max-w-[1500px] mx-auto px-4 md:px-8">
+                    <div className="flex flex-col md:grid md:grid-cols-2 gap-4 md:gap-[40px] md:h-[640px]">
                         {/* Left Column - Tall Item */}
                         <motion.div
                             initial={{ x: -100, opacity: 0 }}
                             whileInView={{ x: 0, opacity: 1 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.8, ease: "easeOut" }}
-                            className="w-full h-full"
+                            className="w-full h-[400px] md:h-full"
                         >
                             {isEditMode ? (
                                 <div className="relative block w-full h-full overflow-hidden rounded-lg group">
@@ -218,14 +216,14 @@ export default function CollectionGrid({ data = {}, isEditMode = false, onUpdate
                         </motion.div>
 
                         {/* Right Column - Stacked Items */}
-                        <div className="flex flex-col gap-[40px] h-full">
+                        <div className="flex flex-col gap-4 md:gap-[40px] h-full">
                             {/* Top Right */}
                             <motion.div
                                 initial={{ x: 100, opacity: 0 }}
                                 whileInView={{ x: 0, opacity: 1 }}
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-                                className="w-full h-[300px]"
+                                className="w-full h-[250px] md:h-[300px]"
                             >
                                 {isEditMode ? (
                                     <div className="relative block w-full h-full overflow-hidden rounded-lg group">
@@ -247,7 +245,7 @@ export default function CollectionGrid({ data = {}, isEditMode = false, onUpdate
                                 whileInView={{ x: 0, opacity: 1 }}
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-                                className="w-full h-[300px]"
+                                className="w-full h-[250px] md:h-[300px]"
                             >
                                 {isEditMode ? (
                                     <div className="relative block w-full h-full overflow-hidden rounded-lg group">

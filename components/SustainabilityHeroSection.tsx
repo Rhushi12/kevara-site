@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Upload } from "lucide-react";
 import EditableText from "@/components/admin/EditableText";
+import { authUpload } from "@/lib/auth-client";
 
 interface SustainabilityHeroSectionProps {
     data?: {
@@ -45,10 +46,7 @@ export default function SustainabilityHeroSection({
         formData.append('file', file);
 
         try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await authUpload('/api/upload', formData);
 
             if (res.ok) {
                 const uploadData = await res.json();
@@ -63,23 +61,13 @@ export default function SustainabilityHeroSection({
     };
 
     return (
-        <section className="w-full flex justify-center bg-[#006D77]">
+        <section className="w-full bg-[#006D77]">
             <div
-                className="w-full flex relative"
-                style={{
-                    maxWidth: '1374px',
-                    height: '669px'
-                }}
+                className="w-full max-w-[1500px] mx-auto flex flex-col md:flex-row relative px-4 md:px-8"
             >
                 {/* Left: Image Block */}
                 <div
-                    className="relative flex-shrink-0 rounded-sm overflow-hidden"
-                    style={{
-                        width: '509px',
-                        height: '509px',
-                        marginTop: '80px',
-                        marginLeft: '107px'
-                    }}
+                    className="relative flex-shrink-0 rounded-sm overflow-hidden w-full md:w-[509px] h-[350px] md:h-[509px] mt-8 md:mt-[80px] mx-auto md:mx-0 md:ml-[107px]"
                 >
                     <Image
                         src={image}
@@ -114,12 +102,7 @@ export default function SustainabilityHeroSection({
 
                 {/* Right: Text Container */}
                 <div
-                    className="flex-1 flex items-center justify-center"
-                    style={{
-                        paddingTop: '218px',
-                        paddingBottom: '218px',
-                        paddingRight: '111px'
-                    }}
+                    className="flex-1 flex items-center justify-center py-8 md:py-[80px] px-4 md:pr-[111px]"
                 >
                     <div className="flex flex-col items-center text-center max-w-[500px]">
                         {/* Small Heading */}
@@ -145,7 +128,7 @@ export default function SustainabilityHeroSection({
 
                         {/* Main Heading */}
                         <motion.div
-                            className="mt-6"
+                            className="mt-4 md:mt-6"
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
@@ -156,10 +139,10 @@ export default function SustainabilityHeroSection({
                                     value={heading}
                                     onSave={(val) => updateField("heading", val)}
                                     isAdmin={true}
-                                    className="text-[36px] leading-[40px] tracking-[-0.8px] text-white font-lora text-center bg-white/10 border-b border-white/30 px-2 py-1"
+                                    className="text-[28px] md:text-[36px] leading-[32px] md:leading-[40px] tracking-[-0.8px] text-white font-lora text-center bg-white/10 border-b border-white/30 px-2 py-1"
                                 />
                             ) : (
-                                <h1 className="text-[36px] leading-[40px] tracking-[-0.8px] text-white font-lora">
+                                <h1 className="text-[28px] md:text-[36px] leading-[32px] md:leading-[40px] tracking-[-0.8px] text-white font-lora">
                                     {heading}
                                 </h1>
                             )}
@@ -167,7 +150,7 @@ export default function SustainabilityHeroSection({
 
                         {/* Description */}
                         <motion.div
-                            className="mt-6"
+                            className="mt-4 md:mt-6"
                             initial={{ opacity: 0 }}
                             whileInView={{ opacity: 1 }}
                             viewport={{ once: true }}
@@ -179,10 +162,10 @@ export default function SustainabilityHeroSection({
                                     onSave={(val) => updateField("description", val)}
                                     isAdmin={true}
                                     multiline={true}
-                                    className="text-[15px] leading-[26px] text-white font-figtree text-center bg-white/10 border-b border-white/30 px-2 py-1"
+                                    className="text-[14px] md:text-[15px] leading-[24px] md:leading-[26px] text-white font-figtree text-center bg-white/10 border-b border-white/30 px-2 py-1"
                                 />
                             ) : (
-                                <p className="text-[15px] leading-[26px] text-white font-figtree">
+                                <p className="text-[14px] md:text-[15px] leading-[24px] md:leading-[26px] text-white font-figtree">
                                     {description}
                                 </p>
                             )}

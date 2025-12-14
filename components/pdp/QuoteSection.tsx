@@ -18,7 +18,7 @@ export default function QuoteSection() {
                     viewport={{ once: true }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
                 >
-                    "The label has developed its own contemporary look that avoids trend chasing and focuses instead on practicality, quality, and timeless style."
+                    &ldquo;The label has developed its own contemporary look that avoids trend chasing and focuses instead on practicality, quality, and timeless style.&rdquo;
                 </motion.blockquote>
 
                 <motion.div

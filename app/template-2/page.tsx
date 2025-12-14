@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -17,6 +17,7 @@ import { Trash2, Filter, X } from "lucide-react";
 import { PageContent, PageSection } from "@/types/page-editor";
 import MobileDrawer from "@/components/options/MobileDrawer";
 import ProductPicker from "@/components/admin/ProductPicker";
+import StickyFilterBar from "@/components/StickyFilterBar";
 
 // Default Initial Content
 import { TEMPLATE_2 } from "@/lib/templates";
@@ -31,6 +32,10 @@ export default function Template2Page() {
     const [isEditMode, setIsEditMode] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // New Refs and State for Scroll Logic
+    const productGridRef = useRef<HTMLDivElement>(null); // renamed to match impl
+    const [isStickyBarVisible, setIsStickyBarVisible] = useState(true);
     const [loading, setLoading] = useState(true);
     const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
     const [isMobileSortOpen, setIsMobileSortOpen] = useState(false);
@@ -59,11 +64,20 @@ export default function Template2Page() {
                 if (res.ok) {
                     const data = await res.json();
                     if (data && data.sections && data.sections.length > 0) {
+                        // Ensure sections are valid (have type property)
+                        const validSections = data.sections.filter((s: any) => s && s.type);
+                        if (validSections.length === 0) {
+                            // No valid sections, use default template
+                            console.log("No valid sections found, using default template");
+                            setLoading(false);
+                            return;
+                        }
+
                         // Migration: Ensure essentials_hero section exists (replace old shop_essentials)
-                        const hasEssentialsHero = data.sections.find((s: any) => s.type === "essentials_hero");
+                        const hasEssentialsHero = validSections.find((s: any) => s.type === "essentials_hero");
                         if (!hasEssentialsHero) {
                             // Find and replace shop_essentials with essentials_hero
-                            const essentialsIndex = data.sections.findIndex((s: any) => s.type === "shop_essentials");
+                            const essentialsIndex = validSections.findIndex((s: any) => s.type === "shop_essentials");
                             const newSection = {
                                 id: "essentials-hero-1",
                                 type: "essentials_hero",
@@ -80,19 +94,19 @@ export default function Template2Page() {
 
                             if (essentialsIndex !== -1) {
                                 // Replace shop_essentials with essentials_hero
-                                data.sections[essentialsIndex] = newSection;
+                                validSections[essentialsIndex] = newSection;
                             } else {
                                 // Add it before featured_in section
-                                const featuredIndex = data.sections.findIndex((s: any) => s.type === "featured_in");
+                                const featuredIndex = validSections.findIndex((s: any) => s.type === "featured_in");
                                 if (featuredIndex !== -1) {
-                                    data.sections.splice(featuredIndex, 0, newSection);
+                                    validSections.splice(featuredIndex, 0, newSection);
                                 } else {
-                                    data.sections.push(newSection);
+                                    validSections.push(newSection);
                                 }
                             }
                         }
 
-                        setContent(data);
+                        setContent({ ...data, sections: validSections });
                         // Load sorting settings if they exist
                         if (data.sortedMode !== undefined) {
                             setSortedMode(data.sortedMode);
@@ -113,6 +127,23 @@ export default function Template2Page() {
             }
         }
         fetchContent();
+    }, []);
+
+    // Scroll tracking for sticky bar
+    useEffect(() => {
+        const handleScroll = () => {
+            if (!productGridRef.current) return;
+            const rect = productGridRef.current.getBoundingClientRect();
+            // If the bottom of the grid is above the sticky bar area, hide it.
+            if (rect.bottom < 120) {
+                setIsStickyBarVisible(false);
+            } else {
+                setIsStickyBarVisible(true);
+            }
+        };
+
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
     // Fetch Products for Grid
@@ -299,6 +330,11 @@ export default function Template2Page() {
     return (
         <main className="min-h-screen bg-[#FDFBF7]">
             <Navbar />
+            <StickyFilterBar
+                onFilterClick={() => setIsMobileFilterOpen(true)}
+                onSortClick={() => setIsMobileSortOpen(true)}
+                visible={isStickyBarVisible}
+            />
             <SizeGuidePanel />
 
             {/* Admin Controls */}
@@ -392,199 +428,196 @@ export default function Template2Page() {
                             data={section.settings as any}
                             isEditMode={isEditMode}
                             onUpdate={(newSettings) => updateSection(section.id, newSettings)}
+                            singleImageOnMobile={true}
                         />
                     );
                 }
                 return null;
             })}
 
-            {/* Main Content Layout */}
-            <div className="max-w-[1500px] mx-auto px-4 md:px-6 py-12">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-                    {/* Filter Sidebar - Hidden on Mobile by default */}
-                    <div className="lg:col-span-3">
-                        <FilterSidebar
-                            isOpen={isMobileFilterOpen}
-                            onClose={() => setIsMobileFilterOpen(false)}
-                            onFilterChange={setActiveFilters}
-                            collapsedByDefault={true}
-                        />
-                    </div>
-
-                    {/* Main Content Area */}
-                    <div className="lg:col-span-9 space-y-12">
-                        {/* Mobile Actions Bar - Sticky above Grid or inline */}
-                        <div className="md:hidden sticky top-0 z-30 bg-[#FDFBF7] py-4 border-b border-gray-200 mb-6 flex gap-4">
-                            <button
-                                onClick={() => setIsMobileFilterOpen(true)}
-                                className="flex-1 bg-white border border-gray-200 py-3 px-4 rounded-sm shadow-sm flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-wider text-gray-900"
-                            >
-                                <Filter size={16} /> Filters
-                            </button>
-                            <button
-                                onClick={() => setIsMobileSortOpen(true)}
-                                className="flex-1 bg-white border border-gray-200 py-3 px-4 rounded-sm shadow-sm flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-wider text-gray-900"
-                            >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>
-                                Sort
-                            </button>
-                        </div>
-
-                        {/* Mobile Filter Drawer */}
-                        <MobileDrawer
-                            isOpen={isMobileFilterOpen}
-                            onClose={() => setIsMobileFilterOpen(false)}
-                            title="Filters"
-                        >
+            {/* Content Overlay Wrapper for Parallax Effect */}
+            <div className="relative z-10 bg-[#FDFBF7] -mt-16 md:mt-0">
+                {/* Main Content Layout */}
+                <div ref={productGridRef} className="max-w-[1500px] mx-auto px-4 md:px-6 pt-4 md:py-12 pb-12">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-16">
+                        {/* Filter Sidebar - Hidden on Mobile, only visible on desktop */}
+                        <div className="hidden lg:block lg:col-span-3">
                             <FilterSidebar
                                 isOpen={true}
-                                onClose={() => setIsMobileFilterOpen(false)}
+                                onClose={() => { }}
                                 onFilterChange={setActiveFilters}
-                                collapsedByDefault={false}
-                                isMobile={true} // Add isMobile prop to handle internal layout/scrolling if needed
+                                collapsedByDefault={true}
                             />
-                        </MobileDrawer>
+                        </div>
 
-                        {/* Mobile Sort Drawer */}
-                        <MobileDrawer
-                            isOpen={isMobileSortOpen}
-                            onClose={() => setIsMobileSortOpen(false)}
-                            title="Sort By"
-                        >
-                            <div className="space-y-2 p-2">
-                                {[
-                                    { label: "Featured", value: "featured" },
-                                    { label: "Price: Low to High", value: "price-asc" },
-                                    { label: "Price: High to Low", value: "price-desc" },
-                                    { label: "Name: A-Z", value: "name-asc" },
-                                    { label: "Name: Z-A", value: "name-desc" },
-                                    { label: "Newest Arrivals", value: "newest" },
-                                ].map((option) => (
-                                    <button
-                                        key={option.value}
-                                        onClick={() => {
-                                            setSortBy(option.value);
-                                            setIsMobileSortOpen(false);
-                                        }}
-                                        className={`w-full text-left py-3 px-4 rounded-lg flex items-center justify-between transition-colors ${sortBy === option.value
-                                            ? "bg-[#006D77]/10 text-[#006D77] font-bold"
-                                            : "hover:bg-gray-50 text-gray-700 font-medium"
-                                            }`}
-                                    >
-                                        {option.label}
-                                        {sortBy === option.value && <div className="w-2 h-2 rounded-full bg-[#006D77]" />}
-                                    </button>
-                                ))}
+                        {/* Main Content Area */}
+                        <div className="lg:col-span-9 flex flex-col gap-6 md:gap-12">
+                            {/* Mobile Actions Bar - Sticky above Grid or inline */}
+
+
+                            {/* Promotional Windows */}
+                            {content.sections.map((section) => {
+                                if (section.type === "promo_windows") {
+                                    return (
+                                        <PromoWindows
+                                            key={section.id}
+                                            data={section.settings as any}
+                                            isEditMode={isEditMode}
+                                            onUpdate={(newSettings) => updateSection(section.id, newSettings)}
+                                        />
+                                    );
+                                }
+                                return null;
+                            })}
+
+                            {/* Product Count Indicator */}
+                            <div className="text-center py-2">
+                                <p className="text-sm text-gray-500 font-medium tracking-wide">
+                                    {displayedProducts.length} product{displayedProducts.length !== 1 ? 's' : ''}
+                                </p>
                             </div>
-                        </MobileDrawer>
 
-                        {/* Promotional Windows */}
-                        {content.sections.map((section) => {
-                            if (section.type === "promo_windows") {
-                                return (
-                                    <PromoWindows
-                                        key={section.id}
-                                        data={section.settings as any}
-                                        isEditMode={isEditMode}
-                                        onUpdate={(newSettings) => updateSection(section.id, newSettings)}
-                                    />
-                                );
-                            }
-                            return null;
-                        })}
+                            {/* Product Grid */}
+                            <div className="mb-4">
+                                {/* URL Search Indicator */}
+                                {urlSearch && (
+                                    <div className="bg-[#006D77]/10 border border-[#006D77]/20 rounded-lg p-4 mb-6 flex items-center justify-between">
+                                        <p className="text-sm text-[#006D77] font-medium">
+                                            🔍 Showing results for: <span className="font-bold">"{urlSearch}"</span> - {displayedProducts.length} product{displayedProducts.length !== 1 ? "s" : ""} found
+                                        </p>
+                                        <button
+                                            onClick={clearSearch}
+                                            className="text-[#006D77] hover:text-[#005a63] p-1 hover:bg-[#006D77]/10 rounded-full transition-colors"
+                                        >
+                                            <X size={18} />
+                                        </button>
+                                    </div>
+                                )}
 
-                        {/* Product Grid */}
-                        <div className="mb-4">
-                            {/* URL Search Indicator */}
-                            {urlSearch && (
-                                <div className="bg-[#006D77]/10 border border-[#006D77]/20 rounded-lg p-4 mb-6 flex items-center justify-between">
-                                    <p className="text-sm text-[#006D77] font-medium">
-                                        🔍 Showing results for: <span className="font-bold">"{urlSearch}"</span> - {displayedProducts.length} product{displayedProducts.length !== 1 ? "s" : ""} found
-                                    </p>
-                                    <button
-                                        onClick={clearSearch}
-                                        className="text-[#006D77] hover:text-[#005a63] p-1 hover:bg-[#006D77]/10 rounded-full transition-colors"
-                                    >
-                                        <X size={18} />
-                                    </button>
-                                </div>
-                            )}
+                                {sortedMode && filterKeyword && !urlSearch && (
+                                    <div className="bg-[#006D77]/10 border border-[#006D77]/20 rounded-lg p-4 mb-6">
+                                        <p className="text-sm text-[#006D77] font-medium">
+                                            📊 Filtered by: <span className="font-bold">"{filterKeyword}"</span> - Showing {displayedProducts.length} products
+                                        </p>
+                                    </div>
+                                )}
 
-                            {sortedMode && filterKeyword && !urlSearch && (
-                                <div className="bg-[#006D77]/10 border border-[#006D77]/20 rounded-lg p-4 mb-6">
-                                    <p className="text-sm text-[#006D77] font-medium">
-                                        📊 Filtered by: <span className="font-bold">"{filterKeyword}"</span> - Showing {displayedProducts.length} products
-                                    </p>
-                                </div>
-                            )}
+                                <div className="grid grid-cols-2 md:grid-cols-[repeat(3,314px)] justify-center gap-4 md:gap-6">
+                                    {displayedProducts.map((product, index) => (
+                                        <ProductCard
+                                            key={product.node.id || index}
+                                            product={product}
+                                            imageAspectRatio="w-full h-[264px] md:h-[392px]"
+                                        />
+                                    ))}
 
-                            <div className="grid grid-cols-2 md:grid-cols-[repeat(3,314px)] justify-center gap-4 md:gap-6">
-                                {displayedProducts.map((product, index) => (
-                                    <ProductCard
-                                        key={product.node.id || index}
-                                        product={product}
-                                        imageAspectRatio="w-full h-[264px] md:h-[392px]"
-                                    />
-                                ))}
-
-                                {/* Add Product Card (Edit Mode) */}
-                                {isEditMode && (
-                                    <div className="w-full h-[392px] rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center hover:border-[#006D77] hover:bg-[#006D77]/5 transition-colors group cursor-pointer relative bg-gray-50">
-                                        <div className="absolute inset-0 z-10 opacity-0 group-hover:opacity-100 flex items-center justify-center pointer-events-none">
-                                            <span className="bg-white px-4 py-2 rounded-full shadow-sm text-sm font-bold text-[#006D77]">Select Products</span>
+                                    {/* Add Product Card (Edit Mode) */}
+                                    {isEditMode && (
+                                        <div className="w-full h-[392px] rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center hover:border-[#006D77] hover:bg-[#006D77]/5 transition-colors group cursor-pointer relative bg-gray-50">
+                                            <div className="absolute inset-0 z-10 opacity-0 group-hover:opacity-100 flex items-center justify-center pointer-events-none">
+                                                <span className="bg-white px-4 py-2 rounded-full shadow-sm text-sm font-bold text-[#006D77]">Select Products</span>
+                                            </div>
+                                            <div className="pointer-events-auto">
+                                                <ProductPicker
+                                                    selectedHandles={selectedProductHandles}
+                                                    onSelectionChange={setSelectedProductHandles}
+                                                    maxSelection={12} // Limit to 12 for grid
+                                                />
+                                            </div>
                                         </div>
-                                        <div className="pointer-events-auto">
-                                            <ProductPicker
-                                                selectedHandles={selectedProductHandles}
-                                                onSelectionChange={setSelectedProductHandles}
-                                                maxSelection={12} // Limit to 12 for grid
-                                            />
-                                        </div>
+                                    )}
+                                </div>
+
+                                {displayedProducts.length === 0 && !isEditMode && (
+                                    <div className="text-center py-12 bg-gray-50 rounded-lg">
+                                        <p className="text-gray-500">No products found matching "{filterKeyword}"</p>
                                     </div>
                                 )}
                             </div>
 
-                            {displayedProducts.length === 0 && !isEditMode && (
-                                <div className="text-center py-12 bg-gray-50 rounded-lg">
-                                    <p className="text-gray-500">No products found matching "{filterKeyword}"</p>
+                            {/* Mobile Filter Drawer */}
+                            <MobileDrawer
+                                isOpen={isMobileFilterOpen}
+                                onClose={() => setIsMobileFilterOpen(false)}
+                                title="Filters"
+                            >
+                                <FilterSidebar
+                                    isOpen={true}
+                                    onClose={() => setIsMobileFilterOpen(false)}
+                                    onFilterChange={setActiveFilters}
+                                    collapsedByDefault={false}
+                                    isMobile={true} // Add isMobile prop to handle internal layout/scrolling if needed
+                                />
+                            </MobileDrawer>
+
+                            {/* Mobile Sort Drawer */}
+                            <MobileDrawer
+                                isOpen={isMobileSortOpen}
+                                onClose={() => setIsMobileSortOpen(false)}
+                                title="Sort By"
+                            >
+                                <div className="space-y-2 p-2">
+                                    {[
+                                        { label: "Featured", value: "featured" },
+                                        { label: "Price: Low to High", value: "price-asc" },
+                                        { label: "Price: High to Low", value: "price-desc" },
+                                        { label: "Name: A-Z", value: "name-asc" },
+                                        { label: "Name: Z-A", value: "name-desc" },
+                                        { label: "Newest Arrivals", value: "newest" },
+                                    ].map((option) => (
+                                        <button
+                                            key={option.value}
+                                            onClick={() => {
+                                                setSortBy(option.value);
+                                                setIsMobileSortOpen(false);
+                                            }}
+                                            className={`w-full text-left py-3 px-4 rounded-lg flex items-center justify-between transition-colors ${sortBy === option.value
+                                                ? "bg-[#006D77]/10 text-[#006D77] font-bold"
+                                                : "hover:bg-gray-50 text-gray-700 font-medium"
+                                                }`}
+                                        >
+                                            {option.label}
+                                            {sortBy === option.value && <div className="w-2 h-2 rounded-full bg-[#006D77]" />}
+                                        </button>
+                                    ))}
                                 </div>
-                            )}
+                            </MobileDrawer>
                         </div>
                     </div>
                 </div>
+
+                {/* Essentials Section */}
+                {content.sections.map((section) => {
+                    if (section.type === "essentials_hero") {
+                        return (
+                            <EssentialsHero
+                                key={section.id}
+                                data={section.settings as any}
+                                isEditMode={isEditMode}
+                                onUpdate={(newSettings) => updateSection(section.id, newSettings)}
+                            />
+                        );
+                    }
+                    return null;
+                })}
+
+                {/* Featured In Section */}
+                {content.sections.map((section) => {
+                    if (section.type === "featured_in") {
+                        return (
+                            <FeaturedIn
+                                key={section.id}
+                                data={section.settings as any}
+                                isEditMode={isEditMode}
+                                onUpdate={(newSettings) => updateSection(section.id, newSettings)}
+                            />
+                        );
+                    }
+                    return null;
+                })}
+
+                <Footer />
             </div>
-
-            {/* Essentials Section */}
-            {content.sections.map((section) => {
-                if (section.type === "essentials_hero") {
-                    return (
-                        <EssentialsHero
-                            key={section.id}
-                            data={section.settings as any}
-                            isEditMode={isEditMode}
-                            onUpdate={(newSettings) => updateSection(section.id, newSettings)}
-                        />
-                    );
-                }
-                return null;
-            })}
-
-            {/* Featured In Section */}
-            {content.sections.map((section) => {
-                if (section.type === "featured_in") {
-                    return (
-                        <FeaturedIn
-                            key={section.id}
-                            data={section.settings as any}
-                            isEditMode={isEditMode}
-                            onUpdate={(newSettings) => updateSection(section.id, newSettings)}
-                        />
-                    );
-                }
-                return null;
-            })}
-
-            <Footer />
         </main>
     );
 }

@@ -9,7 +9,11 @@ export async function GET() {
         if (!menuData) {
             return NextResponse.json({ error: "Menu not found" }, { status: 404 });
         }
-        return NextResponse.json(menuData);
+
+        // Add cache headers for 60 seconds, stale-while-revalidate for 5 minutes
+        const response = NextResponse.json(menuData);
+        response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+        return response;
     } catch (error) {
         console.error("Failed to fetch navigation:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

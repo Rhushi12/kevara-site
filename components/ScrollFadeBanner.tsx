@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import EditableText from "@/components/admin/EditableText";
+import { authUpload } from "@/lib/auth-client";
 
 interface ScrollFadeBannerProps {
     data?: {
@@ -14,11 +15,26 @@ interface ScrollFadeBannerProps {
     };
     isEditMode?: boolean;
     onUpdate?: (data: any) => void;
+    singleImageOnMobile?: boolean; // New prop
 }
 
-export default function ScrollFadeBanner({ data = {}, isEditMode = false, onUpdate }: ScrollFadeBannerProps) {
+export default function ScrollFadeBanner({ data = {}, isEditMode = false, onUpdate, singleImageOnMobile = false }: ScrollFadeBannerProps) {
     const { scrollY } = useScroll();
-    const opacity = useTransform(scrollY, [0, 300], [1, 0]);
+
+    // Detect if we're on mobile (under 768px)
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    // Only apply parallax effects on mobile
+    const textOpacity = useTransform(scrollY, [0, 300], isMobile ? [1, 0] : [1, 1]);
+    const textY = useTransform(scrollY, [0, 400], isMobile ? [0, -150] : [0, 0]);
+
     const [isLoaded, setIsLoaded] = useState(false);
 
     const {
@@ -44,6 +60,7 @@ export default function ScrollFadeBanner({ data = {}, isEditMode = false, onUpda
     const [isUploading, setIsUploading] = useState(false);
     const [uploadingIndex, setUploadingIndex] = useState<1 | 2 | null>(null);
 
+
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, imageField: 'image' | 'image2') => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -54,10 +71,7 @@ export default function ScrollFadeBanner({ data = {}, isEditMode = false, onUpda
         formData.append('file', file);
 
         try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await authUpload('/api/upload', formData);
 
             if (res.ok) {
                 const data = await res.json();
@@ -73,7 +87,7 @@ export default function ScrollFadeBanner({ data = {}, isEditMode = false, onUpda
     };
 
     return (
-        <section className="relative overflow-hidden group">
+        <section className="sticky top-0 inset-x-0 z-0 w-full flex justify-center overflow-hidden group">
             {/* Teal Background Layer - Animates away when loaded (same as homepage) */}
             <AnimatePresence>
                 {!isLoaded && (
@@ -90,16 +104,11 @@ export default function ScrollFadeBanner({ data = {}, isEditMode = false, onUpda
 
             {/* Two Image Grid */}
             <div
-                className="relative grid grid-cols-1 md:grid-cols-2 mx-auto"
-                style={{
-                    maxWidth: "1376px",
-                    gap: "0px"
-                }}
+                className="relative grid grid-cols-1 md:grid-cols-2 w-full gap-0"
             >
-                {/* Left Image */}
-                <div
-                    className="relative group/left"
-                    style={{ width: "688px", height: "528px", maxWidth: "100%" }}
+                {/* Left Image - Full width on mobile if single image mode */}
+                <motion.div
+                    className={`relative group/left w-full overflow-hidden ${singleImageOnMobile ? "h-[60vh] md:h-[528px]" : "h-[528px]"}`}
                 >
                     <Image
                         src={image}
@@ -107,6 +116,8 @@ export default function ScrollFadeBanner({ data = {}, isEditMode = false, onUpda
                         fill
                         className="object-cover"
                         priority
+                        quality={100}
+                        sizes="(max-width: 768px) 100vw, 50vw"
                     />
                     <div className="absolute inset-0 bg-black/30" />
 
@@ -131,12 +142,11 @@ export default function ScrollFadeBanner({ data = {}, isEditMode = false, onUpda
                             </div>
                         </div>
                     )}
-                </div>
+                </motion.div>
 
-                {/* Right Image */}
-                <div
-                    className="relative group/right"
-                    style={{ width: "688px", height: "528px", maxWidth: "100%" }}
+                {/* Right Image - Hidden on mobile if singleImageOnMobile is true */}
+                <motion.div
+                    className={`relative group/right w-full overflow-hidden ${singleImageOnMobile ? "hidden md:block md:h-[528px]" : "block h-[528px]"}`}
                 >
                     <Image
                         src={image2}
@@ -144,6 +154,8 @@ export default function ScrollFadeBanner({ data = {}, isEditMode = false, onUpda
                         fill
                         className="object-cover"
                         priority
+                        quality={100}
+                        sizes="50vw"
                     />
                     <div className="absolute inset-0 bg-black/30" />
 
@@ -168,11 +180,12 @@ export default function ScrollFadeBanner({ data = {}, isEditMode = false, onUpda
                             </div>
                         </div>
                     )}
-                </div>
+                </motion.div>
 
                 {/* Centered Text Content - Spanning Both Images */}
-                <div
-                    className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 z-10 pointer-events-none"
+                <motion.div
+                    style={{ opacity: textOpacity, y: textY }}
+                    className="absolute inset-0 w-full flex flex-col items-center justify-center text-center px-4 z-10 pointer-events-none"
                 >
                     {isEditMode ? (
                         <div className="pointer-events-auto">
@@ -236,7 +249,7 @@ export default function ScrollFadeBanner({ data = {}, isEditMode = false, onUpda
                             )}
                         </AnimatePresence>
                     )}
-                </div>
+                </motion.div>
             </div>
         </section>
     );

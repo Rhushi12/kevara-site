@@ -10,14 +10,16 @@ import LiquidButton from "@/components/ui/LiquidButton";
 import EditableText from "@/components/admin/EditableText";
 import SimpleImageUploadModal from "@/components/admin/SimpleImageUploadModal";
 import DimensionBadge from "@/components/admin/DimensionBadge";
+import { authUpload } from "@/lib/auth-client";
 
 interface HeroSliderProps {
     slides?: typeof HERO_SLIDES;
     isEditMode?: boolean;
     onUpdate?: (slides: typeof HERO_SLIDES) => void;
+    mobileHeight?: string;
 }
 
-export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, onUpdate }: HeroSliderProps) {
+export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, onUpdate, mobileHeight = "h-[85vh]" }: HeroSliderProps) {
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isLoaded, setIsLoaded] = useState(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -54,10 +56,7 @@ export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, o
             const formData = new FormData();
             formData.append("file", file);
 
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await authUpload('/api/upload', formData);
             const data = await res.json();
 
             if (!data.success) throw new Error("Upload failed");
@@ -138,7 +137,7 @@ export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, o
     if (!activeSlide) return null;
 
     return (
-        <div className="relative h-[667px] w-full overflow-hidden bg-[#FDFBF7]">
+        <div className={`relative ${mobileHeight} md:h-screen w-full overflow-hidden bg-[#FDFBF7]`}>
             {isEditMode && (
                 <div className="absolute top-4 right-4 z-50 flex gap-2">
                     <button
@@ -246,10 +245,10 @@ export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, o
                                                 value={activeSlide.heading}
                                                 onSave={(val) => updateSlide("heading", val)}
                                                 isAdmin={true}
-                                                className="text-[48px] md:text-[64px] leading-[1.1] md:leading-[64px] font-normal font-lora bg-transparent text-white border-b border-white/20"
+                                                className="text-[36px] md:text-6xl font-normal font-lora bg-transparent text-white border-b border-white/20"
                                             />
                                         ) : (
-                                            <h1 className="text-[48px] md:text-[64px] leading-[1.1] md:leading-[64px] font-normal font-lora">
+                                            <h1 className="text-[36px] md:text-6xl font-normal font-lora text-white mb-4">
                                                 {activeSlide.heading}
                                             </h1>
                                         )}
@@ -304,7 +303,7 @@ export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, o
                                                         }
                                                     }}
                                                     variant="secondary"
-                                                    className="border-none"
+                                                    className="border-none text-sm md:text-base px-6 py-2 md:px-8 md:py-3"
                                                 >
                                                     {activeSlide.buttonText}
                                                 </LiquidButton>
@@ -321,7 +320,7 @@ export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, o
                                                             }
                                                         }}
                                                         variant="secondary"
-                                                        className="border-none"
+                                                        className="border-none text-sm md:text-base px-6 py-2 md:px-8 md:py-3"
                                                     >
                                                         {activeSlide.secondaryButtonText}
                                                     </LiquidButton>

@@ -1,9 +1,25 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { uploadFileToShopify } from '@/lib/shopify-admin';
 import { createCustomProduct } from '@/lib/custom-products';
+import { requireAdmin } from '@/lib/auth';
 
-export async function POST(request: Request) {
+// Helper for safe JSON parsing
+function parseJsonSafe(str: string | null): any | undefined {
+    if (!str) return undefined;
     try {
+        return JSON.parse(str);
+    } catch (e) {
+        console.warn('[API] Failed to parse JSON:', e);
+        return undefined;
+    }
+}
+
+export async function POST(request: NextRequest) {
+    try {
+        // Check authentication
+        const authError = await requireAdmin(request);
+        if (authError) return authError;
+
         const formData = await request.formData();
         const title = formData.get('title') as string;
         const description = formData.get('description') as string;
@@ -17,9 +33,9 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Title and Price are required" }, { status: 400 });
         }
 
-        // Parse colors and sizes if provided
-        const colors = colorsJson ? JSON.parse(colorsJson) : undefined;
-        const sizes = sizesJson ? JSON.parse(sizesJson) : undefined;
+        // Safe JSON parsing with try-catch
+        const colors = parseJsonSafe(colorsJson);
+        const sizes = parseJsonSafe(sizesJson);
 
 
         // Upload all images to Shopify Files in parallel

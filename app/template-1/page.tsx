@@ -172,6 +172,7 @@ export default function Template1Page() {
                                 slides={(section.settings as any).slides || []}
                                 isEditMode={isEditMode}
                                 onUpdate={(newSlides) => updateSection(section.id, { slides: newSlides })}
+                                mobileHeight="h-[65vh]"
                             />
                         );
                     case "shop_essentials":

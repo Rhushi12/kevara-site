@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateGlobalMenu } from "@/lib/shopify-admin";
+import { requireAdmin } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
     try {
+        // Check authentication
+        const authError = await requireAdmin(req);
+        if (authError) return authError;
+
         const body = await req.json();
         const { menuTabs } = body;
 

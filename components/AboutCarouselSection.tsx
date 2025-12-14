@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Upload, Plus, X } from "lucide-react";
 import EditableText from "@/components/admin/EditableText";
+import { authUpload } from "@/lib/auth-client";
 
 interface CarouselImage {
     src: string;
@@ -73,10 +74,7 @@ export default function AboutCarouselSection({ data = {}, isEditMode = false, on
         formData.append('file', file);
 
         try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await authUpload('/api/upload', formData);
 
             if (res.ok) {
                 const uploadData = await res.json();
@@ -128,9 +126,9 @@ export default function AboutCarouselSection({ data = {}, isEditMode = false, on
     };
 
     return (
-        <section className="w-full flex justify-center mt-12 md:mt-20">
+        <section className="w-full mt-12 md:mt-20">
             <div
-                className="relative w-full max-w-[1374px] min-h-[600px] md:min-h-[771px] bg-[#003840] overflow-hidden"
+                className="relative w-full min-h-[600px] md:min-h-[771px] bg-[#003840] overflow-hidden"
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Upload } from "lucide-react";
 import EditableText from "@/components/admin/EditableText";
+import { authUpload } from "@/lib/auth-client";
 
 interface SustainabilityCTASectionProps {
     data?: {
@@ -48,10 +49,7 @@ export default function SustainabilityCTASection({
         formData.append('file', file);
 
         try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await authUpload('/api/upload', formData);
 
             if (res.ok) {
                 const uploadData = await res.json();
@@ -66,13 +64,9 @@ export default function SustainabilityCTASection({
     };
 
     return (
-        <section className="w-full flex justify-center" style={{ marginTop: '80px' }}>
+        <section className="w-full mt-20">
             <motion.div
-                className="relative w-full overflow-hidden"
-                style={{
-                    maxWidth: '1374px',
-                    height: '500px'
-                }}
+                className="relative w-full overflow-hidden h-[500px]"
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true, amount: 0.3 }}

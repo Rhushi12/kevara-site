@@ -4,8 +4,11 @@ import { getCustomProducts } from '@/lib/custom-products';
 export async function GET() {
     try {
         const products = await getCustomProducts(); // Fetch all custom products
-        // Force rebuild 2
-        return NextResponse.json({ products });
+
+        // Add cache headers for 60 seconds, stale-while-revalidate for 5 minutes
+        const response = NextResponse.json({ products });
+        response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+        return response;
     } catch (error) {
         console.error("Failed to fetch products:", error);
         return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 });

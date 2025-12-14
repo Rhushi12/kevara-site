@@ -30,7 +30,9 @@ export type SectionType =
     | 'sustainability_cta_section'
     | 'sustainability_hero_section'
     | 'sustainability_products_section'
-    | 'sustainability_quote_section';
+    | 'sustainability_quote_section'
+    | 'category_carousel'
+    | 'focal_on_you';
 
 export interface BaseSection {
     id: string;
@@ -206,6 +208,8 @@ export interface SustainabilityCTASectionType extends BaseSection { type: 'susta
 export interface SustainabilityHeroSectionType extends BaseSection { type: 'sustainability_hero_section'; settings: any; }
 export interface SustainabilityProductsSectionType extends BaseSection { type: 'sustainability_products_section'; settings: any; }
 export interface SustainabilityQuoteSectionType extends BaseSection { type: 'sustainability_quote_section'; settings: any; }
+export interface CategoryCarouselSection extends BaseSection { type: 'category_carousel'; settings: any; }
+export interface FocalOnYouSection extends BaseSection { type: 'focal_on_you'; settings: any; }
 
 export type PageSection =
     | HeroSliderSection
@@ -239,8 +243,11 @@ export type PageSection =
     | SustainabilityCTASectionType
     | SustainabilityHeroSectionType
     | SustainabilityProductsSectionType
-    | SustainabilityQuoteSectionType;
+    | SustainabilityQuoteSectionType
+    | CategoryCarouselSection
+    | FocalOnYouSection;
 
 export interface PageContent {
     sections: PageSection[];
+    template_type?: 'template1' | 'template2' | 'template3' | 'homepage' | 'collection';
 }

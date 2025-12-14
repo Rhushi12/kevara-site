@@ -111,8 +111,8 @@ export default function FilterSidebar({
 
     return (
         <>
-            {/* Mobile Overlay */}
-            {isOpen && (
+            {/* Mobile Overlay - Only show when NOT inside a MobileDrawer */}
+            {isOpen && !isMobile && (
                 <div
                     className="md:hidden fixed inset-0 bg-black/50 z-40"
                     onClick={onClose}
@@ -121,13 +121,12 @@ export default function FilterSidebar({
 
             {/* Sidebar */}
             <aside className={`
-                fixed md:sticky top-24 left-0 h-[calc(100vh-6rem)] md:h-auto
-                ${isMobile ? 'w-full' : 'w-[280px]'} md:w-full
-                bg-[#FDFBF7] md:bg-transparent border-r md:border-none
+                ${isMobile ? 'w-full relative' : 'fixed md:sticky top-24 left-0 h-[calc(100vh-6rem)] md:h-auto w-[280px] md:w-full'}
+                bg-[#FDFBF7] md:bg-transparent ${!isMobile ? 'border-r md:border-none' : ''}
                 overflow-y-auto scrollbar-hide
                 transition-transform duration-300
-                z-50 md:z-0
-                ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+                ${!isMobile ? 'z-50 md:z-0' : ''}
+                ${isOpen || isMobile ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
             `}>
                 {/* Mobile Close Button (Only show if NOT embedded in drawer - drawer has its own close) */}
                 {!isMobile && (

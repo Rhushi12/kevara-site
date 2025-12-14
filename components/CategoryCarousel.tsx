@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Upload, Plus, Trash2, Edit2 } from "lucide-react";
 import SimpleImageUploadModal from "@/components/admin/SimpleImageUploadModal";
+import { authUpload } from "@/lib/auth-client";
 
 interface CategoryItem {
     id: string;
@@ -74,10 +75,7 @@ export default function CategoryCarousel({
             const formData = new FormData();
             formData.append("file", file);
 
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await authUpload('/api/upload', formData);
             const result = await res.json();
 
             if (!result.success) throw new Error("Upload failed");
@@ -113,14 +111,7 @@ export default function CategoryCarousel({
 
     return (
         <div
-            className="w-full bg-[#FDFBF7] flex items-center justify-center relative"
-            style={{
-                maxWidth: "1374px",
-                height: "257px",
-                margin: "0 auto",
-                marginTop: "40px",
-                marginBottom: "43px"
-            }}
+            className="w-full bg-[#FDFBF7] flex items-center justify-center relative h-[257px] my-10"
         >
             {/* Add Category Button (Edit Mode) */}
             {isEditMode && (

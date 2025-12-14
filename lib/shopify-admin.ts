@@ -11,39 +11,83 @@ function logDebug(message: string, data?: any) {
   console.log(`[DEBUG] ${message}`, data ? JSON.stringify(data, null, 2) : '');
 }
 
-// Exported fetch function for admin API
-export async function shopifyFetch(query: string, variables: any = {}) {
-  const url = `https://${domain}/admin/api/2024-07/graphql.json`;
+// Fetch with timeout helper
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number = 30000): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Shopify-Access-Token": accessToken!,
-      },
-      body: JSON.stringify({ query, variables }),
-      cache: 'no-store', // Ensure we always get fresh data from Admin API
+      ...options,
+      signal: controller.signal,
     });
-
-    if (!response.ok) {
-      const text = await response.text();
-      console.error(`Shopify API Error (${response.status} ${response.statusText}):`, text);
-      throw new Error(`Shopify API Error: ${response.status} ${response.statusText} - ${text}`);
-    }
-
-    const json = await response.json();
-    if (json.errors) {
-      console.error("Shopify API GraphQL Error:", json.errors);
-      console.error("Query:", query);
-      console.error("Variables:", JSON.stringify(variables, null, 2));
-      throw new Error("Failed to fetch from Shopify Admin API: " + JSON.stringify(json.errors));
-    }
-    return json.data;
+    clearTimeout(timeoutId);
+    return response;
   } catch (error: any) {
-    console.error("Shopify Fetch Network/System Error:", error);
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error(`Request timed out after ${timeoutMs}ms`);
+    }
     throw error;
   }
+}
+
+// Exported fetch function for admin API with timeout and retry
+export async function shopifyFetch(query: string, variables: any = {}, options?: {
+  cache?: RequestCache;
+  timeout?: number;
+  retries?: number;
+}) {
+  const url = `https://${domain}/admin/api/2024-07/graphql.json`;
+  const timeout = options?.timeout ?? 30000; // 30 second default timeout
+  const maxRetries = options?.retries ?? 3;
+  const cacheOption = options?.cache ?? 'no-store';
+
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetchWithTimeout(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Shopify-Access-Token": accessToken!,
+        },
+        body: JSON.stringify({ query, variables }),
+        cache: cacheOption,
+      }, timeout);
+
+      if (!response.ok) {
+        const text = await response.text();
+        console.error(`Shopify API Error (${response.status} ${response.statusText}):`, text);
+        throw new Error(`Shopify API Error: ${response.status} ${response.statusText} - ${text}`);
+      }
+
+      const json = await response.json();
+      if (json.errors) {
+        console.error("Shopify API GraphQL Error:", json.errors);
+        console.error("Query:", query);
+        console.error("Variables:", JSON.stringify(variables, null, 2));
+        throw new Error("Failed to fetch from Shopify Admin API: " + JSON.stringify(json.errors));
+      }
+      return json.data;
+    } catch (error: any) {
+      lastError = error;
+      console.error(`Shopify Fetch attempt ${attempt}/${maxRetries} failed:`, error.message);
+
+      // Don't retry on GraphQL errors or auth errors
+      if (error.message?.includes('GraphQL') || error.message?.includes('401')) {
+        throw error;
+      }
+
+      // Wait before retry (exponential backoff)
+      if (attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, Math.min(1000 * Math.pow(2, attempt - 1), 5000)));
+      }
+    }
+  }
+
+  throw lastError || new Error('All retry attempts failed');
 }
 
 async function upsertMetaobject(type: string, handle: string, fields: any[]) {
@@ -123,8 +167,9 @@ function getResourceType(mimeType: string): 'IMAGE' | 'VIDEO' | 'FILE' {
 }
 
 /**
- * Convert File to Buffer for upload, resizing large images
- * Shopify has a 20MP limit, so we resize to max 4000x4000 (~16MP)
+ * Convert File to Buffer for upload
+ * Only resizes if image exceeds Shopify's 20MP limit (very rare)
+ * Otherwise uploads the original image preserving quality
  */
 async function fileToBuffer(file: any): Promise<{ buffer: Buffer; mimeType: string }> {
   let buffer: Buffer;
@@ -139,11 +184,10 @@ async function fileToBuffer(file: any): Promise<{ buffer: Buffer; mimeType: stri
     throw new Error('Cannot convert file to buffer - unsupported file type');
   }
 
-  // Log original file signature
-  const signature = buffer.slice(0, 16).toString('hex');
-  console.log(`[Upload] File "${file.name}" signature (first 16 bytes): ${signature}`);
+  // Log original file info
+  console.log(`[Upload] File "${file.name}" size: ${buffer.length} bytes, type: ${mimeType}`);
 
-  // Only resize images, not videos
+  // Only resize images if they exceed Shopify's 20MP limit (very rare for web uploads)
   if (mimeType.startsWith('image/') && !mimeType.includes('gif')) {
     try {
       const image = sharp(buffer);
@@ -151,28 +195,35 @@ async function fileToBuffer(file: any): Promise<{ buffer: Buffer; mimeType: stri
 
       console.log(`[Upload] Image dimensions: ${metadata.width}x${metadata.height}`);
 
-      const MAX_DIMENSION = 4000; // 4000x4000 = 16MP, well under 20MP limit
+      // Shopify limit is 20MP = 20,000,000 pixels
+      const SHOPIFY_MAX_PIXELS = 20000000;
+      const currentPixels = (metadata.width || 0) * (metadata.height || 0);
 
-      if (metadata.width && metadata.height &&
-        (metadata.width > MAX_DIMENSION || metadata.height > MAX_DIMENSION)) {
-        console.log(`[Upload] Resizing image from ${metadata.width}x${metadata.height}...`);
+      if (currentPixels > SHOPIFY_MAX_PIXELS) {
+        // Calculate what dimension to resize to (maintain aspect ratio)
+        const scaleFactor = Math.sqrt(SHOPIFY_MAX_PIXELS / currentPixels);
+        const newWidth = Math.floor((metadata.width || 4000) * scaleFactor);
+        const newHeight = Math.floor((metadata.height || 4000) * scaleFactor);
+
+        console.log(`[Upload] Image exceeds 20MP limit (${Math.round(currentPixels / 1000000)}MP), resizing to ${newWidth}x${newHeight}...`);
 
         const resizedBuffer = await image
-          .resize(MAX_DIMENSION, MAX_DIMENSION, {
+          .resize(newWidth, newHeight, {
             fit: 'inside',
             withoutEnlargement: true
           })
-          .jpeg({ quality: 85 }) // Convert to JPEG for consistency
+          .jpeg({ quality: 90 }) // Higher quality for large images
           .toBuffer();
 
         buffer = resizedBuffer;
-        mimeType = 'image/jpeg'; // After resize, it's JPEG
+        mimeType = 'image/jpeg';
 
-        console.log(`[Upload] Resized to max ${MAX_DIMENSION}px, new size: ${buffer.length} bytes`);
+        console.log(`[Upload] Resized to ${newWidth}x${newHeight}, new size: ${buffer.length} bytes`);
       }
+      // If under 20MP, upload original without any resizing
     } catch (err) {
-      console.error('[Upload] Failed to resize image, uploading original:', err);
-      // Continue with original if resize fails
+      console.error('[Upload] Image processing failed, uploading original:', err);
+      // Continue with original if processing fails
     }
   }
 
@@ -603,7 +654,7 @@ export async function getGlobalMenu() {
   if (!metaobject) return null;
 
   let menuJson: any = null;
-  let imageMap: Record<string, { url: string, id: string }> = {};
+  const imageMap: Record<string, { url: string, id: string }> = {};
 
   metaobject.fields.forEach((field: any) => {
     if (field.key === "menu_structure_json") {

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { Upload } from "lucide-react";
 import EditableText from "@/components/admin/EditableText";
+import { authUpload } from "@/lib/auth-client";
 
 interface SliderItem {
     image: string;
@@ -99,10 +100,7 @@ export default function SustainabilitySliderSection({
         formData.append('file', file);
 
         try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await authUpload('/api/upload', formData);
 
             if (res.ok) {
                 const uploadData = await res.json();
@@ -180,17 +178,11 @@ export default function SustainabilitySliderSection({
     };
 
     return (
-        <section className="w-full flex justify-center bg-[#F0F9F9]">
-            <div className="w-full max-w-[1374px] h-auto md:h-[669px] flex flex-col md:flex-row relative">
+        <section className="w-full bg-[#F0F9F9]">
+            <div className="w-full max-w-[1500px] mx-auto flex flex-col md:flex-row relative px-4 md:px-8 py-8 md:py-0">
                 {/* Left: Image Slider */}
                 <div
-                    className="relative flex-shrink-0 rounded-sm overflow-hidden"
-                    style={{
-                        width: '509px',
-                        height: '509px',
-                        marginTop: '80px',
-                        marginLeft: '107px'
-                    }}
+                    className="relative flex-shrink-0 rounded-sm overflow-hidden w-full md:w-[509px] h-[300px] md:h-[509px] md:mt-[80px] md:ml-[107px] mx-auto md:mx-0"
                 >
                     {/* Teal Background for Reveal */}
                     <div className="absolute inset-0 bg-[#006D77] z-0" />
@@ -237,10 +229,9 @@ export default function SustainabilitySliderSection({
                     </AnimatePresence>
                 </div>
 
-                {/* Right: Text Content - Fixed 201px from top */}
+                {/* Right: Text Content */}
                 <div
-                    className="flex-1 flex justify-center px-8 md:px-0"
-                    style={{ paddingTop: '201px' }}
+                    className="flex-1 flex justify-center px-4 md:px-8 pt-8 md:pt-[201px]"
                 >
                     <div className="w-full max-w-[576px]">
                         <AnimatePresence mode="wait">

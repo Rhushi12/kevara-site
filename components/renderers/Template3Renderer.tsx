@@ -16,26 +16,32 @@ import LoadingBar from "@/components/LoadingBar";
 import FocalOnYou from "@/components/FocalOnYou";
 import SizeGuidePanel from "@/components/SizeGuidePanel";
 import PremiumPreloader from "@/components/PremiumPreloader";
-import { Trash2, Filter } from "lucide-react";
+import { Trash2, Filter, X } from "lucide-react";
 import { PageContent, PageSection } from "@/types/page-editor";
 import MobileDrawer from "@/components/options/MobileDrawer";
 import ProductPicker from "@/components/admin/ProductPicker";
 import StickyFilterBar from "@/components/StickyFilterBar";
 
-// Default Initial Content
-import { TEMPLATE_3 } from "@/lib/templates";
+interface Template3RendererProps {
+    content: PageContent;
+    slug: string;
+}
 
-const DEFAULT_CONTENT: PageContent = TEMPLATE_3;
-
-export default function Template3Page() {
+export default function Template3Renderer({ content, slug }: Template3RendererProps) {
     const { isAdmin } = useAuth();
-    const [content, setContent] = useState<PageContent>(DEFAULT_CONTENT);
+
+    const [pageContent, setPageContent] = useState<PageContent>(content);
     const [isEditMode, setIsEditMode] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // UI States
     const [loading, setLoading] = useState(true);
     const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
     const [isMobileSortOpen, setIsMobileSortOpen] = useState(false);
+    const [isStickyBarVisible, setIsStickyBarVisible] = useState(true);
+
+    // Product Data & Filtering
     const [products, setProducts] = useState<any[]>([]);
     const [sortedMode, setSortedMode] = useState(false);
     const [filterKeyword, setFilterKeyword] = useState("");
@@ -48,6 +54,8 @@ export default function Template3Page() {
     const [selectedProductHandles, setSelectedProductHandles] = useState<string[]>([]);
     const [sortBy, setSortBy] = useState("featured");
     const [categoryCarouselItems, setCategoryCarouselItems] = useState<any[]>([]);
+
+    // Pagination
     const [currentPage, setCurrentPage] = useState(1);
     const productsPerPage = 24;
     const productGridRef = useRef<HTMLDivElement>(null);
@@ -75,16 +83,25 @@ export default function Template3Page() {
         }
     };
 
-    // Scroll tracking for Sticky Bar visibility
-    const [isStickyBarVisible, setIsStickyBarVisible] = useState(true);
+    // Load persisted settings from content
+    useEffect(() => {
+        if (content) {
+            const data = content as any;
+            if (data.sortedMode !== undefined) setSortedMode(data.sortedMode);
+            if (data.filterKeyword) setFilterKeyword(data.filterKeyword);
+            if (data.selectedProductHandles) setSelectedProductHandles(data.selectedProductHandles);
+            if (data.categoryCarouselItems) setCategoryCarouselItems(data.categoryCarouselItems);
+            setPageContent(content);
+        }
+        setLoading(false);
+    }, [content]);
 
+    // Scroll tracking for Sticky Bar visibility
     useEffect(() => {
         const handleScroll = () => {
             if (!productGridRef.current) return;
             const rect = productGridRef.current.getBoundingClientRect();
-            // grid bottom position relative to viewport top
-            // If the bottom of the grid is above the sticky bar area (approx 120px), hide it.
-            // 120px = 64px (navbar) + ~56px (bar height)
+            // If the bottom of the grid is above the sticky bar area, hide it.
             if (rect.bottom < 120) {
                 setIsStickyBarVisible(false);
             } else {
@@ -94,83 +111,6 @@ export default function Template3Page() {
 
         window.addEventListener("scroll", handleScroll, { passive: true });
         return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
-
-    // Fetch Page Content
-    useEffect(() => {
-        async function fetchContent() {
-            try {
-                const res = await fetch("/api/builder/content?handle=template-3");
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.sections && data.sections.length > 0) {
-                        // Ensure sections are valid (have type property)
-                        const validSections = data.sections.filter((s: any) => s && s.type);
-                        if (validSections.length === 0) {
-                            // No valid sections, use default template
-                            console.log("No valid sections found, using default template");
-                            setLoading(false);
-                            return;
-                        }
-
-                        // Migration: Ensure essentials_hero section exists (replace old shop_essentials)
-                        const hasEssentialsHero = validSections.find((s: any) => s.type === "essentials_hero");
-                        if (!hasEssentialsHero) {
-                            // Find and replace shop_essentials with essentials_hero
-                            const essentialsIndex = validSections.findIndex((s: any) => s.type === "shop_essentials");
-                            const newSection = {
-                                id: "essentials-hero-3",
-                                type: "essentials_hero",
-                                settings: {
-                                    label: "ESSENTIALS",
-                                    heading: "More than basics",
-                                    description: "Starting with our core, we are replacing the conventional composition of our Essentials collections with more sustainable fibres in each product. An action only contributing to the longevity of the classic styles, designed to last and stand the test of time.",
-                                    buttonText: "LEARN MORE",
-                                    buttonLink: "/collections/essentials",
-                                    image: "https://images.unsplash.com/photo-1516826957135-700dedea698c?q=80&w=1000&auto=format&fit=crop",
-                                    imageTag: "Fighter"
-                                }
-                            };
-
-                            if (essentialsIndex !== -1) {
-                                // Replace shop_essentials with essentials_hero
-                                validSections[essentialsIndex] = newSection;
-                            } else {
-                                // Add it before featured_in section
-                                const featuredIndex = validSections.findIndex((s: any) => s.type === "featured_in");
-                                if (featuredIndex !== -1) {
-                                    validSections.splice(featuredIndex, 0, newSection);
-                                } else {
-                                    validSections.push(newSection);
-                                }
-                            }
-                        }
-
-                        setContent({ ...data, sections: validSections });
-                        // Load sorting settings if they exist
-                        if (data.sortedMode !== undefined) {
-                            setSortedMode(data.sortedMode);
-                        }
-                        if (data.filterKeyword) {
-                            setFilterKeyword(data.filterKeyword);
-                        }
-                        // Load selected products
-                        if (data.selectedProductHandles) {
-                            setSelectedProductHandles(data.selectedProductHandles);
-                        }
-                        // Load category carousel items
-                        if (data.categoryCarouselItems) {
-                            setCategoryCarouselItems(data.categoryCarouselItems);
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error("Failed to fetch page content:", error);
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchContent();
     }, []);
 
     // Fetch Products for Grid
@@ -194,7 +134,7 @@ export default function Template3Page() {
         setIsSaving(true);
         try {
             const dataToSave = {
-                ...content,
+                ...pageContent,
                 sortedMode,
                 filterKeyword,
                 selectedProductHandles,
@@ -203,7 +143,7 @@ export default function Template3Page() {
             const res = await fetch("/api/builder/content", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ handle: "template-3", data: dataToSave }),
+                body: JSON.stringify({ handle: slug, data: dataToSave }),
             });
             if (!res.ok) throw new Error("Failed to save");
             alert("Changes saved successfully!");
@@ -219,12 +159,9 @@ export default function Template3Page() {
     // Delete Page
     const deletePage = async () => {
         if (!confirm("Are you sure you want to delete this page? This action cannot be undone.")) return;
-
         setIsDeleting(true);
         try {
-            const res = await fetch("/api/builder/content?handle=template-3", {
-                method: "DELETE",
-            });
+            const res = await fetch(`/api/builder/content?handle=${slug}`, { method: "DELETE" });
             if (!res.ok) throw new Error("Failed to delete");
             alert("Page deleted successfully!");
             window.location.reload();
@@ -238,7 +175,7 @@ export default function Template3Page() {
 
     // Update Section Helper
     const updateSection = useCallback((sectionId: string, newSettings: any) => {
-        setContent((prev) => ({
+        setPageContent((prev) => ({
             ...prev,
             sections: prev.sections.map((section) =>
                 section.id === sectionId
@@ -248,19 +185,18 @@ export default function Template3Page() {
         }));
     }, []);
 
-    // Filter products based on sidebar filters and sort settings
+    // Filter products
     const getDisplayedProducts = () => {
         let finalProducts = products;
 
         // 0. Manual Selection Priority
         if (selectedProductHandles.length > 0) {
-            // Map handles to full product objects, preserving order
             finalProducts = selectedProductHandles
                 .map(handle => products.find(p => p.node.handle === handle))
-                .filter(Boolean); // Remove nulls if product not found
+                .filter(Boolean);
         }
 
-        // 1. Keyword Filter (from Admin sort mode)
+        // 1. Keyword Filter
         if (sortedMode && filterKeyword) {
             finalProducts = finalProducts.filter(product =>
                 product.node.title.toLowerCase().includes(filterKeyword.toLowerCase())
@@ -271,7 +207,6 @@ export default function Template3Page() {
         if (activeFilters.categories.length > 0 || activeFilters.priceRange.min || activeFilters.priceRange.max || activeFilters.sizes.length > 0 || activeFilters.colors.length > 0) {
             finalProducts = finalProducts.filter(product => {
                 const node = product.node;
-                // Category
                 if (activeFilters.categories.length > 0) {
                     const matchesCategory = activeFilters.categories.some(cat =>
                         node.title.toLowerCase().includes(cat.toLowerCase()) ||
@@ -279,15 +214,12 @@ export default function Template3Page() {
                     );
                     if (!matchesCategory) return false;
                 }
-                // Price
                 if (activeFilters.priceRange.min && parseFloat(node.priceRange.minVariantPrice.amount) < parseFloat(activeFilters.priceRange.min)) return false;
                 if (activeFilters.priceRange.max && parseFloat(node.priceRange.minVariantPrice.amount) > parseFloat(activeFilters.priceRange.max)) return false;
-                // Size
                 if (activeFilters.sizes.length > 0) {
                     const hasSize = node.variants.edges.some((v: any) => activeFilters.sizes.some(size => v.node.title.includes(size)));
                     if (!hasSize) return false;
                 }
-                // Color
                 if (activeFilters.colors.length > 0) {
                     const hasColor = node.variants.edges.some((v: any) => activeFilters.colors.some(color => v.node.title.includes(color)));
                     if (!hasColor) return false;
@@ -305,19 +237,12 @@ export default function Template3Page() {
                 const titleB = b.node.title.toLowerCase();
 
                 switch (sortBy) {
-                    case "price-asc":
-                        return priceA - priceB;
-                    case "price-desc":
-                        return priceB - priceA;
-                    case "name-asc":
-                        return titleA.localeCompare(titleB);
-                    case "name-desc":
-                        return titleB.localeCompare(titleA);
-                    case "newest":
-                        // Assuming products have a publishedAt field or similar, otherwise fallback to index/id
-                        return new Date(b.node.publishedAt || 0).getTime() - new Date(a.node.publishedAt || 0).getTime();
-                    default:
-                        return 0;
+                    case "price-asc": return priceA - priceB;
+                    case "price-desc": return priceB - priceA;
+                    case "name-asc": return titleA.localeCompare(titleB);
+                    case "name-desc": return titleB.localeCompare(titleA);
+                    case "newest": return new Date(b.node.publishedAt || 0).getTime() - new Date(a.node.publishedAt || 0).getTime();
+                    default: return 0;
                 }
             });
         }
@@ -343,12 +268,10 @@ export default function Template3Page() {
             {/* Admin Controls */}
             {isAdmin && (
                 <>
-                    {/* Sorting Controls - Top Right */}
+                    {/* Sorting Controls */}
                     {isEditMode && (
                         <div className="fixed top-24 right-6 z-50 bg-white p-6 rounded-lg shadow-xl border border-gray-200 max-w-sm">
                             <h3 className="text-sm font-bold uppercase tracking-wider mb-4">Product Sorting</h3>
-
-                            {/* Sort Mode Toggle */}
                             <div className="flex items-center gap-3 mb-4">
                                 <button
                                     onClick={() => setSortedMode(!sortedMode)}
@@ -360,13 +283,9 @@ export default function Template3Page() {
                                     {sortedMode ? '✓ Sorted' : 'Unsorted'}
                                 </button>
                             </div>
-
-                            {/* Filter Keyword Input */}
                             {sortedMode && (
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-2">
-                                        Filter by keyword (e.g., "T-shirt")
-                                    </label>
+                                    <label className="block text-xs font-medium text-gray-600 mb-2">Filter by keyword</label>
                                     <input
                                         type="text"
                                         value={filterKeyword}
@@ -382,48 +301,27 @@ export default function Template3Page() {
                         </div>
                     )}
 
-                    {/* Main Edit Controls - Bottom Right */}
+                    {/* Main Edit Controls */}
                     <div className="fixed bottom-6 right-6 z-50 flex gap-4">
                         {isEditMode ? (
                             <>
-                                <button
-                                    onClick={() => setIsEditMode(false)}
-                                    className="bg-gray-800 text-white px-6 py-3 rounded-full shadow-lg hover:bg-gray-700 transition-colors"
-                                >
-                                    Cancel
+                                <button onClick={() => setIsEditMode(false)} className="bg-gray-800 text-white px-6 py-3 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Cancel</button>
+                                <button onClick={deletePage} disabled={isDeleting} className="bg-red-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2">
+                                    <Trash2 size={18} />{isDeleting ? "Deleting..." : "Delete"}
                                 </button>
-                                <button
-                                    onClick={deletePage}
-                                    disabled={isDeleting}
-                                    className="bg-red-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-                                >
-                                    <Trash2 size={18} />
-                                    {isDeleting ? "Deleting..." : "Delete"}
-                                </button>
-                                <button
-                                    onClick={saveChanges}
-                                    disabled={isSaving}
-                                    className="bg-[#006D77] text-white px-6 py-3 rounded-full shadow-lg hover:bg-[#005a63] transition-colors disabled:opacity-50"
-                                >
+                                <button onClick={saveChanges} disabled={isSaving} className="bg-[#006D77] text-white px-6 py-3 rounded-full shadow-lg hover:bg-[#005a63] transition-colors disabled:opacity-50">
                                     {isSaving ? "Saving..." : "Save Changes"}
                                 </button>
                             </>
                         ) : (
-                            <button
-                                onClick={() => setIsEditMode(true)}
-                                className="bg-black text-white px-6 py-3 rounded-full shadow-lg hover:bg-gray-900 transition-colors"
-                            >
-                                Edit Page
-                            </button>
+                            <button onClick={() => setIsEditMode(true)} className="bg-black text-white px-6 py-3 rounded-full shadow-lg hover:bg-gray-900 transition-colors">Edit Page</button>
                         )}
                     </div>
                 </>
             )}
 
-
-
             {/* Render Banner */}
-            {content.sections.map((section) => {
+            {pageContent.sections.map((section) => {
                 if (section.type === "scroll_banner") {
                     return (
                         <ScrollFadeBanner
@@ -452,7 +350,7 @@ export default function Template3Page() {
                 {/* Main Content Layout */}
                 <div ref={productGridRef} className="max-w-[1500px] mx-auto px-4 md:px-6 pt-4 md:py-12 pb-12">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-16">
-                        {/* Filter Sidebar - Hidden on Mobile, only visible on desktop */}
+                        {/* Filter Sidebar */}
                         <div className="hidden lg:block lg:col-span-3">
                             <FilterSidebar
                                 isOpen={true}
@@ -464,9 +362,6 @@ export default function Template3Page() {
 
                         {/* Main Content Area */}
                         <div className="lg:col-span-9 flex flex-col gap-6 md:gap-12">
-                            {/* Mobile Actions Bar - Sticky above Grid or inline */}
-
-
                             {/* Product Count Indicator */}
                             <div className="text-center py-2">
                                 <p className="text-sm text-gray-500 font-medium tracking-wide">
@@ -517,7 +412,7 @@ export default function Template3Page() {
                                     </div>
                                 )}
 
-                                {/* Pagination - Inside Product Grid */}
+                                {/* Pagination */}
                                 {displayedProducts.length > productsPerPage && (
                                     <div className="col-span-full">
                                         <Pagination
@@ -530,26 +425,18 @@ export default function Template3Page() {
                             </div>
 
                             {/* Mobile Filter Drawer */}
-                            <MobileDrawer
-                                isOpen={isMobileFilterOpen}
-                                onClose={() => setIsMobileFilterOpen(false)}
-                                title="Filters"
-                            >
+                            <MobileDrawer isOpen={isMobileFilterOpen} onClose={() => setIsMobileFilterOpen(false)} title="Filters">
                                 <FilterSidebar
                                     isOpen={true}
                                     onClose={() => setIsMobileFilterOpen(false)}
                                     onFilterChange={setActiveFilters}
                                     collapsedByDefault={false}
-                                    isMobile={true} // Add isMobile prop to handle internal layout/scrolling if needed
+                                    isMobile={true}
                                 />
                             </MobileDrawer>
 
                             {/* Mobile Sort Drawer */}
-                            <MobileDrawer
-                                isOpen={isMobileSortOpen}
-                                onClose={() => setIsMobileSortOpen(false)}
-                                title="Sort By"
-                            >
+                            <MobileDrawer isOpen={isMobileSortOpen} onClose={() => setIsMobileSortOpen(false)} title="Sort By">
                                 <div className="space-y-2 p-2">
                                     {[
                                         { label: "Featured", value: "featured" },
@@ -584,7 +471,7 @@ export default function Template3Page() {
                 <FocalOnYou isEditMode={isEditMode} />
 
                 {/* Featured In Section */}
-                {content.sections.map((section) => {
+                {pageContent.sections.map((section) => {
                     if (section.type === "featured_in") {
                         return (
                             <FeaturedIn

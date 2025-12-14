@@ -6,6 +6,7 @@ import LiquidButton from "@/components/ui/LiquidButton";
 import EditableText from "@/components/admin/EditableText";
 import SimpleImageUploadModal from "@/components/admin/SimpleImageUploadModal";
 import DimensionBadge from "@/components/admin/DimensionBadge";
+import { authUpload } from "@/lib/auth-client";
 
 interface VideoPromoProps {
     data?: {
@@ -62,10 +63,7 @@ export default function VideoPromo({ data, isEditMode = false, onUpdate }: Video
             const formData = new FormData();
             formData.append("file", file);
 
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await authUpload('/api/upload', formData);
             const result = await res.json();
 
             if (!result.success) throw new Error("Upload failed");

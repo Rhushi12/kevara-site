@@ -89,25 +89,13 @@ export default function SustainabilityProductsSection({
         : products.slice(0, 4); // Default to first 4 if none selected
 
     return (
-        <section className="w-full flex justify-center">
+        <section className="w-full">
             <div
-                className="w-full flex flex-col items-center"
-                style={{
-                    maxWidth: '1374px',
-                    minHeight: '809px',
-                    paddingTop: '48px',
-                    paddingBottom: '48px'
-                }}
+                className="w-full max-w-[1500px] mx-auto flex flex-col items-center px-4 md:px-8 py-8"
             >
                 {/* Text Container */}
                 <div
-                    className="flex flex-col items-center text-center"
-                    style={{
-                        width: '800px',
-                        maxWidth: '100%',
-                        paddingLeft: '16px',
-                        paddingRight: '16px'
-                    }}
+                    className="flex flex-col items-center text-center w-full md:w-[800px] px-4"
                 >
                     {/* Small Heading */}
                     {isEditMode ? (
@@ -130,13 +118,13 @@ export default function SustainabilityProductsSection({
                     )}
 
                     {/* Main Heading */}
-                    <div style={{ marginTop: '24px' }}>
+                    <div className="mt-4 md:mt-6">
                         {isEditMode ? (
                             <EditableText
                                 value={heading}
                                 onSave={(val) => updateField("heading", val)}
                                 isAdmin={true}
-                                className="text-[48px] leading-[52px] tracking-[-1px] text-[#1a1a1a] font-lora text-center bg-gray-100 border-b border-gray-300 px-2 py-1"
+                                className="text-[32px] md:text-[48px] leading-[36px] md:leading-[52px] tracking-[-1px] text-[#1a1a1a] font-lora text-center bg-gray-100 border-b border-gray-300 px-2 py-1"
                             />
                         ) : (
                             <motion.h2
@@ -144,7 +132,7 @@ export default function SustainabilityProductsSection({
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.6, delay: 0.1, ease: [0.7, 0, 0.84, 0] }}
-                                className="text-[48px] leading-[52px] tracking-[-1px] text-[#1a1a1a] font-lora"
+                                className="text-[32px] md:text-[48px] leading-[36px] md:leading-[52px] tracking-[-1px] text-[#1a1a1a] font-lora"
                             >
                                 {heading}
                             </motion.h2>
@@ -152,14 +140,14 @@ export default function SustainabilityProductsSection({
                     </div>
 
                     {/* Description */}
-                    <div style={{ marginTop: '24px' }}>
+                    <div className="mt-4 md:mt-6">
                         {isEditMode ? (
                             <EditableText
                                 value={description}
                                 onSave={(val) => updateField("description", val)}
                                 isAdmin={true}
                                 multiline={true}
-                                className="text-[15px] leading-[26px] text-[#1a1a1a] font-figtree text-center bg-gray-100 border-b border-gray-300 px-2 py-1"
+                                className="text-[14px] md:text-[15px] leading-[24px] md:leading-[26px] text-[#1a1a1a] font-figtree text-center bg-gray-100 border-b border-gray-300 px-2 py-1"
                             />
                         ) : (
                             <motion.p
@@ -167,8 +155,7 @@ export default function SustainabilityProductsSection({
                                 whileInView={{ opacity: 1 }}
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.6, delay: 0.2 }}
-                                className="text-[15px] leading-[26px] text-[#1a1a1a] font-figtree"
-                                style={{ marginTop: '15px' }}
+                                className="text-[14px] md:text-[15px] leading-[24px] md:leading-[26px] text-[#1a1a1a] font-figtree mt-4"
                             >
                                 {description}
                             </motion.p>
@@ -200,16 +187,14 @@ export default function SustainabilityProductsSection({
 
                 {/* Products Grid */}
                 <div
-                    className="grid grid-cols-4 mt-12"
-                    style={{ gap: '24px' }}
+                    className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mt-8 md:mt-12 w-full"
                 >
                     {loading ? (
                         // Loading skeleton
                         [...Array(4)].map((_, i) => (
                             <div
                                 key={i}
-                                className="bg-gray-100 animate-pulse rounded-sm"
-                                style={{ width: '291px', height: '364px' }}
+                                className="bg-gray-100 animate-pulse rounded-sm w-full aspect-[291/364]"
                             />
                         ))
                     ) : displayProducts.length > 0 ? (
@@ -227,14 +212,12 @@ export default function SustainabilityProductsSection({
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.5, delay: idx * 0.1 }}
-                                    className="group relative"
-                                    style={{ width: '291px' }}
+                                    className="group relative w-full"
                                 >
                                     {/* Product Image */}
                                     <Link href={`/products/${productSlug}`}>
                                         <div
-                                            className="relative overflow-hidden rounded-sm bg-gray-100"
-                                            style={{ width: '291px', height: '364px' }}
+                                            className="relative overflow-hidden rounded-sm bg-gray-100 w-full aspect-[291/364]"
                                         >
                                             {imageUrl ? (
                                                 <Image
@@ -254,7 +237,7 @@ export default function SustainabilityProductsSection({
                                                 onClick={(e) => {
                                                     e.preventDefault();
                                                     e.stopPropagation();
-                                                    openQuickView(product);
+                                                    openQuickView(product as any);
                                                 }}
                                                 className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm p-2.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
                                             >
@@ -266,11 +249,11 @@ export default function SustainabilityProductsSection({
                                     {/* Product Info */}
                                     <div className="mt-3 text-center">
                                         <Link href={`/products/${productSlug}`}>
-                                            <h3 className="text-[15px] font-figtree text-[#1a1a1a] hover:text-[#006D77] transition-colors">
+                                            <h3 className="text-[14px] md:text-[15px] font-figtree text-[#1a1a1a] hover:text-[#006D77] transition-colors line-clamp-1">
                                                 {title}
                                             </h3>
                                         </Link>
-                                        <p className="text-[14px] font-figtree text-[#1a1a1a] mt-1">
+                                        <p className="text-[13px] md:text-[14px] font-figtree text-[#1a1a1a] mt-1">
                                             {new Intl.NumberFormat("en-IN", {
                                                 style: "currency",
                                                 currency: currency,
@@ -281,7 +264,7 @@ export default function SustainabilityProductsSection({
                             );
                         })
                     ) : (
-                        <div className="col-span-4 text-center py-12 text-gray-500">
+                        <div className="col-span-2 md:col-span-4 text-center py-12 text-gray-500">
                             No products selected. {isEditMode && "Click 'Select Products' above to choose products."}
                         </div>
                     )}

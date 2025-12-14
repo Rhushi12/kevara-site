@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { Upload } from "lucide-react";
 import EditableText from "@/components/admin/EditableText";
+import { authUpload } from "@/lib/auth-client";
 
 interface FocalItem {
     id: string;
@@ -46,10 +47,7 @@ export default function FocalOnYou({
         formData.append('file', file);
 
         try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await authUpload('/api/upload', formData);
 
             if (res.ok) {
                 const data = await res.json();
@@ -81,116 +79,77 @@ export default function FocalOnYou({
     };
 
     return (
-        <section
-            className="mx-auto relative"
-            style={{
-                width: "1374px",
-                maxWidth: "100%",
-                height: "478px",
-                backgroundColor: "#E8F5F4"
-            }}
-        >
-            {/* Heading - 80px from top */}
-            <div
-                className="absolute left-0 right-0 flex justify-center"
-                style={{ top: "80px" }}
-            >
-                {isEditMode ? (
-                    <div className="font-lora text-[48px] leading-[52px] tracking-[-1px] text-center text-[#1a1a1a]">
-                        <EditableText
-                            value={localHeading}
-                            onSave={updateHeading}
-                            isAdmin={true}
-                            className="bg-white/50 border-b border-teal-300 px-4 py-2"
-                        />
-                    </div>
-                ) : (
-                    <h3
-                        className="font-lora"
-                        style={{
-                            color: "#1a1a1a",
-                            fontSize: "48px",
-                            letterSpacing: "-1px",
-                            lineHeight: "52px",
-                            textAlign: "center"
-                        }}
-                    >
-                        {localHeading}
-                    </h3>
-                )}
-            </div>
+        <section className="w-full py-8 md:py-12 px-4 md:px-8 bg-[#E8F5F4]">
+            {/* Content Container */}
+            <div className="flex flex-col items-center">
+                {/* Heading */}
+                <div className="mb-4 md:mb-6">
+                    {isEditMode ? (
+                        <div className="font-lora text-3xl md:text-5xl leading-tight tracking-[-1px] text-center text-[#1a1a1a]">
+                            <EditableText
+                                value={localHeading}
+                                onSave={updateHeading}
+                                isAdmin={true}
+                                className="bg-white/50 border-b border-teal-300 px-4 py-2"
+                            />
+                        </div>
+                    ) : (
+                        <h3 className="font-lora text-3xl md:text-5xl leading-tight tracking-[-1px] text-center text-[#1a1a1a]">
+                            {localHeading}
+                        </h3>
+                    )}
+                </div>
 
-            {/* Subheading - 156px from top */}
-            <div
-                className="absolute left-0 right-0 flex justify-center"
-                style={{ top: "156px" }}
-            >
-                {isEditMode ? (
-                    <div className="font-figtree text-[15px] leading-[26px] text-center text-[#1a1a1a]">
-                        <EditableText
-                            value={localSubheading}
-                            onSave={updateSubheading}
-                            isAdmin={true}
-                            className="bg-white/50 border-b border-teal-300 px-4 py-2"
-                        />
-                    </div>
-                ) : (
-                    <p
-                        className="font-figtree"
-                        style={{
-                            color: "#1a1a1a",
-                            fontSize: "15px",
-                            lineHeight: "26px",
-                            textAlign: "center"
-                        }}
-                    >
-                        {localSubheading}
-                    </p>
-                )}
-            </div>
+                {/* Subheading */}
+                <div className="mb-6 md:mb-10">
+                    {isEditMode ? (
+                        <div className="font-figtree text-sm md:text-[15px] leading-relaxed text-center text-[#1a1a1a]">
+                            <EditableText
+                                value={localSubheading}
+                                onSave={updateSubheading}
+                                isAdmin={true}
+                                className="bg-white/50 border-b border-teal-300 px-4 py-2"
+                            />
+                        </div>
+                    ) : (
+                        <p className="font-figtree text-sm md:text-[15px] leading-relaxed text-center text-[#1a1a1a]">
+                            {localSubheading}
+                        </p>
+                    )}
+                </div>
 
-            {/* 6 Square Windows - 230px from top, 24px gap */}
-            <div
-                className="absolute left-0 right-0 flex justify-center items-center"
-                style={{
-                    top: "230px",
-                    gap: "24px"
-                }}
-            >
-                {localItems.map((item, index) => (
-                    <div
-                        key={item.id}
-                        className="relative overflow-hidden bg-gray-100 group"
-                        style={{
-                            width: "166px",
-                            height: "166px",
-                            borderRadius: "8px"
-                        }}
-                    >
-                        <Image
-                            src={item.image}
-                            alt="Instagram look"
-                            fill
-                            className="object-cover"
-                            sizes="(max-width: 768px) 166px, (max-width: 1200px) 332px, 664px"
-                            quality={90}
-                            unoptimized={item.image.includes('shopify') || item.image.includes('cdn.shopify')}
-                        />
+                {/* 6 Square Windows - 3x2 on mobile, 6 in row on desktop */}
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-3 md:gap-6">
+                    {localItems.map((item, index) => (
+                        <div
+                            key={item.id}
+                            className="relative overflow-hidden bg-gray-100 group w-24 h-24 md:w-[166px] md:h-[166px] rounded-lg"
+                        >
+                            <Image
+                                src={item.image}
+                                alt="Instagram look"
+                                fill
+                                className="object-cover"
+                                sizes="(max-width: 768px) 96px, 166px"
+                                quality={90}
+                                unoptimized={item.image.includes('shopify') || item.image.includes('cdn.shopify')}
+                            />
 
-                        {/* Edit Mode Upload Overlay */}
-                        {isEditMode && (
-                            <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center">
-                                <Upload size={24} className="text-white" />
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(e) => handleImageUpload(e, index)}
-                                    className="hidden"
-                                />
-                            </label>
-                        )}
-                    </div>
-                ))}
+                            {/* Edit Mode Upload Overlay */}
+                            {isEditMode && (
+                                <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center">
+                                    <Upload size={24} className="text-white" />
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => handleImageUpload(e, index)}
+                                        className="hidden"
+                                    />
+                                </label>
+                            )}
+                        </div>
+                    ))}
+                </div>
             </div>
         </section>
     );

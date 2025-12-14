@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getCollectionPage, updateCollectionPage } from '@/lib/shopify-admin';
+import { requireAdmin } from '@/lib/auth';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -18,8 +19,12 @@ export async function GET(request: Request) {
     }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
     try {
+        // Check authentication
+        const authError = await requireAdmin(request);
+        if (authError) return authError;
+
         const body = await request.json();
         const { handle, data } = body;
 
@@ -36,8 +41,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true });
     } catch (error: any) {
         console.error("Failed to save page:", error);
-        const fs = require('fs');
-        fs.writeFileSync('debug_api_error.json', JSON.stringify({ message: error.message, stack: error.stack }, null, 2));
         return NextResponse.json({ error: error.message || "Failed to save page" }, { status: 500 });
     }
 }
+

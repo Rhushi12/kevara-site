@@ -49,3 +49,8 @@ next-env.d.ts
 *_log.txt
 test.txt
 serviceAccountKey.json
+debug-save.ts
+backend-debug.log
+server-error.log
+setup_output.log
+build_log.txt

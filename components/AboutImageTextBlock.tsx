@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Upload } from "lucide-react";
 import EditableText from "@/components/admin/EditableText";
+import { authUpload } from "@/lib/auth-client";
 
 interface AboutImageTextBlockProps {
     data?: {
@@ -39,10 +40,7 @@ export default function AboutImageTextBlock({ data = {}, isEditMode = false, onU
         formData.append('file', file);
 
         try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            const res = await authUpload('/api/upload', formData);
 
             if (res.ok) {
                 const data = await res.json();
@@ -69,8 +67,8 @@ export default function AboutImageTextBlock({ data = {}, isEditMode = false, onU
     };
 
     return (
-        <section className="w-full flex justify-center mt-12 md:mt-20 px-4">
-            <div className="relative w-full max-w-[1374px] min-h-[500px] md:min-h-[669px] overflow-hidden">
+        <section className="w-full mt-12 md:mt-20 px-4">
+            <div className="relative w-full max-w-[1500px] mx-auto min-h-[500px] md:min-h-[669px] overflow-hidden">
                 {/* Split Background */}
                 <div className="absolute inset-0 flex">
                     <div className="w-[30%] bg-[#E8F5F5]" />
