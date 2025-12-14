@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import LiquidButton from "@/components/ui/LiquidButton";
+// We intentionally remove Navbar/Footer here for a clean landing page feel,
+// OR we can keep them. Given "First Visit" landing, clean is often better.
+// But user said "whenever a user first opens the site it should open the login page".
+// Let's keep it clean but functional.
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import Image from "next/image";
 
 export default function LoginPage() {
     const { signInWithGoogle, user } = useAuth();
@@ -21,83 +23,109 @@ export default function LoginPage() {
     const handleGoogleLogin = async () => {
         try {
             await signInWithGoogle();
+            localStorage.setItem("hasVisited", "true");
         } catch (error) {
             console.error("Login failed", error);
         }
     };
 
+    const handleSkip = () => {
+        localStorage.setItem("hasVisited", "true");
+        router.push("/");
+    };
+
     return (
-        <main className="bg-[#FDFBF7] min-h-screen flex flex-col">
-            <Navbar />
-
-            <div className="flex-grow flex items-center justify-center py-24 px-4">
-                <div className="w-full max-w-md bg-white p-8 md:p-12 shadow-sm border border-gray-100">
-                    <div className="text-center mb-10">
-                        <h1 className="text-3xl font-lora font-bold text-slate-900 mb-3">Login</h1>
-                        <p className="text-sm text-gray-500 font-figtree">
-                            Please enter your e-mail and password:
-                        </p>
-                    </div>
-
-                    <div className="mb-6">
-                        <button
-                            onClick={handleGoogleLogin}
-                            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-slate-700 py-3 rounded-md hover:bg-gray-50 transition-colors font-medium text-sm"
-                        >
-                            <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
-                            Continue with Google
-                        </button>
-                        <div className="relative my-6">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-200"></div>
-                            </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-white text-gray-500">Or continue with email</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <form className="space-y-6">
-                        <div>
-                            <input
-                                type="email"
-                                placeholder="Email"
-                                className="w-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-slate-900 placeholder:text-gray-400 focus:outline-none focus:border-[#006D77] transition-colors"
-                            />
-                        </div>
-                        <div>
-                            <input
-                                type="password"
-                                placeholder="Password"
-                                className="w-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-slate-900 placeholder:text-gray-400 focus:outline-none focus:border-[#006D77] transition-colors"
-                            />
-                            <div className="flex justify-end mt-2">
-                                <Link href="#" className="text-xs text-gray-500 hover:text-[#006D77] transition-colors">
-                                    Forgot password?
-                                </Link>
-                            </div>
-                        </div>
-
-                        <LiquidButton
-                            type="submit"
-                            className="w-full bg-[#006D77] text-white py-3 font-medium hover:bg-[#005a63]"
-                        >
-                            Login
-                        </LiquidButton>
-                    </form>
-
-                    <div className="mt-8 text-center">
-                        <p className="text-sm text-gray-500 font-figtree">
-                            Don't have an account?{" "}
-                            <Link href="/signup" className="text-[#006D77] font-medium hover:underline">
-                                Create one
-                            </Link>
-                        </p>
-                    </div>
+        <main className="min-h-screen grid lg:grid-cols-2">
+            {/* Left: Image (Hidden on mobile used for premium feel) */}
+            <div className="hidden lg:block relative h-full w-full bg-[#0E4D55] overflow-hidden">
+                <Image
+                    src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop"
+                    alt="Kevara Fashion"
+                    fill
+                    className="object-cover opacity-80"
+                    priority
+                />
+                <div className="absolute inset-0 bg-black/20" />
+                <div className="absolute bottom-12 left-12 text-white">
+                    <h2 className="text-4xl font-lora italic mb-4">"Elegance is not standing out, but being remembered."</h2>
+                    <p className="font-figtree text-white/80 tracking-widest uppercase text-sm">Kevara Collection</p>
                 </div>
             </div>
 
-            <Footer />
+            {/* Right: Login Form */}
+            <div className="flex flex-col justify-center items-center p-8 bg-[#FDFBF7] relative">
+                {/* Skip Button - Absolute Top Right */}
+                <button
+                    onClick={handleSkip}
+                    className="absolute top-6 right-6 text-sm text-gray-400 hover:text-[#0E4D55] transition-colors font-medium"
+                >
+                    Skip to Store →
+                </button>
+
+                <div className="w-full max-w-md">
+                    <div className="text-center mb-12">
+                        <div className="relative w-32 h-10 mx-auto mb-8">
+                            <Image
+                                src="/aesthetic-logo.png"
+                                alt="Kevara"
+                                fill
+                                className="object-contain"
+                            />
+                        </div>
+                        <h1 className="text-3xl font-lora text-slate-900 mb-2">Welcome Back</h1>
+                        <p className="text-gray-500 font-figtree">Sign in to access your exclusive curation</p>
+                    </div>
+
+                    <div className="space-y-4">
+                        <button
+                            onClick={handleGoogleLogin}
+                            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 text-slate-700 py-3.5 rounded-sm hover:border-[#0E4D55] hover:shadow-sm transition-all duration-300 font-medium text-sm group"
+                        >
+                            <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity" />
+                            Continue with Google
+                        </button>
+
+                        <div className="relative py-4">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-200"></div>
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase tracking-widest">
+                                <span className="px-2 bg-[#FDFBF7] text-gray-400">Or email</span>
+                            </div>
+                        </div>
+
+                        <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+                            <input
+                                type="email"
+                                placeholder="Email address"
+                                className="w-full bg-white border border-gray-200 px-4 py-3.5 text-slate-900 placeholder:text-gray-400 focus:outline-none focus:border-[#0E4D55] transition-colors rounded-sm"
+                            />
+                            <input
+                                type="password"
+                                placeholder="Password"
+                                className="w-full bg-white border border-gray-200 px-4 py-3.5 text-slate-900 placeholder:text-gray-400 focus:outline-none focus:border-[#0E4D55] transition-colors rounded-sm"
+                            />
+                            <div className="flex justify-end">
+                                <Link href="#" className="text-xs text-gray-400 hover:text-[#0E4D55] transition-colors">
+                                    Forgot password?
+                                </Link>
+                            </div>
+                            <button
+                                className="w-full bg-[#0E4D55] text-white py-3.5 rounded-sm font-medium hover:bg-[#0A3A40] transition-colors shadow-lg shadow-[#0E4D55]/10 mt-2"
+                            >
+                                Sign In
+                            </button>
+                        </form>
+                    </div>
+
+                    <p className="mt-8 text-center text-sm text-gray-500">
+                        New to Kevara?{" "}
+                        <Link href="/signup" className="text-[#0E4D55] font-medium hover:underline">
+                            Create Account
+                        </Link>
+                    </p>
+                </div>
+            </div>
         </main>
     );
 }
