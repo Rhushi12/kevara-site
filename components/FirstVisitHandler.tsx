@@ -7,12 +7,23 @@ import { useAuth } from "@/context/AuthContext";
 export default function FirstVisitHandler() {
     const router = useRouter();
     const pathname = usePathname();
-    // We can access auth state if needed, but "First Visit" is usually independent of auth
-    // (i.e. even if not logged in, we force them to login screen once).
+    const { user, loading } = useAuth();
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
         setIsMounted(true);
+        if (loading) return; // Wait for auth check
+
+        // If user is already logged in, they effectively "visited".
+        // This prevents the loop: Home -> Login -> Home -> Login
+        if (user) {
+            // Optional: Auto-mark as visited if they are logged in
+            if (!localStorage.getItem("hasVisited")) {
+                localStorage.setItem("hasVisited", "true");
+            }
+            return;
+        }
+
         const hasVisited = localStorage.getItem("hasVisited");
 
         // Allow list: pages that don't trigger the redirect
@@ -24,7 +35,7 @@ export default function FirstVisitHandler() {
         if (!hasVisited && !isAllowedPath) {
             router.push("/login");
         }
-    }, [pathname, router]);
+    }, [pathname, router, user, loading]);
 
     return null; // This component renders nothing
 }
