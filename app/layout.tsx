@@ -40,7 +40,9 @@ export default function RootLayout({
         className={`${figtree.variable} ${lora.variable} font-figtree antialiased bg-[#FDFBF7] text-slate-900`}
       >
         <AuthProvider>
-          {children}
+          <div className="relative w-full overflow-x-hidden min-h-screen flex flex-col">
+            {children}
+          </div>
           <QuickViewPanel />
           <SearchPanel />
           <ToastNotification />
