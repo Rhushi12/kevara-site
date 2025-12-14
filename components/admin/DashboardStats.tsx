@@ -6,13 +6,21 @@ import { db } from "@/lib/firebase";
 
 export default function DashboardStats() {
     const [totalUsers, setTotalUsers] = useState<number | null>(null);
+    const [productCount, setProductCount] = useState<number | null>(null);
 
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const coll = collection(db, "users");
-                const snapshot = await getCountFromServer(coll);
-                setTotalUsers(snapshot.data().count);
+                // Fetch Users Count
+                const usersColl = collection(db, "users");
+                const usersSnapshot = await getCountFromServer(usersColl);
+                setTotalUsers(usersSnapshot.data().count);
+
+                // Fetch Products Count
+                // We typically seed products into 'products' collection in AdminPage
+                const productsColl = collection(db, "products");
+                const productsSnapshot = await getCountFromServer(productsColl);
+                setProductCount(productsSnapshot.data().count);
             } catch (error) {
                 console.error("Error fetching stats:", error);
             }
@@ -32,9 +40,9 @@ export default function DashboardStats() {
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                 <h3 className="text-gray-500 text-sm font-medium uppercase tracking-wider">Catalog Items</h3>
                 <p className="text-3xl font-bold text-slate-800 mt-2">
-                    124
+                    {productCount === null ? "..." : productCount}
                 </p>
-                <span className="text-xs text-gray-400">Products for presentation</span>
+                <span className="text-xs text-gray-400">Products in database</span>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                 <h3 className="text-gray-500 text-sm font-medium uppercase tracking-wider">System Status</h3>
