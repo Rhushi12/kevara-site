@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@types/dompurify": "^3.0.5",
+    "chart.js": "^4.5.1",
     "clsx": "^2.1.1",
     "dompurify": "^3.3.1",
     "dotenv": "^17.2.3",
@@ -20,6 +21,7 @@
     "lucide-react": "^0.555.0",
     "next": "^16.0.10",
     "react": "^19.2.3",
+    "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.2.3",
     "sharp": "^0.34.5",
     "tailwind-merge": "^3.4.0",

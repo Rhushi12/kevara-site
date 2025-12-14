@@ -50,7 +50,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const signInWithGoogle = async () => {
         const provider = new GoogleAuthProvider();
         try {
-            await signInWithPopup(auth, provider);
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+
+            // Sync user to Firestore
+            const { doc, setDoc, getDoc, serverTimestamp } = await import("firebase/firestore");
+            const { db } = await import("@/lib/firebase");
+
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
+
+            if (!userSnap.exists()) {
+                await setDoc(userRef, {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName,
+                    photoURL: user.photoURL,
+                    createdAt: serverTimestamp(),
+                    lastLogin: serverTimestamp(),
+                    role: user.email === "rhushimanumehta@gmail.com" ? "admin" : "user"
+                });
+            } else {
+                await setDoc(userRef, {
+                    lastLogin: serverTimestamp(),
+                    email: user.email,
+                    displayName: user.displayName,
+                    photoURL: user.photoURL,
+                }, { merge: true });
+            }
+
         } catch (error) {
             console.error("Error signing in with Google", error);
             throw error;
