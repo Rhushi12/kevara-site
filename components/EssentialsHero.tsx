@@ -89,7 +89,6 @@ export default function EssentialsHero({ data = {}, isEditMode = false, onUpdate
                                 src={image}
                                 alt={heading}
                                 fill
-                                fill
                                 className="object-cover"
                                 quality={100}
                                 sizes="(max-width: 768px) 100vw, 50vw"
