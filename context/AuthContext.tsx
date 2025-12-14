@@ -79,8 +79,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 }, { merge: true });
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error signing in with Google", error);
+            if (error.code === 'auth/unauthorized-domain') {
+                alert(`Configuration Error: This domain (${window.location.hostname}) is not authorized in Firebase. \n\nPlease go to Firebase Console -> Authentication -> Settings -> Authorized Domains and add this domain.`);
+            } else if (error.code === 'auth/popup-closed-by-user') {
+                // Ignore, user just closed it
+            } else {
+                alert(`Login Failed: ${error.message}`);
+            }
             throw error;
         }
     };
