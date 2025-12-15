@@ -1,28 +1,28 @@
 "use client";
 
-import { RefreshCw, ShieldCheck, Star, Truck } from "lucide-react";
+import { RefreshCw, ShieldCheck, Star, Globe } from "lucide-react";
 
 export default function Features() {
     const features = [
         {
-            icon: Truck,
-            title: "Fast Delivery",
-            description: "Within 3-5 business days",
+            icon: Globe, // Keeping Icon variable name, but conceptually "Global"
+            title: "Global Design",
+            description: "Inspired by nature, crafted for the world",
         },
         {
             icon: ShieldCheck,
-            title: "Premium Quality",
-            description: "Certified authentic materials",
+            title: "Premium Materials",
+            description: "Ethically sourced, finest quality fabrics",
         },
         {
             icon: Star,
-            title: "5-Star Rated",
-            description: "Loved by 10,000+ customers",
+            title: "Timeless Style",
+            description: "Elegance that transcends trends",
         },
         {
-            icon: RefreshCw,
-            title: "Easy Returns",
-            description: "Hassle-free 30-day policy",
+            icon: RefreshCw, // Keeping Icon variable name
+            title: "Sustainable Future",
+            description: "Committed to eco-friendly practices",
         },
     ];
 

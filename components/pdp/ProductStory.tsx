@@ -112,6 +112,7 @@ export default function ProductStory({ initialData }: { initialData?: ProductSto
                 onClose={() => setIsUploadModalOpen(false)}
                 onUpload={handleImageUpload}
                 title="Upload Section Image"
+                aspectRatio={4 / 5}
             />
 
             <div className="container mx-auto px-4 relative z-10">

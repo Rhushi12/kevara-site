@@ -132,13 +132,6 @@ export default function ProductInfo({
             {/* Actions: WhatsApp & Email */}
             <div className="flex flex-col gap-3 pt-4">
                 {/* REMOVED WHATSAPP BUTTON */}
-                {/* <LiquidButton
-                    className="w-full h-12 bg-[#25D366] text-white hover:bg-[#128C7E] rounded-lg flex items-center justify-center gap-2 border-none"
-                    variant="primary"
-                    onClick={() => window.open(`https://wa.me/919876543210?text=Hi, I'm interested in ${title}`, '_blank')}
-                >
-                    <span className="font-medium">Chat with WhatsApp</span>
-                </LiquidButton> */}
 
                 <LiquidButton
                     className="w-full h-12 bg-white text-slate-900 border border-slate-900 hover:bg-slate-50 rounded-lg flex items-center justify-center gap-2"

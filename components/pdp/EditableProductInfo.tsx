@@ -210,8 +210,8 @@ export default function EditableProductInfo({
                     )}
                 </div>
 
-                {/* Price */}
-                <div className="flex flex-col gap-2">
+                {/* Price - HIDDEN */}
+                <div className="flex flex-col gap-2 hidden">
                     <div className="flex items-baseline gap-4">
                         {isEditMode ? (
                             <div className="flex items-center gap-2">
@@ -413,16 +413,9 @@ export default function EditableProductInfo({
             </div>
 
             {/* Actions: WhatsApp & Email */}
+            {/* Actions: Email Only */}
             {!isEditMode && (
                 <div className="flex flex-col gap-3 pt-4">
-                    <LiquidButton
-                        className="w-full h-12 bg-[#25D366] text-white hover:bg-[#128C7E] rounded-lg flex items-center justify-center gap-2 border-none"
-                        variant="primary"
-                        onClick={() => window.open(`https://wa.me/919876543210?text=Hi, I'm interested in ${title}`, '_blank')}
-                    >
-                        <span className="font-medium">Chat with WhatsApp</span>
-                    </LiquidButton>
-
                     <LiquidButton
                         className="w-full h-12 bg-white text-slate-900 border border-slate-900 hover:bg-slate-50 rounded-lg flex items-center justify-center gap-2"
                         variant="secondary"

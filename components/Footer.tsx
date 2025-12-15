@@ -1,6 +1,6 @@
 "use client";
 
-import { Facebook, Instagram, Twitter, Send } from "lucide-react";
+import { Facebook, Instagram, Twitter, Send, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import FooterFeatures from "@/components/FooterFeatures";
 
@@ -53,10 +53,13 @@ export default function Footer() {
                     <div className="lg:col-span-2">
                         <h3 className="text-xs font-bold tracking-widest uppercase mb-6 text-white/90">Follow Us</h3>
                         <div className="flex gap-3">
-                            <Link href="#" className="w-10 h-10 border border-white/20 flex items-center justify-center hover:bg-white hover:text-[#006D77] transition-all rounded-sm">
-                                <Facebook size={18} />
-                            </Link>
-                            <Link href="#" className="w-10 h-10 border border-white/20 flex items-center justify-center hover:bg-white hover:text-[#006D77] transition-all rounded-sm">
+                            {/* Facebook Removed */}
+                            <Link
+                                href="https://www.instagram.com/kevara.in?igsh=ZmUxaW12MDg2NTZ0"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-10 h-10 border border-white/20 flex items-center justify-center hover:bg-white hover:text-[#006D77] transition-all rounded-sm"
+                            >
                                 <Instagram size={18} />
                             </Link>
                         </div>
@@ -66,7 +69,7 @@ export default function Footer() {
                     <div className="lg:col-span-4 bg-white/5 p-6 rounded-lg border border-white/5">
                         <h3 className="text-xs font-bold tracking-widest uppercase mb-4 text-white/90">Newsletter</h3>
                         <p className="text-sm text-gray-300 mb-6 font-figtree leading-relaxed">
-                            Subscribe to our newsletter and get a 10% discount on your first order. Be the first to know about new arrivals.
+                            Subscribe to stay updated with our latest collections and stories.
                         </p>
                         <form className="relative">
                             <input
@@ -88,15 +91,11 @@ export default function Footer() {
                         <span className="hidden md:inline text-white/20">|</span>
                         <span>Powered by Shopify</span>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <span className="text-xs text-gray-400">We accept</span>
-                        <div className="flex gap-1.5">
-                            {['Visa', 'Mastercard', 'Amex', 'PayPal'].map((card) => (
-                                <div key={card} className="h-6 px-2 bg-white rounded-sm flex items-center justify-center shadow-sm opacity-90 hover:opacity-100 transition-opacity cursor-default">
-                                    <span className="text-[8px] text-slate-900 font-bold uppercase tracking-tighter">{card}</span>
-                                </div>
-                            ))}
-                        </div>
+
+                    {/* Protected by Cloudflare Badge */}
+                    <div className="flex items-center gap-2 text-gray-400">
+                        <ShieldCheck size={14} className="text-[#F48120]" />
+                        <span className="text-xs font-medium tracking-wide">Protected by Cloudflare</span>
                     </div>
                 </div>
             </div>

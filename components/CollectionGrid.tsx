@@ -269,6 +269,7 @@ export default function CollectionGrid({ data = {}, isEditMode = false, onUpdate
                 isOpen={isUploadModalOpen}
                 onClose={() => setIsUploadModalOpen(false)}
                 onUpload={handleImageUpload}
+                aspectRatio={uploadIndex === 0 ? 3 / 4 : 16 / 9} // Tall for first item, Wide for others
             />
         </section>
     );

@@ -234,6 +234,7 @@ export default function VideoPromo({ data, isEditMode = false, onUpdate }: Video
                 onUpload={handleFileUpload}
                 accept={uploadType === "video" ? "video/*" : "image/*"}
                 title={uploadType === "video" ? "Upload Video (max 100MB)" : "Upload Image"}
+                aspectRatio={uploadType === "video" ? undefined : 16 / 9}
             />
         </section>
     );

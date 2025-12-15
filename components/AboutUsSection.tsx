@@ -7,6 +7,7 @@ import EditableText from "@/components/admin/EditableText";
 import { useState } from "react";
 import { Upload } from "lucide-react";
 import { authUpload } from "@/lib/auth-client";
+import SimpleImageUploadModal from "@/components/admin/SimpleImageUploadModal";
 
 interface AboutUsSectionProps {
     data?: {
@@ -23,7 +24,7 @@ interface AboutUsSectionProps {
 }
 
 export default function AboutUsSection({ data = {}, isEditMode = false, onUpdate }: AboutUsSectionProps) {
-    const [isUploading, setIsUploading] = useState(false);
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
     const {
         label = "ABOUT US",
@@ -40,26 +41,23 @@ export default function AboutUsSection({ data = {}, isEditMode = false, onUpdate
         onUpdate({ ...data, [field]: value });
     };
 
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        setIsUploading(true);
-        const formData = new FormData();
-        formData.append('file', file);
+    const handleImageUpload = async (file: File) => {
+        if (!onUpdate) return;
 
         try {
-            const res = await authUpload('/api/upload', formData);
+            const formData = new FormData();
+            formData.append("file", file);
 
-            if (res.ok) {
-                const data = await res.json();
-                updateField('image', data.url);
-            }
+            const res = await authUpload('/api/upload', formData);
+            const result = await res.json();
+
+            if (!result.success) throw new Error("Upload failed");
+
+            updateField('image', result.url);
+            setIsUploadModalOpen(false);
         } catch (error) {
-            console.error('Upload failed:', error);
-            alert('Failed to upload image');
-        } finally {
-            setIsUploading(false);
+            console.error("Upload failed:", error);
+            alert("Failed to upload image");
         }
     };
 
@@ -109,26 +107,22 @@ export default function AboutUsSection({ data = {}, isEditMode = false, onUpdate
 
                             {/* Upload Button (Edit Mode) */}
                             {isEditMode && (
-                                <label className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg cursor-pointer hover:bg-white transition-colors flex items-center gap-2 z-30">
+                                <button
+                                    onClick={() => setIsUploadModalOpen(true)}
+                                    className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg cursor-pointer hover:bg-white transition-colors flex items-center gap-2 z-30"
+                                >
                                     <Upload size={14} />
                                     <span className="text-xs font-medium text-black">Change</span>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleImageUpload}
-                                        className="hidden"
-                                        disabled={isUploading}
-                                    />
-                                </label>
+                                </button>
                             )}
 
-                            {isUploading && (
-                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-40">
-                                    <div className="bg-white px-4 py-2 rounded-lg">
-                                        <p className="text-xs font-medium text-black">Uploading...</p>
-                                    </div>
-                                </div>
-                            )}
+                            <SimpleImageUploadModal
+                                isOpen={isUploadModalOpen}
+                                onClose={() => setIsUploadModalOpen(false)}
+                                onUpload={handleImageUpload}
+                                title="Upload About Image"
+                                aspectRatio={1}
+                            />
                         </motion.div>
                     </div>
 

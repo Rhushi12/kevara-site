@@ -252,6 +252,7 @@ export default function SalesSplit({ data, isEditMode = false, onUpdate }: Sales
                     setUploadingIndex(null);
                 }}
                 onUpload={handleImageUpload}
+                aspectRatio={1.2}
             />
         </section>
     );

@@ -389,6 +389,7 @@ export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, o
                 isOpen={isUploadModalOpen}
                 onClose={() => setIsUploadModalOpen(false)}
                 onUpload={handleImageUpload}
+                aspectRatio={16 / 9}
             />
         </div>
     );

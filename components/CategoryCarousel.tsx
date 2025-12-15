@@ -318,6 +318,7 @@ export default function CategoryCarousel({
                 }}
                 onUpload={handleImageUpload}
                 title="Upload Category Image"
+                aspectRatio={166 / 208}
             />
         </div>
     );

@@ -350,6 +350,7 @@ export default function ShopCategory({ data, isEditMode = false, onUpdate }: Sho
                     setUploadingIndex(null);
                 }}
                 onUpload={handleImageUpload}
+                aspectRatio={320 / 407}
             />
         </section>
     );

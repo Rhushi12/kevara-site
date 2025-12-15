@@ -45,8 +45,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(user);
             if (user && user.email === "rhushimanumehta@gmail.com") {
                 setIsAdmin(true);
+                if (typeof window !== 'undefined') localStorage.setItem('isAdmin', 'true');
             } else {
                 setIsAdmin(false);
+                if (typeof window !== 'undefined') localStorage.removeItem('isAdmin');
             }
             setLoading(false);
         });
@@ -130,6 +132,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
             await signOut(auth);
             setIsAdmin(false);
+            if (typeof window !== 'undefined') localStorage.removeItem('isAdmin');
         } catch (error) {
             console.error("Error signing out", error);
             throw error;

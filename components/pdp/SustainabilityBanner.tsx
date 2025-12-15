@@ -112,6 +112,7 @@ export default function SustainabilityBanner({ initialData }: { initialData?: Su
                 onClose={() => setIsUploadModalOpen(false)}
                 onUpload={handleImageUpload}
                 title="Upload Banner Image"
+                aspectRatio={16 / 9}
             />
 
             <div className="container mx-auto px-4 relative z-10">
