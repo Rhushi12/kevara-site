@@ -211,8 +211,10 @@ export default function FeaturedProduct({
                                 <h2 className="text-3xl md:text-5xl font-lora text-slate-900 mb-4 leading-tight">
                                     {product.title}
                                 </h2>
-                                <div className="text-2xl md:text-3xl text-slate-900 font-medium">{price}</div>
+                                {/* Hidden Price */}
+                                <div className="text-2xl md:text-3xl text-slate-900 font-medium hidden">{price}</div>
                             </div>
+
 
                             <hr className="border-gray-100" />
 
@@ -294,12 +296,12 @@ export default function FeaturedProduct({
                         </div>
 
                         <div className="flex flex-col gap-3 mt-auto pt-8">
-                            <LiquidButton
+                            {/* <LiquidButton
                                 className="w-full bg-[#25D366] text-white hover:bg-[#128C7E] border-none"
                                 onClick={() => window.open(`https://wa.me/919876543210?text=Hi, I'm interested in ${product.title} (Color: ${selectedColor}, Size: ${selectedSize})`, '_blank')}
                             >
                                 Chat with WhatsApp
-                            </LiquidButton>
+                            </LiquidButton> */}
                             <LiquidButton
                                 className="w-full"
                                 onClick={() => window.location.href = `mailto:contact@kevara.com?subject=Inquiry about ${product.title}&body=I'm interested in ${product.title} (Color: ${selectedColor}, Size: ${selectedSize})`}

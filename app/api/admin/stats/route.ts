@@ -6,14 +6,31 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
-        const [products, customers] = await Promise.all([
-            getCustomProducts(),
-            getShopifyCustomers(250) // Fetch up to 250 to get a count
-        ]);
+        let productCount = 0;
+        let customerCount = 0;
+
+        // 1. Fetch Products
+        try {
+            const products = await getCustomProducts();
+            productCount = products.length;
+        } catch (e) {
+            console.error("[Admin Stats] Failed to fetch products:", e);
+        }
+
+        // 2. Fetch Customers
+        try {
+            const customers = await getShopifyCustomers(250);
+            customerCount = customers.length;
+        } catch (e: any) {
+            console.error("[Admin Stats] Failed to fetch customers:", e);
+            if (e.message?.includes("access denied") || e.message?.includes("scope")) {
+                console.error("[Admin Stats] HINT: Check if your Shopify Access Token has 'read_customers' scope.");
+            }
+        }
 
         return NextResponse.json({
-            productCount: products.length,
-            customerCount: customers.length
+            productCount,
+            customerCount
         });
     } catch (error) {
         console.error("Error fetching admin stats:", error);

@@ -169,7 +169,8 @@ export default function QuickViewPanel() {
                         </div>
                         <div>
                             <h3 className="text-xl font-lora text-slate-900 mb-2">{title}</h3>
-                            <div className="flex items-center gap-3">
+                            {/* Price - HIDDEN */}
+                            <div className="flex items-center gap-3 hidden">
                                 <span className="text-lg font-figtree font-bold text-slate-900">
                                     {new Intl.NumberFormat("en-IN", { style: "currency", currency }).format(parseFloat(price))}
                                 </span>
@@ -251,7 +252,7 @@ export default function QuickViewPanel() {
 
                     {/* Actions */}
                     <div className="mt-auto space-y-3 qv-content-item">
-                        <LiquidButton
+                        {/* <LiquidButton
                             className="w-full bg-[#25D366] text-white hover:bg-[#128C7E] border-none"
                             onClick={() => {
                                 window.open(`https://wa.me/919876543210?text=Hi, I'm interested in ${title} (Color: ${selectedColor}, Size: ${selectedSize})`, '_blank');
@@ -259,7 +260,7 @@ export default function QuickViewPanel() {
                             }}
                         >
                             Chat with WhatsApp
-                        </LiquidButton>
+                        </LiquidButton> */}
                         <LiquidButton
                             className="w-full"
                             variant="secondary"

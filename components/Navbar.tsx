@@ -300,9 +300,9 @@ export default function Navbar() {
             </AnimatePresence>
 
             <nav className="sticky top-0 left-0 right-0 z-50 bg-[#0E4D55] text-white border-b border-white/10 transition-all duration-300">
-                <div className="container mx-auto px-4 h-16 md:h-20 flex items-center justify-between relative">
+                <div className="container mx-auto px-4 h-16 lg:h-20 flex items-center justify-between relative">
                     {/* Mobile Left: Menu + Search */}
-                    <div className="flex md:hidden items-center gap-4">
+                    <div className="flex lg:hidden items-center gap-4">
                         <button
                             onClick={() => setIsMenuOpen(true)}
                             className="p-1 -ml-1"
@@ -315,7 +315,7 @@ export default function Navbar() {
                     </div>
 
                     {/* Desktop Left: Links */}
-                    <div className="hidden md:flex items-center gap-8">
+                    <div className="hidden lg:flex items-center gap-8">
                         {menuData.map((item) => (
                             <div
                                 key={item.id}
@@ -355,7 +355,7 @@ export default function Navbar() {
                                 alt="Kevara Logo"
                                 width={110}
                                 height={37}
-                                className="w-[90px] md:w-[110px] h-auto object-contain brightness-0 invert"
+                                className="w-[90px] lg:w-[110px] h-auto object-contain brightness-0 invert"
                                 priority
                             />
                         </Link>
@@ -368,18 +368,18 @@ export default function Navbar() {
                         {!user ? (
                             <>
                                 {/* Desktop: Text Link */}
-                                <Link href="/login" className="hidden md:block text-sm font-medium hover:text-white/80 transition-colors">
+                                <Link href="/login" className="hidden lg:block text-sm font-medium hover:text-white/80 transition-colors">
                                     Login
                                 </Link>
                                 {/* Mobile: User Icon */}
-                                <Link href="/login" className="block md:hidden text-white hover:text-white/80 transition-colors">
+                                <Link href="/login" className="block lg:hidden text-white hover:text-white/80 transition-colors">
                                     <User size={24} />
                                 </Link>
                             </>
                         ) : (
                             <>
                                 {/* Desktop: Detailed Menu */}
-                                <div className="hidden md:flex items-center gap-4">
+                                <div className="hidden lg:flex items-center gap-4">
                                     <span className="text-sm text-white/90">Hi, {user.displayName?.split(' ')[0] || 'User'}</span>
                                     {isAdmin && (
                                         <div className="flex items-center gap-3">
@@ -402,7 +402,7 @@ export default function Navbar() {
                                     </button>
                                 </div>
                                 {/* Mobile: User Icon (Access Account) */}
-                                <Link href="/account" className="block md:hidden text-white hover:text-white/80 transition-colors">
+                                <Link href="/account" className="block lg:hidden text-white hover:text-white/80 transition-colors">
                                     <User size={24} />
                                 </Link>
                             </>
@@ -410,7 +410,7 @@ export default function Navbar() {
 
                         <button
                             onClick={openSearch}
-                            className="hidden md:block hover:opacity-70 transition-opacity"
+                            className="hidden lg:block hover:opacity-70 transition-opacity"
                         >
                             <Search size={20} />
                         </button>

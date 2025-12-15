@@ -63,7 +63,7 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: -100, opacity: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="fixed top-16 md:top-20 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-gray-200 z-40 shadow-lg"
+                    className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-gray-200 z-[60] shadow-lg"
                 >
                     <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
                         {/* Product Info */}
@@ -82,7 +82,8 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
                                 <h3 className="text-sm font-lora text-slate-900 font-medium truncate">
                                     {product.title}
                                 </h3>
-                                <span className="text-sm text-slate-900 font-bold">
+                                {/* Hidden Price */}
+                                <span className="text-sm text-slate-900 font-bold hidden">
                                     ${product.price.toFixed(2)}
                                 </span>
                             </div>
@@ -187,7 +188,8 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
                                 )}
                             </div>
 
-                            <LiquidButton
+                            {/* REMOVED WHATSAPP BUTTON AS PER REQUEST */}
+                            {/* <LiquidButton
                                 onClick={() => window.open(`https://wa.me/919876543210?text=I'm interested in ${product.title} (Color: ${selectedColor?.name}, Size: ${selectedSize})`, '_blank')}
                                 className="px-4 md:px-6 py-2 md:py-2.5 text-xs h-9 md:h-10 min-w-[140px] uppercase tracking-wider bg-[#25D366] hover:bg-[#128C7E] border-none text-white"
                             >
@@ -195,7 +197,7 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
                                     <MessageCircle size={16} />
                                     <span className="hidden md:inline">WhatsApp</span>
                                 </div>
-                            </LiquidButton>
+                            </LiquidButton> */}
 
                             <button
                                 onClick={() => window.location.href = `mailto:contact@kevara.com?subject=Inquiry about ${product.title}&body=I'm interested in ${product.title} (Color: ${selectedColor?.name}, Size: ${selectedSize})`}

@@ -39,13 +39,14 @@ interface PageRendererProps {
 
 export default function PageRenderer({ slug }: PageRendererProps) {
     const router = useRouter();
-    const { isAdmin } = useAuth();
+    const { isAdmin, loading: authLoading } = useAuth();
 
     const [content, setContent] = useState<PageContent | null>(null);
     const [isEditMode, setIsEditMode] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [isRedirecting, setIsRedirecting] = useState(false);
     const [notFound, setNotFound] = useState(false);
 
     // Fetch Page Content
@@ -57,23 +58,17 @@ export default function PageRenderer({ slug }: PageRendererProps) {
                 if (res.ok) {
                     const data = await res.json();
 
-                    // DEBUG: Log the received data
-                    console.log(`[PageRenderer] Fetched content for '${slug}':`, data);
-                    console.log(`[PageRenderer] Sections:`, data?.sections);
-                    if (data?.sections) {
-                        console.log(`[PageRenderer] Section types:`, data.sections.map((s: any) => s?.type));
-                    }
-
                     // Handle Redirects
                     if (data.type === "redirect" && data.target) {
-                        router.push(data.target);
-                        return;
+                        setIsRedirecting(true);
+                        router.replace(data.target); // Use replace to avoid history stack issues
+                        return; // proper return, finally block will run but we handle it
                     }
 
                     if (data && data.sections && data.sections.length > 0) {
                         setContent(data);
                     } else {
-                        console.log(`[PageRenderer] No sections found, setting notFound`);
+                        console.log(`[PageRenderer] No sections found for ${slug}, setting notFound`);
                         setNotFound(true);
                     }
                 } else {
@@ -84,7 +79,13 @@ export default function PageRenderer({ slug }: PageRendererProps) {
                 console.error("Failed to fetch page content:", error);
                 setNotFound(true);
             } finally {
-                setLoading(false);
+                // If we are redirecting, we DON'T want to set loading to false, 
+                // because we want to show the loader until the page changes.
+                // However, we can't easily access the state inside useEffect closure if checking 'isRedirecting',
+                // but we know if we hit the redirect block we return.
+                // Actually, 'finally' runs anyway.
+                // So we need to control this.
+                setLoading((prev) => false);
             }
         }
         fetchContent();
@@ -146,11 +147,14 @@ export default function PageRenderer({ slug }: PageRendererProps) {
         });
     }, []);
 
-    if (loading) return <PremiumPreloader />;
+    // Handle Redirect Loading State override
+    // If isRedirecting is true, we force return loader
+    if (loading || isRedirecting || authLoading) return <PremiumPreloader />;
 
     // 404 Handling: Admin vs User
     if (notFound || !content) {
         if (isAdmin) {
+            // Only show builder if we are sure we are not redirecting
             return <AdminPageBuilder slug={slug} />;
         } else {
             return <UnderConstruction />;

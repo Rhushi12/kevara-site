@@ -5,6 +5,7 @@ import QuickViewPanel from "@/components/QuickViewPanel";
 import SearchPanel from "@/components/SearchPanel";
 import ToastNotification from "@/components/admin/ToastNotification";
 import FirstVisitHandler from "@/components/FirstVisitHandler";
+import NextTopLoader from "nextjs-toploader";
 
 const figtree = Figtree({
   variable: "--font-figtree",
@@ -73,6 +74,17 @@ export default function RootLayout({
         className={`${figtree.variable} ${lora.variable} font-figtree antialiased bg-[#FDFBF7] text-slate-900`}
       >
         <AuthProvider>
+          <NextTopLoader
+            color="#0E4D55"
+            initialPosition={0.08}
+            crawlSpeed={200}
+            height={3}
+            crawl={true}
+            showSpinner={false}
+            easing="ease"
+            speed={200}
+            shadow="0 0 10px #0E4D55,0 0 5px #0E4D55"
+          />
           <FirstVisitHandler />
           <div className="relative w-full overflow-x-hidden min-h-screen flex flex-col">
             {children}

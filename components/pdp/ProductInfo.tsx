@@ -45,8 +45,8 @@ export default function ProductInfo({
                     </button>
                 </div>
 
-                {/* Price */}
-                <div className="flex flex-col gap-2">
+                {/* Price - HIDDEN */}
+                <div className="flex flex-col gap-2 hidden">
                     <div className="flex items-baseline gap-4">
                         <span className="text-2xl font-figtree font-semibold text-slate-900">
                             {new Intl.NumberFormat("en-IN", {
@@ -131,13 +131,14 @@ export default function ProductInfo({
 
             {/* Actions: WhatsApp & Email */}
             <div className="flex flex-col gap-3 pt-4">
-                <LiquidButton
+                {/* REMOVED WHATSAPP BUTTON */}
+                {/* <LiquidButton
                     className="w-full h-12 bg-[#25D366] text-white hover:bg-[#128C7E] rounded-lg flex items-center justify-center gap-2 border-none"
                     variant="primary"
                     onClick={() => window.open(`https://wa.me/919876543210?text=Hi, I'm interested in ${title}`, '_blank')}
                 >
                     <span className="font-medium">Chat with WhatsApp</span>
-                </LiquidButton>
+                </LiquidButton> */}
 
                 <LiquidButton
                     className="w-full h-12 bg-white text-slate-900 border border-slate-900 hover:bg-slate-50 rounded-lg flex items-center justify-center gap-2"
