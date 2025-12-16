@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { TEMPLATE_1, TEMPLATE_2, TEMPLATE_3 } from "@/lib/templates";
+import { useToast } from "@/context/ToastContext";
 
 interface AdminPageBuilderProps {
     slug: string;
@@ -10,6 +11,7 @@ interface AdminPageBuilderProps {
 
 export default function AdminPageBuilder({ slug }: AdminPageBuilderProps) {
     const router = useRouter();
+    const { showToast } = useToast();
     const [activeTab, setActiveTab] = useState<"template" | "redirect">("template");
     const [redirectUrl, setRedirectUrl] = useState("");
     const [isSaving, setIsSaving] = useState(false);
@@ -51,19 +53,22 @@ export default function AdminPageBuilder({ slug }: AdminPageBuilderProps) {
             }
 
             // 3. Refresh to load the new page
-            alert("Page created successfully! Reloading...");
+            showToast("Page created successfully! Reloading...", "success");
             window.location.reload();
 
         } catch (error) {
             console.error("Failed to create page:", error);
-            alert("Failed to create page. Check console.");
+            showToast("Failed to create page. Check console.", "error");
         } finally {
             setIsSaving(false);
         }
     };
 
     const handleCreateRedirect = async () => {
-        if (!redirectUrl) return alert("Please enter a URL");
+        if (!redirectUrl) {
+            showToast("Please enter a URL", "warning");
+            return;
+        }
         setIsSaving(true);
         try {
             // Create a special "redirect" page content
@@ -80,12 +85,12 @@ export default function AdminPageBuilder({ slug }: AdminPageBuilderProps) {
 
             if (!res.ok) throw new Error("Failed to create redirect");
 
-            alert("Redirect created! Reloading...");
+            showToast("Redirect created! Reloading...", "success");
             window.location.reload();
 
         } catch (error) {
             console.error("Failed to create redirect:", error);
-            alert("Failed to create redirect.");
+            showToast("Failed to create redirect.", "error");
         } finally {
             setIsSaving(false);
         }

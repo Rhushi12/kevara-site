@@ -18,6 +18,7 @@ import { PageContent, PageSection } from "@/types/page-editor";
 import MobileDrawer from "@/components/options/MobileDrawer";
 import ProductPicker from "@/components/admin/ProductPicker";
 import StickyFilterBar from "@/components/StickyFilterBar";
+import { useToast } from "@/context/ToastContext";
 
 interface Template2RendererProps {
     content: PageContent;
@@ -32,6 +33,7 @@ export default function Template2Renderer({ content, slug }: Template2RendererPr
     const [isEditMode, setIsEditMode] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const { showToast } = useToast();
 
     // New Refs and State for Scroll Logic
     const productGridRef = useRef<HTMLDivElement>(null);
@@ -117,11 +119,11 @@ export default function Template2Renderer({ content, slug }: Template2RendererPr
                 body: JSON.stringify({ handle: slug, data: dataToSave }),
             });
             if (!res.ok) throw new Error("Failed to save");
-            alert("Changes saved successfully!");
+            showToast("Changes saved successfully!", "success");
             setIsEditMode(false);
         } catch (error) {
             console.error("Failed to save:", error);
-            alert("Failed to save changes.");
+            showToast("Failed to save changes.", "error");
         } finally {
             setIsSaving(false);
         }
@@ -134,11 +136,11 @@ export default function Template2Renderer({ content, slug }: Template2RendererPr
         try {
             const res = await fetch(`/api/builder/content?handle=${slug}`, { method: "DELETE" });
             if (!res.ok) throw new Error("Failed to delete");
-            alert("Page deleted successfully!");
+            showToast("Page deleted successfully!", "success");
             window.location.reload();
         } catch (error) {
             console.error("Failed to delete:", error);
-            alert("Failed to delete page.");
+            showToast("Failed to delete page.", "error");
         } finally {
             setIsDeleting(false);
         }

@@ -7,6 +7,7 @@ import EditableText from "@/components/admin/EditableText";
 import SimpleImageUploadModal from "@/components/admin/SimpleImageUploadModal";
 import { useState } from "react";
 import { authUpload } from "@/lib/auth-client";
+import { useToast } from "@/context/ToastContext";
 
 interface CollectionGridProps {
     data?: {
@@ -21,6 +22,7 @@ interface CollectionGridProps {
 export default function CollectionGrid({ data = {}, isEditMode = false, onUpdate }: CollectionGridProps) {
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [uploadIndex, setUploadIndex] = useState<number | null>(null);
+    const { showToast } = useToast();
 
     const {
         items = [],
@@ -84,7 +86,7 @@ export default function CollectionGrid({ data = {}, isEditMode = false, onUpdate
             setUploadIndex(null);
         } catch (error) {
             console.error("Upload failed:", error);
-            alert("Failed to upload image");
+            showToast("Failed to upload image", "error");
         }
     };
 

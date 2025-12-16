@@ -6,6 +6,7 @@
 
   --font-figtree: var(--font-figtree);
   --font-lora: var(--font-lora);
+  --font-prata: var(--font-prata);
 
   /* Override defaults */
   --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";

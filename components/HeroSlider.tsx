@@ -12,6 +12,7 @@ import EditableText from "@/components/admin/EditableText";
 import SimpleImageUploadModal from "@/components/admin/SimpleImageUploadModal";
 import DimensionBadge from "@/components/admin/DimensionBadge";
 import { authUpload } from "@/lib/auth-client";
+import { useToast } from "@/context/ToastContext";
 
 interface HeroSliderProps {
     slides?: typeof HERO_SLIDES;
@@ -24,6 +25,7 @@ export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, o
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isLoaded, setIsLoaded] = useState(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+    const { showToast } = useToast();
 
     // Phase 1: Initial Load Delay (0.5s)
     useEffect(() => {
@@ -71,7 +73,7 @@ export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, o
             setIsUploadModalOpen(false);
         } catch (error) {
             console.error("Upload failed:", error);
-            alert("Failed to upload image");
+            showToast("Failed to upload image", "error");
         }
     };
 

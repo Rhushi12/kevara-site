@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Figtree, Lora } from "next/font/google";
+import { Figtree, Lora, Prata } from "next/font/google";
 import "./globals.css";
 import QuickViewPanel from "@/components/QuickViewPanel";
 import SearchPanel from "@/components/SearchPanel";
@@ -14,6 +14,12 @@ const figtree = Figtree({
 
 const lora = Lora({
   variable: "--font-lora",
+  subsets: ["latin"],
+});
+
+const prata = Prata({
+  weight: "400",
+  variable: "--font-prata",
   subsets: ["latin"],
 });
 
@@ -62,6 +68,11 @@ export const viewport: Viewport = {
 };
 
 import { AuthProvider } from "@/context/AuthContext";
+import { OfferProvider } from "@/context/OfferContext";
+import { ToastProvider } from "@/context/ToastContext";
+import OfferSidebar from "@/components/OfferSidebar";
+import AdminOfferButton from "@/components/admin/AdminOfferButton";
+import ToastContainer from "@/components/ToastContainer";
 
 export default function RootLayout({
   children,
@@ -71,27 +82,34 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${figtree.variable} ${lora.variable} font-figtree antialiased bg-[#FDFBF7] text-slate-900`}
+        className={`${figtree.variable} ${lora.variable} ${prata.variable} font-figtree antialiased bg-[#FDFBF7] text-slate-900`}
       >
         <AuthProvider>
-          <NextTopLoader
-            color="#0E4D55"
-            initialPosition={0.08}
-            crawlSpeed={200}
-            height={3}
-            crawl={true}
-            showSpinner={false}
-            easing="ease"
-            speed={200}
-            shadow="0 0 10px #0E4D55,0 0 5px #0E4D55"
-          />
-          <FirstVisitHandler />
-          <div className="relative w-full overflow-x-hidden min-h-screen flex flex-col">
-            {children}
-          </div>
-          <QuickViewPanel />
-          <SearchPanel />
-          <ToastNotification />
+          <ToastProvider>
+            <OfferProvider>
+              <NextTopLoader
+                color="#0E4D55"
+                initialPosition={0.08}
+                crawlSpeed={200}
+                height={3}
+                crawl={true}
+                showSpinner={false}
+                easing="ease"
+                speed={200}
+                shadow="0 0 10px #0E4D55,0 0 5px #0E4D55"
+              />
+              <FirstVisitHandler />
+              <OfferSidebar />
+              <div className="relative w-full overflow-x-hidden min-h-screen flex flex-col">
+                {children}
+              </div>
+              <QuickViewPanel />
+              <SearchPanel />
+              <ToastNotification />
+              <AdminOfferButton />
+              <ToastContainer />
+            </OfferProvider>
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

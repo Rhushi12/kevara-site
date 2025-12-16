@@ -90,7 +90,7 @@ export async function shopifyFetch(query: string, variables: any = {}, options?:
   throw lastError || new Error('All retry attempts failed');
 }
 
-async function upsertMetaobject(type: string, handle: string, fields: any[]) {
+async function upsertMetaobject(type: string, handle: string, fields: any[], publish: boolean = true) {
   const mutation = `
     mutation upsertMetaobject($handle: MetaobjectHandleInput!, $metaobject: MetaobjectUpsertInput!) {
       metaobjectUpsert(handle: $handle, metaobject: $metaobject) {
@@ -105,16 +105,18 @@ async function upsertMetaobject(type: string, handle: string, fields: any[]) {
     }
   `;
 
+  const metaobjectInput: any = { fields };
+  if (publish) {
+    metaobjectInput.capabilities = {
+      publishable: {
+        status: "ACTIVE"
+      }
+    };
+  }
+
   const variables = {
     handle: { type, handle },
-    metaobject: {
-      fields,
-      capabilities: {
-        publishable: {
-          status: "ACTIVE"
-        }
-      }
-    }
+    metaobject: metaobjectInput
   };
 
   logDebug(`upsertMetaobject ${type} payload`, { handle, fields });
@@ -1132,4 +1134,127 @@ export async function deletePageContent(metaobjectId: string) {
   }
 
   return result.metaobjectDelete.deletedId;
+}
+// 11. WHOLESALE INQUIRIES
+
+async function createMetaobjectDefinition(type: string, name: string, fieldDefinitions: any[]) {
+  const mutation = `
+    mutation CreateMetaobjectDefinition($definition: MetaobjectDefinitionCreateInput!) {
+      metaobjectDefinitionCreate(definition: $definition) {
+        metaobjectDefinition {
+          id
+          type
+        }
+        userErrors {
+          field
+          message
+        }
+      }
+    }
+  `;
+
+  const variables = {
+    definition: {
+      name,
+      type,
+      access: {
+        storefront: "PUBLIC_READ"
+      },
+      fieldDefinitions
+    }
+  };
+
+  const result = await shopifyFetch(mutation, variables);
+
+  if (result.metaobjectDefinitionCreate.userErrors.length > 0) {
+    console.error(`Failed to create definition for ${type}:`, result.metaobjectDefinitionCreate.userErrors);
+    throw new Error(`Failed to create definition: ${JSON.stringify(result.metaobjectDefinitionCreate.userErrors)}`);
+  }
+
+  return result.metaobjectDefinitionCreate.metaobjectDefinition.id;
+}
+
+async function ensureWholesaleDefinition() {
+  console.log("Attempting to create wholesale_inquiry definition...");
+  const fields = [
+    { key: "name", name: "Name", type: "single_line_text_field" },
+    { key: "email", name: "Email", type: "single_line_text_field" },
+    { key: "phone", name: "Phone", type: "single_line_text_field" },
+    { key: "requirement", name: "Requirement", type: "single_line_text_field" },
+    { key: "address", name: "Address", type: "multi_line_text_field" },
+    { key: "description", name: "Description", type: "multi_line_text_field" },
+    { key: "product_title", name: "Product Title", type: "single_line_text_field" },
+    { key: "date", name: "Date", type: "single_line_text_field" }
+  ];
+
+  await createMetaobjectDefinition("wholesale_inquiry", "Wholesale Inquiry", fields);
+  console.log("Successfully created wholesale_inquiry definition.");
+}
+
+export async function createWholesaleInquiry(data: any) {
+  const handle = `inquiry-${Date.now()}`;
+  const fields = [
+    { key: "name", value: data.name },
+    { key: "email", value: data.email },
+    { key: "phone", value: data.phone },
+    { key: "requirement", value: data.requirement },
+    { key: "address", value: data.address },
+    { key: "description", value: data.description },
+    { key: "product_title", value: data.product_title },
+    { key: "date", value: data.date }
+  ];
+
+  logDebug("createWholesaleInquiry payload", { handle, fields });
+
+  try {
+    const result = await upsertMetaobject("wholesale_inquiry", handle, fields, false);
+    logDebug("createWholesaleInquiry success", { id: result });
+    return result;
+  } catch (error: any) {
+    if (error.message && error.message.includes("No metaobject definition exists")) {
+      console.log("Metaobject definition missing. Creating it now...");
+      await ensureWholesaleDefinition();
+      // Retry
+      const result = await upsertMetaobject("wholesale_inquiry", handle, fields, false);
+      return result;
+    }
+    console.error("Failed to create wholesale inquiry:", error);
+    throw error;
+  }
+}
+
+export async function getWholesaleLeads() {
+  const query = `
+    query {
+      metaobjects(type: "wholesale_inquiry", first: 50, reverse: true) {
+        edges {
+          node {
+            id
+            handle
+            updatedAt
+            fields {
+              key
+              value
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const data = await shopifyFetch(query);
+  return data.metaobjects.edges.map((edge: any) => {
+    const node = edge.node;
+    const fields = node.fields.reduce((acc: any, field: any) => {
+      acc[field.key] = field.value;
+      return acc;
+    }, {});
+
+    return {
+      id: node.id,
+      handle: node.handle,
+      updatedAt: node.updatedAt,
+      ...fields
+    };
+  });
 }

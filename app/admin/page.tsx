@@ -8,6 +8,7 @@ import DashboardStats from "@/components/admin/DashboardStats";
 import AnalyticsCharts from "@/components/admin/AnalyticsCharts";
 import UsersTable from "@/components/admin/UsersTable";
 import MenuEditor from "@/components/admin/MenuEditor";
+import WholesaleLeadsTable from "@/components/admin/WholesaleLeadsTable";
 import { db } from "@/lib/firebase";
 import { collection, writeBatch, doc } from "firebase/firestore";
 import { MOCK_SHOPIFY_PRODUCTS } from "@/lib/mockData";
@@ -65,6 +66,16 @@ export default function AdminPage() {
                         </div>
                         <DashboardStats />
                         <AnalyticsCharts />
+                    </div>
+                );
+            case "wholesale":
+                return (
+                    <div className="space-y-6 animate-in fade-in duration-500">
+                        <div>
+                            <h1 className="text-2xl font-lora font-bold text-slate-900">Wholesale Inquiries</h1>
+                            <p className="text-gray-500 text-sm">Manage product lead requests.</p>
+                        </div>
+                        <WholesaleLeadsTable />
                     </div>
                 );
             case "leads":

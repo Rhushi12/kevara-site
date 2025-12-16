@@ -2,6 +2,7 @@ export default function AdminSidebar({ activeTab, setActiveTab }: { activeTab: s
     const menuItems = [
         { id: "dashboard", label: "Dashboard" },
         { id: "leads", label: "Leads & Users" },
+        { id: "wholesale", label: "Wholesale Inquiries" },
         { id: "cms", label: "Content Management" },
         { id: "products", label: "Product Catalog" }, // Placeholder
         { id: "settings", label: "Settings" }, // Placeholder
@@ -18,8 +19,8 @@ export default function AdminSidebar({ activeTab, setActiveTab }: { activeTab: s
                         key={item.id}
                         onClick={() => setActiveTab(item.id)}
                         className={`w-full text-left px-4 py-3 rounded-md text-sm font-medium transition-colors ${activeTab === item.id
-                                ? "bg-[#0E4D55] text-white shadow-md shadow-[#0E4D55]/20"
-                                : "text-gray-500 hover:bg-gray-50 hover:text-slate-900"
+                            ? "bg-[#0E4D55] text-white shadow-md shadow-[#0E4D55]/20"
+                            : "text-gray-500 hover:bg-gray-50 hover:text-slate-900"
                             }`}
                     >
                         {item.label}

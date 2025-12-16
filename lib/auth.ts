@@ -126,9 +126,36 @@ export async function requireAdmin(request: NextRequest): Promise<NextResponse |
         );
     }
 
-    // You can add admin email whitelist or custom claims check here
     // For now, any authenticated user is considered admin
     // TODO: Add admin role verification via custom claims or email whitelist
 
     return null;
+}
+
+/**
+ * Verify a raw ID token string (server-side only)
+ */
+export async function verifyToken(token: string): Promise<AuthResult> {
+    try {
+        // Skip auth in development mode
+        if (!shouldEnforceAuth()) {
+            return {
+                authenticated: true,
+                userId: "dev-user",
+                email: "dev@localhost",
+            };
+        }
+
+        const auth = await getFirebaseAdminAuth();
+        const decodedToken = await auth.verifyIdToken(token);
+
+        return {
+            authenticated: true,
+            userId: decodedToken.uid,
+            email: decodedToken.email,
+        };
+    } catch (error: any) {
+        console.error("[Auth] Token verification failed:", error.message);
+        return { authenticated: false, error: "Invalid or expired token" };
+    }
 }

@@ -4,11 +4,11 @@ import { motion } from "framer-motion";
 
 export default function PremiumPreloader() {
     return (
-        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white">
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#0E4D55]">
             <div className="relative p-8">
                 {/* Text Animation */}
-                <div className="flex items-center gap-[0.2em] overflow-hidden">
-                    {["K", "E", "V", "A", "R", "A"].map((letter, i) => (
+                <div className="flex items-center gap-[0.05em] overflow-hidden">
+                    {["K", "e", "v", "a", "r", "a"].map((letter, i) => (
                         <motion.span
                             key={i}
                             initial={{ y: "100%" }}
@@ -21,7 +21,7 @@ export default function PremiumPreloader() {
                                 repeatDelay: 3,
                                 repeatType: "reverse"
                             }}
-                            className="text-4xl md:text-6xl font-lora font-medium text-slate-900 tracking-widest"
+                            className="text-5xl md:text-7xl lg:text-8xl font-prata font-medium text-white tracking-[-0.04em]"
                         >
                             {letter}
                         </motion.span>
@@ -39,7 +39,7 @@ export default function PremiumPreloader() {
                         repeat: Infinity,
                         repeatDelay: 2.5
                     }}
-                    className="absolute bottom-4 left-8 right-8 h-[1px] bg-slate-900 origin-left"
+                    className="absolute bottom-4 left-8 right-8 h-[1px] bg-white origin-left"
                 />
             </div>
         </div>

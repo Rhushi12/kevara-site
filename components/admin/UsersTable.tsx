@@ -6,7 +6,7 @@ interface UserData {
     uid: string;
     email: string;
     displayName: string;
-    lastLogin: Timestamp;
+    lastLogin: Date;
     role?: string;
 }
 

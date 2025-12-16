@@ -8,6 +8,7 @@ import { useState } from "react";
 import { Upload } from "lucide-react";
 import { authUpload } from "@/lib/auth-client";
 import SimpleImageUploadModal from "@/components/admin/SimpleImageUploadModal";
+import { useToast } from "@/context/ToastContext";
 
 interface AboutUsSectionProps {
     data?: {
@@ -25,6 +26,7 @@ interface AboutUsSectionProps {
 
 export default function AboutUsSection({ data = {}, isEditMode = false, onUpdate }: AboutUsSectionProps) {
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+    const { showToast } = useToast();
 
     const {
         label = "ABOUT US",
@@ -57,7 +59,7 @@ export default function AboutUsSection({ data = {}, isEditMode = false, onUpdate
             setIsUploadModalOpen(false);
         } catch (error) {
             console.error("Upload failed:", error);
-            alert("Failed to upload image");
+            showToast("Failed to upload image", "error");
         }
     };
 

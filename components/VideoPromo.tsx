@@ -60,31 +60,47 @@ export default function VideoPromo({ data, isEditMode = false, onUpdate }: Video
 
         setIsUploading(true);
         try {
+            // Get token for Server Action
+            const { getAuthToken } = await import("@/lib/auth-client");
+            const token = await getAuthToken();
+
+            if (!token) {
+                alert("Please log in to upload.");
+                return;
+            }
+
             const formData = new FormData();
             formData.append("file", file);
+            formData.append("token", token);
 
-            const res = await authUpload('/api/upload', formData);
-            const result = await res.json();
+            // Import Server Action dynamically or at top-level?
+            // Next.js actions can be imported.
+            // We need to import it at the top level usually, but inside client component is fine.
+            const { uploadMediaAction } = await import("@/app/actions/upload-media");
 
-            if (!result.success) throw new Error("Upload failed");
+            const result = await uploadMediaAction(formData);
+
+            if (!result.success) throw new Error(result.error);
+
+            const { url, fileId } = result;
 
             switch (uploadType) {
                 case "video":
-                    onUpdate({ ...data, videoUrl: result.url, video_id: result.fileId });
+                    onUpdate({ ...data, videoUrl: url, video_id: fileId });
                     break;
                 case "logo":
-                    onUpdate({ ...data, logoImage: result.url, logo_id: result.fileId });
+                    onUpdate({ ...data, logoImage: url, logo_id: fileId });
                     break;
                 case "fallback":
-                    onUpdate({ ...data, fallbackImage: result.url, fallback_id: result.fileId });
+                    onUpdate({ ...data, fallbackImage: url, fallback_id: fileId });
                     break;
             }
 
             setIsUploadModalOpen(false);
             setUploadType(null);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Upload failed:", error);
-            alert("Failed to upload file. Note: Videos should be under 100MB for Shopify.");
+            alert(`Failed to upload file: ${error.message}`);
         } finally {
             setIsUploading(false);
         }

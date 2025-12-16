@@ -14,6 +14,7 @@ import MobileMenu from "@/components/MobileMenu";
 import MenuCarousel from "./MenuCarousel";
 import { useSearchStore } from "@/components/SearchPanel";
 import { authUpload } from "@/lib/auth-client";
+import { useToast } from "@/context/ToastContext";
 
 export default function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -26,6 +27,7 @@ export default function Navbar() {
     const [isEditMode, setIsEditMode] = useState(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [uploadTarget, setUploadTarget] = useState<{ menuId: string; } | null>(null);
+    const { showToast } = useToast();
 
     useEffect(() => {
         async function fetchMenu() {
@@ -57,7 +59,7 @@ export default function Navbar() {
             }
         } catch (error: any) {
             console.error("Failed to save menu:", error);
-            alert(`Failed to save changes: ${error.message}`);
+            showToast(`Failed to save changes: ${error.message}`, "error");
         }
     };
 
@@ -163,7 +165,7 @@ export default function Navbar() {
             setUploadTarget(null);
         } catch (error) {
             console.error("Failed to upload image:", error);
-            alert("Failed to upload image.");
+            showToast("Failed to upload image.", "error");
         }
     };
 

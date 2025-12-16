@@ -32,6 +32,7 @@ import { PageContent, PageSection } from "@/types/page-editor";
 import { Trash2 } from "lucide-react";
 import Template2Renderer from "@/components/renderers/Template2Renderer";
 import Template3Renderer from "@/components/renderers/Template3Renderer";
+import { useToast } from "@/context/ToastContext";
 
 interface PageRendererProps {
     slug: string;
@@ -48,6 +49,7 @@ export default function PageRenderer({ slug }: PageRendererProps) {
     const [loading, setLoading] = useState(true);
     const [isRedirecting, setIsRedirecting] = useState(false);
     const [notFound, setNotFound] = useState(false);
+    const { showToast } = useToast();
 
     // Fetch Page Content
     useEffect(() => {
@@ -102,11 +104,11 @@ export default function PageRenderer({ slug }: PageRendererProps) {
                 body: JSON.stringify({ handle: slug, data: content }),
             });
             if (!res.ok) throw new Error("Failed to save");
-            alert("Changes saved successfully!");
+            showToast("Changes saved successfully!", "success");
             setIsEditMode(false);
         } catch (error) {
             console.error("Failed to save:", error);
-            alert("Failed to save changes.");
+            showToast("Failed to save changes.", "error");
         } finally {
             setIsSaving(false);
         }
@@ -122,11 +124,11 @@ export default function PageRenderer({ slug }: PageRendererProps) {
                 method: "DELETE",
             });
             if (!res.ok) throw new Error("Failed to delete");
-            alert("Page deleted successfully!");
+            showToast("Page deleted successfully!", "success");
             window.location.reload(); // Reload to trigger 404/AdminPageBuilder
         } catch (error) {
             console.error("Failed to delete:", error);
-            alert("Failed to delete page.");
+            showToast("Failed to delete page.", "error");
         } finally {
             setIsDeleting(false);
         }

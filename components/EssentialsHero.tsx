@@ -8,6 +8,7 @@ import EditableText from "@/components/admin/EditableText";
 import { useState } from "react";
 import { Upload } from "lucide-react";
 import { authUpload } from "@/lib/auth-client";
+import { useToast } from "@/context/ToastContext";
 
 interface EssentialsHeroProps {
     data?: {
@@ -25,6 +26,7 @@ interface EssentialsHeroProps {
 
 export default function EssentialsHero({ data = {}, isEditMode = false, onUpdate }: EssentialsHeroProps) {
     const [isUploading, setIsUploading] = useState(false);
+    const { showToast } = useToast();
 
     const {
         label = "ESSENTIALS",
@@ -58,7 +60,7 @@ export default function EssentialsHero({ data = {}, isEditMode = false, onUpdate
             }
         } catch (error) {
             console.error('Upload failed:', error);
-            alert('Failed to upload image');
+            showToast('Failed to upload image', 'error');
         } finally {
             setIsUploading(false);
         }

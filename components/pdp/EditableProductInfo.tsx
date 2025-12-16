@@ -5,6 +5,8 @@ import { Heart, Save, X, Plus, Trash2 } from "lucide-react";
 import LiquidButton from "@/components/ui/LiquidButton";
 import { useSizeGuideStore } from "@/lib/store";
 import { useAuth } from "@/context/AuthContext";
+import WholesaleInquiryModal from "./WholesaleInquiryModal";
+import { useToast } from "@/context/ToastContext";
 
 interface EditableProductInfoProps {
     title: string;
@@ -62,6 +64,8 @@ export default function EditableProductInfo({
     const [newColorName, setNewColorName] = useState("");
     const [newColorHex, setNewColorHex] = useState("#000000");
     const [showColorPicker, setShowColorPicker] = useState(false);
+    const [showInquiryModal, setShowInquiryModal] = useState(false);
+    const { showToast } = useToast();
 
     const discountPercentage = originalPrice
         ? Math.round(((originalPrice - price) / originalPrice) * 100)
@@ -114,12 +118,12 @@ export default function EditableProductInfo({
             }
 
             setIsEditMode(false);
-            alert("Product updated successfully!");
+            showToast("Product updated successfully!", "success");
             // Reload the page to show updated data
             window.location.reload();
         } catch (error: any) {
             console.error("Failed to save product:", error);
-            alert("Failed to save changes: " + error.message);
+            showToast("Failed to save changes: " + error.message, "error");
         } finally {
             setIsSaving(false);
         }
@@ -423,8 +427,23 @@ export default function EditableProductInfo({
                     >
                         <span className="font-medium">Send us an Email</span>
                     </LiquidButton>
+
+                    <LiquidButton
+                        className="w-full h-12 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium text-sm"
+                        variant="secondary"
+                        onClick={() => setShowInquiryModal(true)}
+                    >
+                        <span className="font-medium">Send us a message (Wholesale)</span>
+                    </LiquidButton>
                 </div>
             )}
+
+            <WholesaleInquiryModal
+                isOpen={showInquiryModal}
+                onClose={() => setShowInquiryModal(false)}
+                productTitle={title}
+                productHandle={handle}
+            />
         </div>
     );
 }
