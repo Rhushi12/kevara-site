@@ -17,6 +17,20 @@ const protectedApiPaths = [
     "/api/pages",
 ];
 
+// Paths that should always be accessible (even in maintenance mode)
+const MAINTENANCE_PUBLIC_PATHS = [
+    '/under-construction',
+    '/admin-bypass',
+    '/api/auth',
+    '/_next',
+    '/favicon.ico',
+    '/logo',
+    '/og-image',
+];
+
+// File extensions that should always be accessible
+const PUBLIC_EXTENSIONS = ['.svg', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.webp', '.woff', '.woff2'];
+
 // Rate limiting configuration (simple in-memory, use Redis for production)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
@@ -45,6 +59,30 @@ export function proxy(request: NextRequest) {
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0] ||
         request.headers.get("x-real-ip") ||
         "127.0.0.1";
+
+    // ========== MAINTENANCE MODE CHECK ==========
+    const isMaintenanceMode = process.env.MAINTENANCE_MODE === 'true';
+
+    // Don't apply maintenance mode to API routes
+    if (isMaintenanceMode && !pathname.startsWith("/api/")) {
+        // Check if the path is always public during maintenance
+        const isPublicPath = MAINTENANCE_PUBLIC_PATHS.some(path => pathname.startsWith(path));
+
+        // Check if it's a static file
+        const isStaticFile = PUBLIC_EXTENSIONS.some(ext => pathname.endsWith(ext));
+
+        // Check for admin bypass cookie
+        const adminBypass = request.cookies.get('admin_bypass');
+        const hasAdminBypass = adminBypass?.value === 'true';
+
+        // If not a public path, not a static file, and no admin bypass -> redirect
+        if (!isPublicPath && !isStaticFile && !hasAdminBypass) {
+            const url = request.nextUrl.clone();
+            url.pathname = '/under-construction';
+            return NextResponse.redirect(url);
+        }
+    }
+    // ========== END MAINTENANCE MODE CHECK ==========
 
     // CORS handling for API routes
     if (pathname.startsWith("/api/")) {
@@ -97,7 +135,8 @@ export function proxy(request: NextRequest) {
 
 export const config = {
     matcher: [
-        // Match all API routes
-        "/api/:path*",
+        // Match all routes for maintenance mode
+        '/((?!_next/static|_next/image).*)',
     ],
 };
+

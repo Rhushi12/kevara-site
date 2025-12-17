@@ -8,12 +8,29 @@ interface Lead {
     name: string;
     email: string;
     phone: string;
+    requirementType: string;
     requirement: string;
+    state: string;
+    city: string;
     address: string;
     description: string;
     product_title: string;
     date: string;
 }
+
+// Helper to get requirement type label and styling
+const getRequirementTypeInfo = (type: string) => {
+    switch (type) {
+        case "retail":
+            return { label: "Retail Shop", icon: "🏪", color: "bg-blue-50 text-blue-700 border-blue-200" };
+        case "wholesale":
+            return { label: "Wholesale (B2B)", icon: "🏭", color: "bg-purple-50 text-purple-700 border-purple-200" };
+        case "online":
+            return { label: "Online Portal", icon: "🌐", color: "bg-green-50 text-green-700 border-green-200" };
+        default:
+            return { label: type || "N/A", icon: "📦", color: "bg-slate-50 text-slate-700 border-slate-200" };
+    }
+};
 
 export default function WholesaleLeadsTable() {
     const [leads, setLeads] = useState<Lead[]>([]);
@@ -84,9 +101,12 @@ export default function WholesaleLeadsTable() {
                                     <h4 className="font-bold text-slate-900 line-clamp-1">{lead.name}</h4>
                                     <p className="text-sm text-slate-500">{new Date(lead.date).toLocaleDateString()}</p>
                                 </div>
-                                <div className="px-2 py-1 bg-[#FDFBF7] text-[#0E4D55] rounded text-xs font-bold border border-[#F0EBE0]">
-                                    Lead
-                                </div>
+                                {lead.requirementType && (
+                                    <div className={`px-2 py-1 rounded text-xs font-bold border flex items-center gap-1 ${getRequirementTypeInfo(lead.requirementType).color}`}>
+                                        <span>{getRequirementTypeInfo(lead.requirementType).icon}</span>
+                                        <span>{getRequirementTypeInfo(lead.requirementType).label}</span>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="space-y-2 text-sm">
@@ -98,6 +118,12 @@ export default function WholesaleLeadsTable() {
                                     <span className="w-4 h-4 rounded-full bg-slate-100 flex items-center justify-center text-[10px] text-slate-400">#</span>
                                     <a href={`tel:${lead.phone}`} className="hover:text-[#0E4D55] transition-colors">{lead.phone}</a>
                                 </div>
+                                {(lead.city || lead.state) && (
+                                    <div className="flex items-center gap-2 text-slate-600">
+                                        <span className="w-4 h-4 rounded-full bg-slate-100 flex items-center justify-center text-[10px] text-slate-400">📍</span>
+                                        <span className="truncate">{[lead.city, lead.state].filter(Boolean).join(", ")}</span>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="bg-slate-50 px-3 py-2.5 rounded-lg text-sm border border-slate-100">
@@ -105,12 +131,26 @@ export default function WholesaleLeadsTable() {
                                 <p className="font-medium text-[#0E4D55] line-clamp-1">{lead.product_title}</p>
                             </div>
 
-                            {(lead.requirement || lead.description) && (
-                                <div className="pt-2 border-t border-slate-100 mt-auto">
-                                    <p className="text-xs text-slate-500 line-clamp-2">
-                                        <span className="font-semibold text-slate-700">Note: </span>
-                                        {lead.requirement} {lead.description}
-                                    </p>
+                            {(lead.requirement || lead.description || lead.address) && (
+                                <div className="pt-2 border-t border-slate-100 mt-auto space-y-1">
+                                    {lead.requirement && (
+                                        <p className="text-xs text-slate-500">
+                                            <span className="font-semibold text-slate-700">Qty: </span>
+                                            {lead.requirement}
+                                        </p>
+                                    )}
+                                    {lead.address && (
+                                        <p className="text-xs text-slate-500">
+                                            <span className="font-semibold text-slate-700">Address: </span>
+                                            {lead.address}
+                                        </p>
+                                    )}
+                                    {lead.description && (
+                                        <p className="text-xs text-slate-500 line-clamp-2">
+                                            <span className="font-semibold text-slate-700">Note: </span>
+                                            {lead.description}
+                                        </p>
+                                    )}
                                 </div>
                             )}
                         </div>

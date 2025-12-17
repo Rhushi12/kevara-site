@@ -169,8 +169,8 @@ export default function QuickViewPanel() {
                         </div>
                         <div>
                             <h3 className="text-xl font-lora text-slate-900 mb-2">{title}</h3>
-                            {/* Price - HIDDEN */}
-                            <div className="flex items-center gap-3 hidden">
+                            {/* Price */}
+                            <div className="flex items-center gap-3">
                                 <span className="text-lg font-figtree font-bold text-slate-900">
                                     {new Intl.NumberFormat("en-IN", { style: "currency", currency }).format(parseFloat(price))}
                                 </span>

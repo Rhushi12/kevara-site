@@ -214,8 +214,8 @@ export default function EditableProductInfo({
                     )}
                 </div>
 
-                {/* Price - HIDDEN */}
-                <div className="flex flex-col gap-2 hidden">
+                {/* Price */}
+                <div className="flex flex-col gap-2">
                     <div className="flex items-baseline gap-4">
                         {isEditMode ? (
                             <div className="flex items-center gap-2">

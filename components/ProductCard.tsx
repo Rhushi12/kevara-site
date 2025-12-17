@@ -123,8 +123,8 @@ export default function ProductCard({ product, imageAspectRatio = "aspect-[3/4]"
                 </h3>
             </Link>
 
-            {/* Price - HIDDEN */}
-            <div className="flex gap-2 items-center justify-center mt-1 hidden">
+            {/* Price */}
+            <div className="flex gap-2 items-center justify-center mt-1">
                 {parseFloat(price) < 100 && (
                     <span className="text-xs text-red-700 line-through md:text-sm font-figtree">
                         {new Intl.NumberFormat("en-IN", {

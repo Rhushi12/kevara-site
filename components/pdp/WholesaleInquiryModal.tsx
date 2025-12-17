@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { X, Send, Loader2 } from "lucide-react";
 import LiquidButton from "@/components/ui/LiquidButton";
 import { useToast } from "@/context/ToastContext";
+import { INDIA_STATES, getCitiesForState } from "@/lib/indiaData";
 
 interface WholesaleInquiryModalProps {
     isOpen: boolean;
@@ -23,7 +24,10 @@ export default function WholesaleInquiryModal({
         name: "",
         email: "",
         phone: "",
+        requirementType: "", // Retail Shop, Wholesale (B2B), Online Portal
         requirement: "", // Quantity/Type
+        state: "",
+        city: "",
         address: "",
         description: "",
     });
@@ -32,6 +36,14 @@ export default function WholesaleInquiryModal({
     const [error, setError] = useState("");
     const [mounted, setMounted] = useState(false);
     const { showToast } = useToast();
+
+    // Get cities based on selected state
+    const availableCities = formData.state ? getCitiesForState(formData.state) : [];
+
+    // Reset city when state changes
+    const handleStateChange = (newState: string) => {
+        setFormData({ ...formData, state: newState, city: "" });
+    };
 
     // Ensure we only use portal on client side
     useEffect(() => {
@@ -64,7 +76,7 @@ export default function WholesaleInquiryModal({
             setTimeout(() => {
                 onClose();
                 setSuccess(false);
-                setFormData({ name: "", email: "", phone: "", requirement: "", address: "", description: "" });
+                setFormData({ name: "", email: "", phone: "", requirementType: "", requirement: "", state: "", city: "", address: "", description: "" });
             }, 2000);
         } catch (err) {
             setError("Something went wrong. Please try again.");
@@ -173,15 +185,125 @@ export default function WholesaleInquiryModal({
                                 />
                             </div>
 
+                            {/* Type of Requirement */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1">
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                    </svg>
+                                    Type of Requirement
+                                </label>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+                                    {[
+                                        { value: "retail", label: "Retail Shop", icon: "🏪" },
+                                        { value: "wholesale", label: "Wholesale (B2B)", icon: "🏭" },
+                                        { value: "online", label: "Online Portal", icon: "🌐" }
+                                    ].map((option) => (
+                                        <label
+                                            key={option.value}
+                                            className={`flex items-center gap-2 p-3 sm:p-2.5 rounded-lg border cursor-pointer transition-all duration-200 ${formData.requirementType === option.value
+                                                    ? 'border-[#0E4D55] bg-[#0E4D55]/5 ring-1 ring-[#0E4D55]/20'
+                                                    : 'border-slate-200 hover:border-slate-300 bg-white'
+                                                }`}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="requirementType"
+                                                value={option.value}
+                                                checked={formData.requirementType === option.value}
+                                                onChange={(e) => setFormData({ ...formData, requirementType: e.target.value })}
+                                                className="sr-only"
+                                            />
+                                            <span className="text-base sm:text-lg">{option.icon}</span>
+                                            <span className={`text-sm font-medium ${formData.requirementType === option.value
+                                                    ? 'text-[#0E4D55]'
+                                                    : 'text-slate-600'
+                                                }`}>
+                                                {option.label}
+                                            </span>
+                                            {formData.requirementType === option.value && (
+                                                <svg className="w-4 h-4 ml-auto text-[#0E4D55]" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                </svg>
+                                            )}
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+
                             <div className="space-y-1">
-                                <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Requirements</label>
+                                <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Quantity / Details</label>
                                 <input
                                     type="text"
                                     value={formData.requirement}
                                     onChange={e => setFormData({ ...formData, requirement: e.target.value })}
-                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0E4D55] focus:ring-1 focus:ring-[#0E4D55]"
+                                    className="w-full px-3 py-2.5 sm:py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0E4D55] focus:ring-2 focus:ring-[#0E4D55]/20 text-sm sm:text-base"
                                     placeholder="e.g. 50 units, Custom Size..."
                                 />
+                            </div>
+
+                            {/* State and City Dropdowns */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1">
+                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        State
+                                    </label>
+                                    <div className="relative">
+                                        <select
+                                            required
+                                            value={formData.state}
+                                            onChange={e => handleStateChange(e.target.value)}
+                                            className="w-full px-3 py-2.5 sm:py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0E4D55] focus:ring-2 focus:ring-[#0E4D55]/20 appearance-none cursor-pointer text-sm sm:text-base transition-all duration-200 hover:border-slate-300 pr-10"
+                                        >
+                                            <option value="">Select State</option>
+                                            {INDIA_STATES.map((state) => (
+                                                <option key={state} value={state}>{state}</option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                            <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1">
+                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                        </svg>
+                                        City
+                                    </label>
+                                    <div className="relative">
+                                        <select
+                                            required
+                                            value={formData.city}
+                                            onChange={e => setFormData({ ...formData, city: e.target.value })}
+                                            disabled={!formData.state}
+                                            className={`w-full px-3 py-2.5 sm:py-2 bg-white border rounded-lg focus:outline-none focus:border-[#0E4D55] focus:ring-2 focus:ring-[#0E4D55]/20 appearance-none text-sm sm:text-base transition-all duration-200 pr-10 ${!formData.state
+                                                ? 'opacity-50 cursor-not-allowed border-slate-100 bg-slate-50 text-slate-400'
+                                                : 'cursor-pointer border-slate-200 hover:border-slate-300'
+                                                }`}
+                                        >
+                                            <option value="">{formData.state ? "Select City" : "Select state first"}</option>
+                                            {availableCities.map((city) => (
+                                                <option key={city} value={city}>{city}</option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                            <svg className={`w-4 h-4 ${!formData.state ? 'text-slate-300' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    {formData.state && availableCities.length > 0 && (
+                                        <p className="text-[10px] text-slate-400">{availableCities.length} cities available</p>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="space-y-1">
@@ -191,7 +313,7 @@ export default function WholesaleInquiryModal({
                                     value={formData.address}
                                     onChange={e => setFormData({ ...formData, address: e.target.value })}
                                     className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0E4D55] focus:ring-1 focus:ring-[#0E4D55]"
-                                    placeholder="Delivery Location"
+                                    placeholder="Street Address, Pincode"
                                 />
                             </div>
 

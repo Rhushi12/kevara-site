@@ -45,8 +45,8 @@ export default function ProductInfo({
                     </button>
                 </div>
 
-                {/* Price - HIDDEN */}
-                <div className="flex flex-col gap-2 hidden">
+                {/* Price */}
+                <div className="flex flex-col gap-2">
                     <div className="flex items-baseline gap-4">
                         <span className="text-2xl font-figtree font-semibold text-slate-900">
                             {new Intl.NumberFormat("en-IN", {
