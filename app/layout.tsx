@@ -24,7 +24,7 @@ const prata = Prata({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://kevara-site.vercel.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://kevara.in"),
   title: {
     default: "Kevara | Timeless Elegance",
     template: "%s | Kevara"
