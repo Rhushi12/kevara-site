@@ -150,6 +150,8 @@ export default function Template3Renderer({ content, slug }: Template3RendererPr
             if (!res.ok) throw new Error("Failed to save");
             showToast("Changes saved successfully!", "success");
             setIsEditMode(false);
+            // Force refresh to ensure the page gets the latest data from server
+            window.location.reload();
         } catch (error) {
             console.error("Failed to save:", error);
             showToast("Failed to save changes.", "error");
@@ -158,22 +160,36 @@ export default function Template3Renderer({ content, slug }: Template3RendererPr
         }
     };
 
+
     // Delete Page
     const deletePage = async () => {
         if (!confirm("Are you sure you want to delete this page? This action cannot be undone.")) return;
+
+        // Get metaobject_id from content if available
+        const metaobjectId = (pageContent as any)?.metaobject_id;
+        if (!metaobjectId) {
+            showToast("Cannot delete: page ID not found", "error");
+            console.error("[deletePage] No metaobject_id in pageContent:", pageContent);
+            return;
+        }
+
         setIsDeleting(true);
         try {
-            const res = await fetch(`/api/builder/content?handle=${slug}`, { method: "DELETE" });
-            if (!res.ok) throw new Error("Failed to delete");
+            const res = await fetch(`/api/builder/content?handle=${slug}&id=${encodeURIComponent(metaobjectId)}`, { method: "DELETE" });
+            if (!res.ok) {
+                const error = await res.json().catch(() => ({}));
+                throw new Error(error.error || "Failed to delete");
+            }
             showToast("Page deleted successfully!", "success");
             window.location.reload();
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to delete:", error);
-            showToast("Failed to delete page.", "error");
+            showToast(`Failed to delete page: ${error.message}`, "error");
         } finally {
             setIsDeleting(false);
         }
     };
+
 
     // Update Section Helper
     const updateSection = useCallback((sectionId: string, newSettings: any) => {

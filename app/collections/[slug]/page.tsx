@@ -79,7 +79,7 @@ export default function CollectionPage() {
         if (!slug) return;
         async function fetchContent() {
             try {
-                const res = await fetch(`/api/builder/content?handle=${slug}`);
+                const res = await fetch(`/api/builder/content?handle=${slug}`, { cache: 'no-store' });
                 if (res.ok) {
                     const data = await res.json();
 
@@ -116,6 +116,8 @@ export default function CollectionPage() {
             if (!res.ok) throw new Error("Failed to save");
             alert("Changes saved successfully!");
             setIsEditMode(false);
+            // Force refresh to get latest data from server
+            window.location.reload();
         } catch (error) {
             console.error("Failed to save:", error);
             alert("Failed to save changes.");
@@ -128,21 +130,33 @@ export default function CollectionPage() {
     const deletePage = async () => {
         if (!confirm("Are you sure you want to delete this page? This action cannot be undone.")) return;
 
+        // Get metaobject_id from content if available
+        const metaobjectId = (content as any)?.metaobject_id;
+        if (!metaobjectId) {
+            alert("Cannot delete: page ID not found");
+            console.error("[deletePage] No metaobject_id in content:", content);
+            return;
+        }
+
         setIsDeleting(true);
         try {
-            const res = await fetch(`/api/builder/content?handle=${slug}`, {
+            const res = await fetch(`/api/builder/content?handle=${slug}&id=${encodeURIComponent(metaobjectId)}`, {
                 method: "DELETE",
             });
-            if (!res.ok) throw new Error("Failed to delete");
+            if (!res.ok) {
+                const error = await res.json().catch(() => ({}));
+                throw new Error(error.error || "Failed to delete");
+            }
             alert("Page deleted successfully!");
             window.location.reload();
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to delete:", error);
-            alert("Failed to delete page.");
+            alert(`Failed to delete page: ${error.message}`);
         } finally {
             setIsDeleting(false);
         }
     };
+
 
     // Update Section Helper
     const updateSection = useCallback((sectionId: string, newSettings: any) => {

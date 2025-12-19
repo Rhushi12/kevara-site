@@ -1,0 +1,85 @@
+{
+  "sections": [
+    {
+      "id": "hero-home",
+      "type": "hero_slider",
+      "settings": {
+        "slides": [
+          {
+            "id": "slide-1",
+            "image": "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=2070&auto=format&fit=crop",
+            "heading": "New Season Arrivals",
+            "subheading": "DISCOVER THE LATEST TRENDS",
+            "buttonText": "SHOP COLLECTION",
+            "link": "/collections/all"
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop-occasion-home",
+      "type": "shop_by_occasion",
+      "settings": {
+        "title": "Shop Essentials",
+        "tab1Label": "Women",
+        "tab2Label": "Men",
+        "tab1Products": [],
+        "tab2Products": []
+      }
+    },
+    {
+      "id": "shop-category-home",
+      "type": "shop_category",
+      "settings": {}
+    },
+    {
+      "id": "sales-split-home",
+      "type": "sales_split",
+      "settings": {}
+    },
+    {
+      "id": "collection-grid-home",
+      "type": "collection_grid",
+      "settings": {
+        "items": []
+      }
+    },
+    {
+      "id": "clean-grid-home",
+      "type": "clean_grid",
+      "settings": {
+        "title": "Latest Arrivals",
+        "products": []
+      }
+    },
+    {
+      "id": "video-promo-home",
+      "type": "video_promo",
+      "settings": {}
+    },
+    {
+      "id": "about-us-home",
+      "type": "about_us",
+      "settings": {
+        "label": "ABOUT US",
+        "heading": "Our Story",
+        "description": "Starting with our core, we are replacing the conventional composition of our Essentials collections with more sustainable fibres in each product. An action only contributing to the longevity of the classic styles, designed to last and stand the test of time.",
+        "buttonText": "LEARN MORE",
+        "buttonLink": "/pages/about-us",
+        "image": "https://images.unsplash.com/photo-1516826957135-700dedea698c?q=80&w=1000&auto=format&fit=crop",
+        "imageTag": "Philosophy"
+      }
+    },
+    {
+      "id": "testimonials-home",
+      "type": "testimonials",
+      "settings": {}
+    },
+    {
+      "id": "features-home",
+      "type": "features",
+      "settings": {}
+    }
+  ],
+  "slug": "new-in"
+}

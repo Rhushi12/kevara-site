@@ -1,0 +1,484 @@
+{
+  "sections": [
+    {
+      "id": "hero-1",
+      "type": "hero_slider",
+      "settings": {
+        "slides": [
+          {
+            "id": "slide-1",
+            "image": "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=2070&auto=format&fit=crop",
+            "heading": "New Season Arrivals",
+            "subheading": "DISCOVER THE LATEST TRENDS",
+            "buttonText": "SHOP COLLECTION",
+            "link": "/collections/new-arrivals"
+          },
+          {
+            "id": 1764618010253,
+            "image": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop",
+            "heading": "New Slide Heading",
+            "subheading": "New Subheading",
+            "buttonText": "Shop Now",
+            "link": "/collections/all"
+          },
+          {
+            "id": 1764663704914,
+            "image": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop",
+            "heading": "New Slide Heading",
+            "subheading": "New Subheading",
+            "buttonText": "BRINNG IT HOMW!",
+            "link": "/collections/all"
+          }
+        ]
+      }
+    },
+    {
+      "id": "essentials-1",
+      "type": "shop_essentials",
+      "settings": {
+        "title": "Dress up in the heat",
+        "description": "SS21 Series of Comfortable textures. With luxurious, natural-looking makeup, we find reasons for the face. New textures and colors bring new inspiration to your everyday life.",
+        "items": [
+          {
+            "title": "Dresses",
+            "products": [
+              {
+                "id": "gid://shopify/Metaobject/126887821347",
+                "handle": "product_1764565369005_w7evuj",
+                "slug": "wuisi",
+                "title": "wuisi",
+                "descriptionHtml": "ferfe",
+                "priceRange": {
+                  "minVariantPrice": {
+                    "amount": "2342",
+                    "currencyCode": "INR"
+                  }
+                },
+                "images": {
+                  "edges": [
+                    {
+                      "node": {
+                        "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/screencapture-localhost-3000-collections-women-best-sellers-2025-11-29-14_25_52_b4daaf06-8d27-4cfd-a3eb-2adbc8f26ac0.png?v=1764565366",
+                        "altText": "wuisi"
+                      }
+                    },
+                    {
+                      "node": {
+                        "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/WhatsApp_Image_2025-11-29_at_11.08.05_c5995384_33f847ed-3146-4fea-bc50-2a1835bf34a1.jpg?v=1764565367",
+                        "altText": "wuisi"
+                      }
+                    },
+                    {
+                      "node": {
+                        "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/screencapture-focal-theme-ivory-myshopify-products-evry-7027-jumpsuit-2025-11-28-23_59_24_ae5aaf5c-536d-43ee-abac-bdad636d05b2.png?v=1764565371",
+                        "altText": "wuisi"
+                      }
+                    }
+                  ]
+                },
+                "variants": {
+                  "edges": [
+                    {
+                      "node": {
+                        "id": "variant_product_1764565369005_w7evuj",
+                        "title": "Default"
+                      }
+                    }
+                  ]
+                },
+                "colors": [
+                  {
+                    "name": "Black",
+                    "hex": "#000000"
+                  },
+                  {
+                    "name": "White",
+                    "hex": "#FFFFFF"
+                  },
+                  {
+                    "name": "Red",
+                    "hex": "#DC2626"
+                  },
+                  {
+                    "name": "Blue",
+                    "hex": "#2563EB"
+                  }
+                ],
+                "sizes": [
+                  "XS",
+                  "S",
+                  "M",
+                  "L"
+                ],
+                "relatedProducts": [],
+                "status": "ACTIVE"
+              },
+              {
+                "id": "gid://shopify/Metaobject/126909906979",
+                "handle": "product_1764586016267_qk1w7r",
+                "slug": "hbhi",
+                "title": "hbhi",
+                "descriptionHtml": "lbbi",
+                "priceRange": {
+                  "minVariantPrice": {
+                    "amount": "684984",
+                    "currencyCode": "INR"
+                  }
+                },
+                "images": {
+                  "edges": [
+                    {
+                      "node": {
+                        "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/screencapture-focal-theme-ivory-myshopify-products-sims-2088-short-sleeved-t-shirt-2025-12-01-12_43_49.png?v=1764586008",
+                        "altText": "hbhi"
+                      }
+                    },
+                    {
+                      "node": {
+                        "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/screencapture-localhost-3000-women-2025-12-01-11_36_00_9021a9ba-715f-47d4-9f26-e2d4127d9833.png?v=1764586013",
+                        "altText": "hbhi"
+                      }
+                    },
+                    {
+                      "node": {
+                        "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/screencapture-localhost-3000-collections-women-best-sellers-2025-11-29-14_25_52_62effa92-b9aa-4de3-8637-aa485eb1a7cc.png?v=1764586016",
+                        "altText": "hbhi"
+                      }
+                    },
+                    {
+                      "node": {
+                        "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/WhatsApp_Image_2025-11-29_at_11.08.05_c5995384_c698568c-7e98-489d-9850-24022815e9ef.jpg?v=1764586018",
+                        "altText": "hbhi"
+                      }
+                    }
+                  ]
+                },
+                "variants": {
+                  "edges": [
+                    {
+                      "node": {
+                        "id": "variant_product_1764586016267_qk1w7r",
+                        "title": "Default"
+                      }
+                    }
+                  ]
+                },
+                "colors": [
+                  {
+                    "name": "Black",
+                    "hex": "#000000"
+                  },
+                  {
+                    "name": "Gray",
+                    "hex": "#6B7280"
+                  }
+                ],
+                "sizes": [
+                  "XS",
+                  "S",
+                  "M"
+                ],
+                "relatedProducts": [],
+                "status": "ACTIVE"
+              },
+              {
+                "id": "gid://shopify/Metaobject/126913708067",
+                "handle": "product_1764592328149_rltme4",
+                "slug": "haudiuau-pmq3tl",
+                "title": "haudiuau",
+                "descriptionHtml": "acdwad",
+                "priceRange": {
+                  "minVariantPrice": {
+                    "amount": "12313",
+                    "currencyCode": "INR"
+                  }
+                },
+                "images": {
+                  "edges": [
+                    {
+                      "node": {
+                        "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/screencapture-focal-theme-ivory-myshopify-products-sims-2088-short-sleeved-t-shirt-2025-12-01-12_43_49_6bc0379f-5670-479e-8933-ee492550c148.png?v=1764592316",
+                        "altText": "haudiuau"
+                      }
+                    },
+                    {
+                      "node": {
+                        "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/screencapture-localhost-3000-women-2025-12-01-11_36_00_8db1b562-44d6-46c3-bb1c-28400ff29d90.png?v=1764592320",
+                        "altText": "haudiuau"
+                      }
+                    },
+                    {
+                      "node": {
+                        "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/screencapture-localhost-3000-collections-women-best-sellers-2025-11-29-14_25_52_3f67a9f7-8e88-49cf-b9ce-9c5c15ad8d53.png?v=1764592324",
+                        "altText": "haudiuau"
+                      }
+                    },
+                    {
+                      "node": {
+                        "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/WhatsApp_Image_2025-11-29_at_11.08.05_c5995384_a91ea482-90dc-44ee-956d-3c2125978675.jpg?v=1764592325",
+                        "altText": "haudiuau"
+                      }
+                    },
+                    {
+                      "node": {
+                        "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/screencapture-focal-theme-ivory-myshopify-products-evry-7027-jumpsuit-2025-11-28-23_59_24_7c7d2ce3-7523-414d-a851-080f6dfe25a8.png?v=1764592330",
+                        "altText": "haudiuau"
+                      }
+                    }
+                  ]
+                },
+                "variants": {
+                  "edges": [
+                    {
+                      "node": {
+                        "id": "variant_product_1764592328149_rltme4",
+                        "title": "Default"
+                      }
+                    }
+                  ]
+                },
+                "colors": [
+                  {
+                    "name": "Black",
+                    "hex": "#000000"
+                  },
+                  {
+                    "name": "White",
+                    "hex": "#FFFFFF"
+                  },
+                  {
+                    "name": "Red",
+                    "hex": "#DC2626"
+                  },
+                  {
+                    "name": "Blue",
+                    "hex": "#2563EB"
+                  },
+                  {
+                    "name": "Green",
+                    "hex": "#16A34A"
+                  },
+                  {
+                    "name": "Yellow",
+                    "hex": "#EAB308"
+                  }
+                ],
+                "sizes": [
+                  "XS",
+                  "S",
+                  "M",
+                  "L",
+                  "XL",
+                  "XXL"
+                ],
+                "relatedProducts": [],
+                "status": "ACTIVE"
+              }
+            ]
+          },
+          {
+            "title": "Shirts",
+            "products": []
+          },
+          {
+            "title": "Shorts",
+            "products": []
+          },
+          {
+            "title": "Neacdac",
+            "products": [
+              {
+                "id": "gid://shopify/Metaobject/126887821347",
+                "handle": "product_1764565369005_w7evuj",
+                "slug": "wuisi",
+                "title": "wuisi",
+                "descriptionHtml": "ferfe",
+                "priceRange": {
+                  "minVariantPrice": {
+                    "amount": "2342",
+                    "currencyCode": "INR"
+                  }
+                },
+                "images": {
+                  "edges": [
+                    {
+                      "node": {
+                        "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/screencapture-localhost-3000-collections-women-best-sellers-2025-11-29-14_25_52_b4daaf06-8d27-4cfd-a3eb-2adbc8f26ac0.png?v=1764565366",
+                        "altText": "wuisi"
+                      }
+                    },
+                    {
+                      "node": {
+                        "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/WhatsApp_Image_2025-11-29_at_11.08.05_c5995384_33f847ed-3146-4fea-bc50-2a1835bf34a1.jpg?v=1764565367",
+                        "altText": "wuisi"
+                      }
+                    },
+                    {
+                      "node": {
+                        "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/screencapture-focal-theme-ivory-myshopify-products-evry-7027-jumpsuit-2025-11-28-23_59_24_ae5aaf5c-536d-43ee-abac-bdad636d05b2.png?v=1764565371",
+                        "altText": "wuisi"
+                      }
+                    }
+                  ]
+                },
+                "variants": {
+                  "edges": [
+                    {
+                      "node": {
+                        "id": "variant_product_1764565369005_w7evuj",
+                        "title": "Default"
+                      }
+                    }
+                  ]
+                },
+                "colors": [
+                  {
+                    "name": "Black",
+                    "hex": "#000000"
+                  },
+                  {
+                    "name": "White",
+                    "hex": "#FFFFFF"
+                  },
+                  {
+                    "name": "Red",
+                    "hex": "#DC2626"
+                  },
+                  {
+                    "name": "Blue",
+                    "hex": "#2563EB"
+                  }
+                ],
+                "sizes": [
+                  "XS",
+                  "S",
+                  "M",
+                  "L"
+                ],
+                "relatedProducts": [],
+                "status": "ACTIVE"
+              },
+              {
+                "id": "gid://shopify/Metaobject/126909906979",
+                "handle": "product_1764586016267_qk1w7r",
+                "slug": "hbhi",
+                "title": "hbhi",
+                "descriptionHtml": "lbbi",
+                "priceRange": {
+                  "minVariantPrice": {
+                    "amount": "684984",
+                    "currencyCode": "INR"
+                  }
+                },
+                "images": {
+                  "edges": [
+                    {
+                      "node": {
+                        "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/screencapture-focal-theme-ivory-myshopify-products-sims-2088-short-sleeved-t-shirt-2025-12-01-12_43_49.png?v=1764586008",
+                        "altText": "hbhi"
+                      }
+                    },
+                    {
+                      "node": {
+                        "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/screencapture-localhost-3000-women-2025-12-01-11_36_00_9021a9ba-715f-47d4-9f26-e2d4127d9833.png?v=1764586013",
+                        "altText": "hbhi"
+                      }
+                    },
+                    {
+                      "node": {
+                        "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/screencapture-localhost-3000-collections-women-best-sellers-2025-11-29-14_25_52_62effa92-b9aa-4de3-8637-aa485eb1a7cc.png?v=1764586016",
+                        "altText": "hbhi"
+                      }
+                    },
+                    {
+                      "node": {
+                        "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/WhatsApp_Image_2025-11-29_at_11.08.05_c5995384_c698568c-7e98-489d-9850-24022815e9ef.jpg?v=1764586018",
+                        "altText": "hbhi"
+                      }
+                    }
+                  ]
+                },
+                "variants": {
+                  "edges": [
+                    {
+                      "node": {
+                        "id": "variant_product_1764586016267_qk1w7r",
+                        "title": "Default"
+                      }
+                    }
+                  ]
+                },
+                "colors": [
+                  {
+                    "name": "Black",
+                    "hex": "#000000"
+                  },
+                  {
+                    "name": "Gray",
+                    "hex": "#6B7280"
+                  }
+                ],
+                "sizes": [
+                  "XS",
+                  "S",
+                  "M"
+                ],
+                "relatedProducts": [],
+                "status": "ACTIVE"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "lookbook-1",
+      "type": "lookbook",
+      "settings": {
+        "title": "Summer 2025",
+        "subtitle": "LOOKBOOK",
+        "image": "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=1000&auto=format&fit=crop",
+        "cta_text": "VIEW LOOKBOOK",
+        "cta_link": "/pages/lookbook"
+      }
+    },
+    {
+      "id": "featured-1",
+      "type": "featured_product",
+      "settings": {
+        "product_handle": "product_1764592328149_rltme4"
+      }
+    },
+    {
+      "id": "grid-1",
+      "type": "collection_grid",
+      "settings": {
+        "items": {
+          "0": {
+            "title": "Women's Resort",
+            "link": "/collections/women",
+            "image": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/screencapture-localhost-3000-women-2025-12-01-11_36_00_74632b0f-39d7-415b-8f5b-60ab7b03631f.png?v=1764663331",
+            "size": "tall",
+            "image_id": "gid://shopify/MediaImage/27174684950563"
+          },
+          "1": {
+            "title": "Men's Casual",
+            "link": "/collections/men",
+            "image": "https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?q=80&w=1000&auto=format&fit=crop",
+            "size": "wide"
+          },
+          "2": {
+            "title": "Home Essentials",
+            "link": "/collections/home",
+            "image": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=1000&auto=format&fit=crop",
+            "size": "wide"
+          },
+          "title": "Home Sa"
+        },
+        "subtitle": "Spring Summer 25']]]]]",
+        "title": "Home S"
+      }
+    }
+  ],
+  "slug": "template-1"
+}

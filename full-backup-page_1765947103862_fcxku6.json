@@ -1,0 +1,80 @@
+{
+  "sections": [
+    {
+      "id": "about-hero-1",
+      "type": "about_hero_banner",
+      "settings": {
+        "image": "https://images.unsplash.com/photo-1558171813-4c088753af8f?q=80&w=2070&auto=format&fit=crop",
+        "heading": "Our Story",
+        "subheading": "Discover who we are"
+      }
+    },
+    {
+      "id": "about-story-1",
+      "type": "about_story_section",
+      "settings": {
+        "heading": "We pride ourselves by following subcultures and translating the essences into fashion just before they become mainstream.",
+        "leftParagraph": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.",
+        "rightParagraph": "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt."
+      }
+    },
+    {
+      "id": "about-image-text-1",
+      "type": "about_image_text_block",
+      "settings": {
+        "image": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/1765095645037-019af7e5-7e8d-760f-b608-5fd2bd04117d_1ce8a2d1-e9bb-47db-a957-5e73269b82a9.png?v=1765947092",
+        "heading": "Minimum is quintessentially bridging our rich nordic heritage with a minimalistic approach to design.",
+        "description": "We believe in creating timeless pieces that transcend seasonal trends, focusing on quality materials and sustainable practices that honor both our heritage and our future."
+      }
+    },
+    {
+      "id": "about-carousel-1",
+      "type": "about_carousel_section",
+      "settings": {
+        "heading": "EXPLORE OUR PORTFOLIO",
+        "images": [
+          {
+            "src": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=800&auto=format&fit=crop",
+            "caption": "SS24 - Runway"
+          },
+          {
+            "src": "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=800&auto=format&fit=crop",
+            "caption": "The Studio"
+          },
+          {
+            "src": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop",
+            "caption": "Craft Store"
+          }
+        ]
+      }
+    },
+    {
+      "id": "about-timeline-1",
+      "type": "about_timeline_section",
+      "settings": {
+        "sectionHeading": "OUR JOURNEY",
+        "items": [
+          {
+            "image": "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop",
+            "heading": "The Beginning in Aarhus",
+            "description": "The company was founded in 2010 in Aarhus, Denmark. The philosophy of the company is founded on the legacy of Scandinavian fashion tradition.",
+            "year": "2010"
+          },
+          {
+            "image": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=800&auto=format&fit=crop",
+            "heading": "Expanding Horizons",
+            "description": "In 2015, we expanded to international markets, bringing our Nordic design philosophy to fashion enthusiasts worldwide.",
+            "year": "2015"
+          },
+          {
+            "image": "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=800&auto=format&fit=crop",
+            "heading": "Sustainable Future",
+            "description": "By 2020, we committed to 100% sustainable materials, leading the industry in eco-conscious fashion practices.",
+            "year": "2020"
+          }
+        ]
+      }
+    }
+  ],
+  "slug": "about-story"
+}

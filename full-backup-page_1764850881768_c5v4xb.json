@@ -1,0 +1,1642 @@
+{
+  "sections": [
+    {
+      "id": "hero-1",
+      "type": "hero_slider",
+      "settings": {
+        "slides": [
+          {
+            "id": "slide-1",
+            "image": "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=2070&auto=format&fit=crop",
+            "heading": "New Season Arrivals",
+            "subheading": "DISCOVER THE LATEST TRENDS",
+            "buttonText": "SHOP COLLECTION",
+            "link": "/pages/coming-soon"
+          },
+          {
+            "id": 1764853268848,
+            "image": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop",
+            "heading": "New Slide Heading",
+            "subheading": "New Subheading",
+            "buttonText": "Shop Now",
+            "link": "/collections/all"
+          }
+        ]
+      }
+    },
+    {
+      "id": "essentials-1",
+      "type": "shop_essentials",
+      "settings": {
+        "title": "Dress up in the heat",
+        "description": "SS21 Series of Comfortable textures. With luxurious, natural-looking makeup, we find reasons for the face. New textures and colors bring new inspiration to your everyday life.",
+        "items": {
+          "items": [
+            {
+              "title": "WOMEN",
+              "products": [
+                {
+                  "id": "gid://shopify/Metaobject/127383306275",
+                  "handle": "product_1765084941471_cwggbh",
+                  "slug": "sweat-pants-a2phfi",
+                  "title": "SWEAT PANTS",
+                  "descriptionHtml": "Sweatpants are comfortable, loose-fitting trousers typically made from soft materials like cotton or polyester, originally designed for athletic purposes but now worn in various situations. They often feature a drawstring or elastic waist and may have elastic cuffs at the ankle",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "1298.99",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510442_4fb11664-372c-434c-9983-16ff9f652e6d.jpg?v=1765084943",
+                          "altText": "SWEAT PANTS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510443.jpg?v=1765084943",
+                          "altText": "SWEAT PANTS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510445.jpg?v=1765084943",
+                          "altText": "SWEAT PANTS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510446.jpg?v=1765084943",
+                          "altText": "SWEAT PANTS"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765084941471_cwggbh",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [
+                    {
+                      "name": "Pink",
+                      "hex": "#EC4899"
+                    }
+                  ],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/127383797795",
+                  "handle": "product_1765085278853_kalwri",
+                  "slug": "beige-joggers-vb6mdx",
+                  "title": "BEIGE JOGGERS",
+                  "descriptionHtml": "THE BEIGE SHADE the JOGGERS are comfortable, loose-fitting trousers typically made from soft materials like cotton or polyester, originally designed for athletic purposes but now worn in various situations. They often feature a drawstring or elastic waist and may have elastic cuffs at the ankle",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "1299",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510459_ca2d560b-c4fd-48e7-aca2-ddb599754ff8.jpg?v=1765085282",
+                          "altText": "BEIGE JOGGERS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510453_ed272157-98ef-4d2d-97bd-c7ea1079c38e.jpg?v=1765085281",
+                          "altText": "BEIGE JOGGERS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510454.jpg?v=1765085281",
+                          "altText": "BEIGE JOGGERS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510456_9f191449-36fb-4a08-b94b-bdb8720958f4.jpg?v=1765085283",
+                          "altText": "BEIGE JOGGERS"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765085278853_kalwri",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [
+                    {
+                      "name": "Beige",
+                      "hex": "#D4C5B0"
+                    }
+                  ],
+                  "sizes": [
+                    "One Size"
+                  ],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/127532367907",
+                  "handle": "product_1765254125359_zo3omz",
+                  "slug": "shorts-pants-smsu0r",
+                  "title": "SHORTS PANTS",
+                  "descriptionHtml": "SHORT are designed for everyday comfort without compromising style — made from a soft, durable cotton-poly blend with 4-way stretch that moves easily through workouts, errands, and lounging. The high-rise waistband flatters the waist, the tapered fit shapes the legs, and the brushed inner lining gives a cozy, cloud-soft feel. Deep functional pockets keep essentials secure, while the fabric stays smooth and pill-free after multiple washes. Lightweight, breathable, and wrinkle-resistant, these sweatpants deliver a confident, relaxed look that fits every moment of the day.",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "1299",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510466.jpg?v=1765254127",
+                          "altText": "SHORTS PANTS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510467.jpg?v=1765254126",
+                          "altText": "SHORTS PANTS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510468.jpg?v=1765254126",
+                          "altText": "SHORTS PANTS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510469.jpg?v=1765254126",
+                          "altText": "SHORTS PANTS"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765254125359_zo3omz",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/127532531747",
+                  "handle": "product_1765254268630_lxf9kp",
+                  "slug": "shorts-2b8gih",
+                  "title": "SHORTS",
+                  "descriptionHtml": "women’s sweat shorts combine everyday comfort with a flattering sporty fit, crafted from a soft cotton-poly blend with 4-way stretch that stays breathable in heat and never loses shape. The high-rise elastic waistband hugs the waist without digging in, while the mid-thigh length adds coverage and confidence for gym, travel, errands, or lounging. A smooth brushed interior keeps them cozy, and deep side pockets actually hold phone and essentials securely. Lightweight, sweat-resistant, and pill-free even after repeated washes, these shorts deliver effortless style and all-day comfort in one easy, go-anywhere piece.",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "799",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510484.jpg?v=1765254268",
+                          "altText": "SHORTS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510483.jpg?v=1765254268",
+                          "altText": "SHORTS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510478.jpg?v=1765254268",
+                          "altText": "SHORTS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510479.jpg?v=1765254268",
+                          "altText": "SHORTS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510480.jpg?v=1765254270",
+                          "altText": "SHORTS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510481.jpg?v=1765254270",
+                          "altText": "SHORTS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510482.jpg?v=1765254270",
+                          "altText": "SHORTS"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765254268630_lxf9kp",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/127532695587",
+                  "handle": "product_1765254378168_nm5840",
+                  "slug": "maroon-sweat-pants-5rs7f0",
+                  "title": "MAROON SWEAT PANTS",
+                  "descriptionHtml": "sweatpants are designed for everyday comfort without compromising style — made from a soft, durable cotton-poly blend with 4-way stretch that moves easily through workouts, errands, and lounging. The high-rise waistband flatters the waist, the tapered fit shapes the legs, and the brushed inner lining gives a cozy, cloud-soft feel. Deep functional pockets keep essentials secure, while the fabric stays smooth and pill-free after multiple washes. Lightweight, breathable, and wrinkle-resistant, these sweatpants deliver a confident, relaxed look that fits every moment of the day.",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "1299",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510493.jpg?v=1765254378",
+                          "altText": "MAROON SWEAT PANTS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510495.jpg?v=1765254378",
+                          "altText": "MAROON SWEAT PANTS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510494.jpg?v=1765254378",
+                          "altText": "MAROON SWEAT PANTS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510491.jpg?v=1765254378",
+                          "altText": "MAROON SWEAT PANTS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510492.jpg?v=1765254379",
+                          "altText": "MAROON SWEAT PANTS"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765254378168_nm5840",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [
+                    {
+                      "name": "Red",
+                      "hex": "#DC2626"
+                    },
+                    {
+                      "name": "MAROON",
+                      "hex": "#7b1e1e"
+                    }
+                  ],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/127532728355",
+                  "handle": "product_1765254459342_m5w74b",
+                  "slug": "dry-fit-d6bh3v",
+                  "title": "DRY FIT",
+                  "descriptionHtml": "These dry-fit track pants are built for performance and comfort, engineered with moisture-wicking stretch fabric that keeps sweat away and stays cool during intense training, running, and everyday wear. The lightweight athletic weave ensures full mobility without cling, while the tapered fit gives a sharp, streamlined look. A secure elastic waistband with drawstring keeps them locked in place through sprints and workouts, and zippered pockets protect phone and essentials without bounce. Quick-dry, wrinkle-free, and breathable, these track pants hold their shape wash after wash, delivering a polished sport-ready style that performs as hard as you do.",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "1199",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510511.jpg?v=1765254461",
+                          "altText": "DRY FIT"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510512.jpg?v=1765254460",
+                          "altText": "DRY FIT"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510513.jpg?v=1765254461",
+                          "altText": "DRY FIT"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510514.jpg?v=1765254460",
+                          "altText": "DRY FIT"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765254459342_m5w74b",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [
+                    {
+                      "name": "Pink",
+                      "hex": "#EC4899"
+                    }
+                  ],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/127532892195",
+                  "handle": "product_1765254637402_gr4hjp",
+                  "slug": "beige-womens-joggers-v2dv61",
+                  "title": "BEIGE WOMEN'S JOGGERS",
+                  "descriptionHtml": "These beige women’s joggers balance comfort and style with a premium cotton-blend fabric that feels soft on the skin while holding its shape all day. The high-rise waistband defines the waist without squeezing, and the tapered ankle fit creates a clean, flattering silhouette whether paired with a crop top, tank, or hoodie. Deep side pockets add everyday convenience, while the brushed inner lining keeps them cozy for travel, gym warm-ups, and casual outings. Lightweight, breathable, and wrinkle-resistant, these joggers deliver an effortlessly classy neutral look that goes with every outfit and every season.",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "1199",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510531.jpg?v=1765254636",
+                          "altText": "BEIGE WOMEN'S JOGGERS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510534.jpg?v=1765254637",
+                          "altText": "BEIGE WOMEN'S JOGGERS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510529.jpg?v=1765254637",
+                          "altText": "BEIGE WOMEN'S JOGGERS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510530.jpg?v=1765254636",
+                          "altText": "BEIGE WOMEN'S JOGGERS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510532.jpg?v=1765254639",
+                          "altText": "BEIGE WOMEN'S JOGGERS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510533.jpg?v=1765254638",
+                          "altText": "BEIGE WOMEN'S JOGGERS"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510535.jpg?v=1765254638",
+                          "altText": "BEIGE WOMEN'S JOGGERS"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765254637402_gr4hjp",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [
+                    {
+                      "name": "Beige",
+                      "hex": "#D4C5B0"
+                    }
+                  ],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/127532957731",
+                  "handle": "product_1765254725624_925oql",
+                  "slug": "tshirt-2qrq34",
+                  "title": "TSHIRT",
+                  "descriptionHtml": "These comfy T-shirts are made for everyday wear with a premium soft-touch cotton blend that feels light, breathable, and smooth from morning to night. The relaxed fit drapes naturally over the body without looking baggy, while the ribbed crewneck keeps its shape even after repeated washes. Designed for comfort in every season, the fabric absorbs sweat without sticking to the skin and stays cool in heat yet cozy indoors. Durable, pill-resistant, and color-fast, these tees pair effortlessly with joggers, jeans, shorts, or leggings for a clean, casual look that never goes out of style.",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "599",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510541.jpg?v=1765254725",
+                          "altText": "TSHIRT"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510542.jpg?v=1765254725",
+                          "altText": "TSHIRT"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510543.jpg?v=1765254725",
+                          "altText": "TSHIRT"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510544.jpg?v=1765254725",
+                          "altText": "TSHIRT"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510545.jpg?v=1765254727",
+                          "altText": "TSHIRT"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510546.jpg?v=1765254726",
+                          "altText": "TSHIRT"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765254725624_925oql",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/127533219875",
+                  "handle": "product_1765254884485_kfpsbs",
+                  "slug": "truecomfort-tee-cpc3jt",
+                  "title": "TrueComfort Tee",
+                  "descriptionHtml": "The TrueComfort Tee is crafted for women who want softness without compromise, made from a premium cotton-modal blend that feels feather-light, breathable, and smooth against the skin all day. Its relaxed feminine fit drapes naturally while maintaining a clean silhouette, and the ribbed neckline holds shape wash after wash. Designed for every season, the fabric absorbs sweat without clinging, resists piling, and keeps colors rich over time. Whether paired with joggers for a cozy look, jeans for casual outings, or shorts for summer days, the TrueComfort Tee delivers effortless comfort and timeless style in one essential piece.",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "599",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510604.jpg?v=1765254886",
+                          "altText": "TrueComfort Tee"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510605.jpg?v=1765254885",
+                          "altText": "TrueComfort Tee"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510606.jpg?v=1765254883",
+                          "altText": "TrueComfort Tee"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510608.jpg?v=1765254883",
+                          "altText": "TrueComfort Tee"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510609.jpg?v=1765254884",
+                          "altText": "TrueComfort Tee"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765254884485_kfpsbs",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [
+                    {
+                      "name": "White",
+                      "hex": "#FFFFFF"
+                    }
+                  ],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/127533383715",
+                  "handle": "product_1765254995494_3wehlc",
+                  "slug": "cloudsoft-slim-tee-urgi4h",
+                  "title": "CloudSoft Slim Tee",
+                  "descriptionHtml": "TheCloudSoft Slim Tee Tee is crafted for women who want softness without compromise, made from a premium cotton-modal blend that feels feather-light, breathable, and smooth against the skin all day. Its relaxed feminine fit drapes naturally while maintaining a clean silhouette, and the ribbed neckline holds shape wash after wash. Designed for every season, the fabric absorbs sweat without clinging, resists piling, and keeps colors rich over time. Whether paired with joggers for a cozy look, jeans for casual outings, or shorts for summer days, the CloudSoft Slim Tee Tee delivers effortless comfort and timeless style in one essential piece",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "599",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510622.jpg?v=1765254997",
+                          "altText": "CloudSoft Slim Tee"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510619.jpg?v=1765254996",
+                          "altText": "CloudSoft Slim Tee"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510620.jpg?v=1765254995",
+                          "altText": "CloudSoft Slim Tee"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510621.jpg?v=1765254996",
+                          "altText": "CloudSoft Slim Tee"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510623.jpg?v=1765254996",
+                          "altText": "CloudSoft Slim Tee"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510624.jpg?v=1765254996",
+                          "altText": "CloudSoft Slim Tee"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765254995494_3wehlc",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [
+                    {
+                      "name": "Black",
+                      "hex": "#000000"
+                    }
+                  ],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/127533547555",
+                  "handle": "product_1765255100364_q3hgvt",
+                  "slug": "truecomfort-dkn8t3",
+                  "title": "TrueComfort",
+                  "descriptionHtml": "The TrueComfort Tee is crafted for women who want softness without compromise, made from a premium cotton-modal blend that feels feather-light, breathable, and smooth against the skin all day. Its relaxed feminine fit drapes naturally while maintaining a clean silhouette, and the ribbed neckline holds shape wash after wash. Designed for every season, the fabric absorbs sweat without clinging, resists piling, and keeps colors rich over time. Whether paired with joggers for a cozy look, jeans for casual outings, or shorts for summer days, the TrueComfort Tee delivers effortless comfort and timeless style in one essential piece.",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "599",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510631.jpg?v=1765255101",
+                          "altText": "TrueComfort"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510632.jpg?v=1765255100",
+                          "altText": "TrueComfort"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510633.jpg?v=1765255101",
+                          "altText": "TrueComfort"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510634.jpg?v=1765255100",
+                          "altText": "TrueComfort"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510635.jpg?v=1765255101",
+                          "altText": "TrueComfort"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510636.jpg?v=1765255101",
+                          "altText": "TrueComfort"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510637.jpg?v=1765255101",
+                          "altText": "TrueComfort"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765255100364_q3hgvt",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [
+                    {
+                      "name": "Pink",
+                      "hex": "#EC4899"
+                    }
+                  ],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/127533940771",
+                  "handle": "product_1765255289244_oidt3j",
+                  "slug": "barebasics-tee-q95w2a",
+                  "title": "BareBasics Tee",
+                  "descriptionHtml": "The BareBasics Tee is built on the idea that comfort doesn’t need complication — crafted from an ultra-soft combed cotton blend that feels smooth, breathable, and gentle on the skin from morning to night. The minimal design features a relaxed feminine fit that flatters naturally without being oversized, while the ribbed crew neckline and reinforced stitching ensure durability through repeated washes. Lightweight, sweat-friendly, and color-stable, this T-shirt pairs effortlessly with denim, joggers, shorts, or leggings for an everyday look that’s simple, timeless, and reliably comfortable.",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "599",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510564.jpg?v=1765255290",
+                          "altText": "BareBasics Tee"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510562.jpg?v=1765255290",
+                          "altText": "BareBasics Tee"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510563.jpg?v=1765255289",
+                          "altText": "BareBasics Tee"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510561.jpg?v=1765255290",
+                          "altText": "BareBasics Tee"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765255289244_oidt3j",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [
+                    {
+                      "name": "White",
+                      "hex": "#FFFFFF"
+                    }
+                  ],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/127534071843",
+                  "handle": "product_1765255400609_bs629v",
+                  "slug": "barebasics-tee-x3n7nu",
+                  "title": "BareBasics TEE",
+                  "descriptionHtml": "The BareBasics Tee is built on the idea that comfort doesn’t need complication — crafted from an ultra-soft combed cotton blend that feels smooth, breathable, and gentle on the skin from morning to night. The minimal design features a relaxed feminine fit that flatters naturally without being oversized, while the ribbed crew neckline and reinforced stitching ensure durability through repeated washes. Lightweight, sweat-friendly, and color-stable, this T-shirt pairs effortlessly with denim, joggers, shorts, or leggings for an everyday look that’s simple, timeless, and reliably comfortable.",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "599",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510555_26f52b70-3a54-4b13-9f11-09edafb5efcd.jpg?v=1765255400",
+                          "altText": "BareBasics TEE"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510554_93537ac7-b293-47eb-bb52-f09a7fe6ec67.jpg?v=1765255400",
+                          "altText": "BareBasics TEE"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510556.jpg?v=1765255400",
+                          "altText": "BareBasics TEE"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510557.jpg?v=1765255401",
+                          "altText": "BareBasics TEE"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/18.11.202510558.jpg?v=1765255402",
+                          "altText": "BareBasics TEE"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765255400609_bs629v",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [
+                    {
+                      "name": "Black",
+                      "hex": "#000000"
+                    }
+                  ],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/127534301219",
+                  "handle": "product_1765255568686_sv8vdz",
+                  "slug": "urban-runner-pants-qjb74j",
+                  "title": "Urban Runner Pants",
+                  "descriptionHtml": "The UrbanRunner Pants are built for women who live in motion — blending athletic performance with street-ready style. Crafted from a lightweight, moisture-wicking stretch fabric, they stay cool and dry through workouts, travel, and long days on the move. The high-rise elastic waistband shapes the waist without digging in, while the slim-tapered fit delivers a sleek, confident silhouette that pairs effortlessly with tees, sports bras, and hoodies. Deep zippered pockets secure essentials on the go, and the wrinkle-free, quick-dry fabric holds its form wash after wash. From gym sessions to city streets, the UrbanRunner Pants deliver comfort, mobility, and attitude in one versatile piece.",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "999",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG06884_____N_M_C.jpg?v=1765255569",
+                          "altText": "Urban Runner Pants"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG06887_____N_M_C.jpg?v=1765255570",
+                          "altText": "Urban Runner Pants"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG06894_____N_M_C.jpg?v=1765255569",
+                          "altText": "Urban Runner Pants"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG06896_____N_M_C.jpg?v=1765255569",
+                          "altText": "Urban Runner Pants"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765255568686_sv8vdz",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/127534399523",
+                  "handle": "product_1765255633951_ap703j",
+                  "slug": "urbanrunner-dry-fit-pants-jcksi2",
+                  "title": "UrbanRunner DRY FIT Pants",
+                  "descriptionHtml": "The UrbanRunner Pants are built for women who live in motion — blending athletic performance with street-ready style. Crafted from a lightweight, moisture-wicking stretch fabric, they stay cool and dry through workouts, travel, and long days on the move. The high-rise elastic waistband shapes the waist without digging in, while the slim-tapered fit delivers a sleek, confident silhouette that pairs effortlessly with tees, sports bras, and hoodies. Deep zippered pockets secure essentials on the go, and the wrinkle-free, quick-dry fabric holds its form wash after wash. From gym sessions to city streets, the UrbanRunner Pants deliver comfort, mobility, and attitude in one versatile piece.",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "998.99",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG07042_____N_M_C.jpg?v=1765255635",
+                          "altText": "UrbanRunner DRY FIT Pants"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG07044_____N_M_C.jpg?v=1765255635",
+                          "altText": "UrbanRunner DRY FIT Pants"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG07032_____N_M_C.jpg?v=1765255635",
+                          "altText": "UrbanRunner DRY FIT Pants"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG07045_____N_M_C.jpg?v=1765255635",
+                          "altText": "UrbanRunner DRY FIT Pants"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765255633951_ap703j",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [
+                    {
+                      "name": "Gray",
+                      "hex": "#6B7280"
+                    }
+                  ],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/127534563363",
+                  "handle": "product_1765255857199_a347ha",
+                  "slug": "urbanrunner-dry-fit-pants-th8sh4",
+                  "title": "UrbanRunner  DRY FIT Pants",
+                  "descriptionHtml": "The UrbanRunner Pants are built for women who live in motion — blending athletic performance with street-ready style. Crafted from a lightweight, moisture-wicking stretch fabric, they stay cool and dry through workouts, travel, and long days on the move. The high-rise elastic waistband shapes the waist without digging in, while the slim-tapered fit delivers a sleek, confident silhouette that pairs effortlessly with tees, sports bras, and hoodies. Deep zippered pockets secure essentials on the go, and the wrinkle-free, quick-dry fabric holds its form wash after wash. From gym sessions to city streets, the UrbanRunner Pants deliver comfort, mobility, and attitude in one versatile piece.",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "999",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG07082_____N_M_C.jpg?v=1765255857",
+                          "altText": "UrbanRunner  DRY FIT Pants"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG07087_____N_M_C.jpg?v=1765255857",
+                          "altText": "UrbanRunner  DRY FIT Pants"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG07075_____N_M_C.jpg?v=1765255857",
+                          "altText": "UrbanRunner  DRY FIT Pants"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG07084_____N_M_C.jpg?v=1765255857",
+                          "altText": "UrbanRunner  DRY FIT Pants"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG07086_____N_M_C.jpg?v=1765255858",
+                          "altText": "UrbanRunner  DRY FIT Pants"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765255857199_a347ha",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [
+                    {
+                      "name": "Black",
+                      "hex": "#000000"
+                    }
+                  ],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/127534858275",
+                  "handle": "product_1765256373244_b30xmx",
+                  "slug": "urbanrunner-dry-fit-pants-zdofun",
+                  "title": "UrbanRunner DRY FIT Pants",
+                  "descriptionHtml": "The UrbanRunner Pants are built for women who live in motion — blending athletic performance with street-ready style. Crafted from a lightweight, moisture-wicking stretch fabric, they stay cool and dry through workouts, travel, and long days on the move. The high-rise elastic waistband shapes the waist without digging in, while the slim-tapered fit delivers a sleek, confident silhouette that pairs effortlessly with tees, and hoodies. Deep zippered pockets secure essentials on the go, and the wrinkle-free, quick-dry fabric holds its form wash after wash. From gym sessions to city streets, the UrbanRunner Pants deliver comfort, mobility, and attitude in one versatile piece.",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "999",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG07095_____N_M_C.jpg?v=1765256374",
+                          "altText": "UrbanRunner DRY FIT Pants"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG07099_____N_M_C.jpg?v=1765256374",
+                          "altText": "UrbanRunner DRY FIT Pants"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG07088_____N_M_C.jpg?v=1765256374",
+                          "altText": "UrbanRunner DRY FIT Pants"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG07097_____N_M_C.jpg?v=1765256374",
+                          "altText": "UrbanRunner DRY FIT Pants"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG07100_____N_M_C.jpg?v=1765256374",
+                          "altText": "UrbanRunner DRY FIT Pants"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765256373244_b30xmx",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/127535448099",
+                  "handle": "product_1765256516305_40i2cs",
+                  "slug": "pureactive-dry-fit-pants-ujr2l5",
+                  "title": "PureActive DRY FIT Pants",
+                  "descriptionHtml": "The UrbanRunner Pants are built for women who live in motion — blending athletic performance with street-ready style. Crafted from a lightweight, moisture-wicking stretch fabric, they stay cool and dry through workouts, travel, and long days on the move. The high-rise elastic waistband shapes the waist without digging in, while the slim-tapered fit delivers a sleek, confident silhouette that pairs effortlessly with tees, sports bras, and hoodies. Deep zippered pockets secure essentials on the go, and the wrinkle-free, quick-dry fabric holds its form wash after wash. From gym sessions to city streets, thePants deliver comfort, mobility, and attitude in one versatile piece.",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "999",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG06856_____N_M_C.jpg?v=1765256517",
+                          "altText": "PureActive DRY FIT Pants"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG06846_____N_M_C.jpg?v=1765256517",
+                          "altText": "PureActive DRY FIT Pants"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG06861_____N_M_C.jpg?v=1765256517",
+                          "altText": "PureActive DRY FIT Pants"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG06863_____N_M_C.jpg?v=1765256517",
+                          "altText": "PureActive DRY FIT Pants"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG06864_____N_M_C.jpg?v=1765256517",
+                          "altText": "PureActive DRY FIT Pants"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765256516305_40i2cs",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/127535513635",
+                  "handle": "product_1765256583920_f3zopc",
+                  "slug": "pureactive-dry-fit-pants-tpcbd3",
+                  "title": "PureActive  DRY FIT Pants",
+                  "descriptionHtml": "The Pants are built for women who live in motion — blending athletic performance with street-ready style. Crafted from a lightweight, moisture-wicking stretch fabric, they stay cool and dry through workouts, travel, and long days on the move. The high-rise elastic waistband shapes the waist without digging in, while the slim-tapered fit delivers a sleek, confident silhouette that pairs effortlessly with tees, sports bras, and hoodies. Deep zippered pockets secure essentials on the go, and the wrinkle-free, quick-dry fabric holds its form wash after wash. From gym sessions to city streets, the  Pants deliver comfort, mobility, and attitude in one versatile piece.",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "598.99",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG07028_____N_M_C.jpg?v=1765256584",
+                          "altText": "PureActive  DRY FIT Pants"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG07019_____N_M_C.jpg?v=1765256584",
+                          "altText": "PureActive  DRY FIT Pants"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG07030_____N_M_C.jpg?v=1765256585",
+                          "altText": "PureActive  DRY FIT Pants"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG07031_____N_M_C.jpg?v=1765256585",
+                          "altText": "PureActive  DRY FIT Pants"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765256583920_f3zopc",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [
+                    {
+                      "name": "Black",
+                      "hex": "#000000"
+                    }
+                  ],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/128351404067",
+                  "handle": "product_1765601424027_udhl38",
+                  "slug": "grace-line-georgette-shirt-5wm5pl",
+                  "title": "Grace Line  Georgette Shirt",
+                  "descriptionHtml": "Grace Line Georgette Shirt is designed for women who prefer elegance with authority. Crafted from lightweight georgette fabric, it offers a smooth, breathable feel with a soft natural drape that elevates formal wear effortlessly. The tailored silhouette ensures a polished appearance, while the 3/4th sleeves strike the perfect balance between professionalism and comfort. Ideal for office wear, meetings, or formal occasions, this shirt delivers a refined look that stays sharp all day without compromising ease of movement.",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "699",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00003_____N_M_C.jpg?v=1765601424",
+                          "altText": "Grace Line  Georgette Shirt"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00005_____N_M_C.jpg?v=1765601424",
+                          "altText": "Grace Line  Georgette Shirt"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00001_____N_M_C.jpg?v=1765601424",
+                          "altText": "Grace Line  Georgette Shirt"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00007_____N_M_C.jpg?v=1765601425",
+                          "altText": "Grace Line  Georgette Shirt"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765601424027_udhl38",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [
+                    {
+                      "name": "Blue",
+                      "hex": "#2563EB"
+                    }
+                  ],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/128351502371",
+                  "handle": "product_1765601495540_mj4ab4",
+                  "slug": "grace-line-georgette-baby-pink-shirt-fcsrf5",
+                  "title": "Grace Line Georgette BABY PINK Shirt",
+                  "descriptionHtml": "Grace Line Georgette Shirt is designed for women who prefer elegance with authority. Crafted from lightweight georgette fabric, it offers a smooth, breathable feel with a soft natural drape that elevates formal wear effortlessly. The tailored silhouette ensures a polished appearance, while the 3/4th sleeves strike the perfect balance between professionalism and comfort. Ideal for office wear, meetings, or formal occasions, this shirt delivers a refined look that stays sharp all day without compromising ease of movement.",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "698.98",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00021_____N_M_C.jpg?v=1765601496",
+                          "altText": "Grace Line Georgette BABY PINK Shirt"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00022_____N_M_C_-_Copy.jpg?v=1765601496",
+                          "altText": "Grace Line Georgette BABY PINK Shirt"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00013_____N_M_C.jpg?v=1765601496",
+                          "altText": "Grace Line Georgette BABY PINK Shirt"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00010_____N_M_C.jpg?v=1765601496",
+                          "altText": "Grace Line Georgette BABY PINK Shirt"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765601495540_mj4ab4",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [
+                    {
+                      "name": "Pink",
+                      "hex": "#EC4899"
+                    }
+                  ],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/128351600675",
+                  "handle": "product_1765601605087_w15lfp",
+                  "slug": "grace-line-georgette-shirt-3wmovo",
+                  "title": "Grace Line Georgette Shirt",
+                  "descriptionHtml": "Grace Line Georgette Shirt is designed for women who prefer elegance with authority. Crafted from lightweight georgette fabric, it offers a smooth, breathable feel with a soft natural drape that elevates formal wear effortlessly. The tailored silhouette ensures a polished appearance, while the 3/4th sleeves strike the perfect balance between professionalism and comfort. Ideal for office wear, meetings, or formal occasions, this shirt delivers a refined look that stays sharp all day without compromising ease of movement.",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "698.98",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00038_____N_M_C.jpg?v=1765601605",
+                          "altText": "Grace Line Georgette Shirt"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00043_____N_M_C.jpg?v=1765601606",
+                          "altText": "Grace Line Georgette Shirt"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00035_____N_M_C.jpg?v=1765601605",
+                          "altText": "Grace Line Georgette Shirt"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00026_____N_M_C.jpg?v=1765601605",
+                          "altText": "Grace Line Georgette Shirt"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765601605087_w15lfp",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [
+                    {
+                      "name": "Green",
+                      "hex": "#16A34A"
+                    }
+                  ],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/128352059427",
+                  "handle": "product_1765601771334_omwqqj",
+                  "slug": "grace-line-georgette-shirt-rsuoli",
+                  "title": "Grace Line Georgette Shirt",
+                  "descriptionHtml": "Grace Line Georgette Shirt is designed for women who prefer elegance with authority. Crafted from lightweight georgette fabric, it offers a smooth, breathable feel with a soft natural drape that elevates formal wear effortlessly. The tailored silhouette ensures a polished appearance, while the 3/4th sleeves strike the perfect balance between professionalism and comfort. Ideal for office wear, meetings, or formal occasions, this shirt delivers a refined look that stays sharp all day without compromising ease of movement.",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "699",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00079_____N_M_C.jpg?v=1765601771",
+                          "altText": "Grace Line Georgette Shirt"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00089_____N_M_C.jpg?v=1765601772",
+                          "altText": "Grace Line Georgette Shirt"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00082_____N_M_C.jpg?v=1765601771",
+                          "altText": "Grace Line Georgette Shirt"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00091_____N_M_C.jpg?v=1765601772",
+                          "altText": "Grace Line Georgette Shirt"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00077_____N_M_C.jpg?v=1765601771",
+                          "altText": "Grace Line Georgette Shirt"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765601771334_omwqqj",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [
+                    {
+                      "name": "Green",
+                      "hex": "#16A34A"
+                    }
+                  ],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                },
+                {
+                  "id": "gid://shopify/Metaobject/128352223267",
+                  "handle": "product_1765601969264_68ib0h",
+                  "slug": "grace-line-georgette-shirt-qgxjws",
+                  "title": "Grace Line Georgette Shirt",
+                  "descriptionHtml": "Grace Line Georgette Shirt is designed for women who prefer elegance with authority. Crafted from lightweight georgette fabric, it offers a smooth, breathable feel with a soft natural drape that elevates formal wear effortlessly. The tailored silhouette ensures a polished appearance, while the 3/4th sleeves strike the perfect balance between professionalism and comfort. Ideal for office wear, meetings, or formal occasions, this shirt delivers a refined look that stays sharp all day without compromising ease of movement.",
+                  "priceRange": {
+                    "minVariantPrice": {
+                      "amount": "698.98",
+                      "currencyCode": "INR"
+                    }
+                  },
+                  "images": {
+                    "edges": [
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00274_____N_M_C.jpg?v=1765601969",
+                          "altText": "Grace Line Georgette Shirt"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00269_____N_M_C.jpg?v=1765601969",
+                          "altText": "Grace Line Georgette Shirt"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00264_____N_M_C.jpg?v=1765601970",
+                          "altText": "Grace Line Georgette Shirt"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00262_____N_M_C.jpg?v=1765601969",
+                          "altText": "Grace Line Georgette Shirt"
+                        }
+                      },
+                      {
+                        "node": {
+                          "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/SRK.IMG00275_____N_M_C.jpg?v=1765601970",
+                          "altText": "Grace Line Georgette Shirt"
+                        }
+                      }
+                    ]
+                  },
+                  "variants": {
+                    "edges": [
+                      {
+                        "node": {
+                          "id": "variant_product_1765601969264_68ib0h",
+                          "title": "Default"
+                        }
+                      }
+                    ]
+                  },
+                  "colors": [],
+                  "sizes": [],
+                  "relatedProducts": [],
+                  "video": null,
+                  "status": "ACTIVE"
+                }
+              ]
+            },
+            {
+              "title": "MEN",
+              "products": []
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lookbook-1",
+      "type": "lookbook",
+      "settings": {
+        "title": "Summer 2025  \nLookbook ",
+        "subtitle": "LOOKBOOK",
+        "image": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/IMG-20251129-WA0006.jpg?v=1764850947",
+        "cta_text": "VIEW LOOKBOOK",
+        "cta_link": "/pages/coming-soon",
+        "success": true,
+        "fileId": "gid://shopify/MediaImage/27177937993763",
+        "url": "https://cdn.shopify.com/s/files/1/0725/3894/7619/files/IMG-20251129-WA0006.jpg?v=1764850947",
+        "image_id": "gid://shopify/MediaImage/27177937993763"
+      }
+    },
+    {
+      "id": "featured-1",
+      "type": "featured_product",
+      "settings": {
+        "product_handle": "product_1764695298433_rvkdwa"
+      }
+    },
+    {
+      "id": "grid-1",
+      "type": "collection_grid",
+      "settings": {
+        "items": []
+      }
+    }
+  ],
+  "slug": "women-new",
+  "metaobject_handle": "page_1764850881768_c5v4xb",
+  "metaobject_id": "gid://shopify/Metaobject/127168315427"
+}

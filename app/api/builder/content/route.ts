@@ -117,27 +117,35 @@ export async function GET(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const handle = searchParams.get("handle");
+    const directId = searchParams.get("id"); // New: accept ID directly
 
-    if (!handle) {
-        return NextResponse.json({ error: "Missing handle" }, { status: 400 });
+    if (!handle && !directId) {
+        return NextResponse.json({ error: "Missing handle or id" }, { status: 400 });
     }
 
     try {
-        // 1. Find the page to get its ID
-        const page = await getPageContentBySlug(handle);
-        if (!page || !page.metaobject_id) {
-            return NextResponse.json({ error: "Page not found" }, { status: 404 });
+        let metaobjectId = directId;
+
+        // If no direct ID provided, look up by handle/slug
+        if (!metaobjectId) {
+            const page = await getPageContentBySlug(handle!);
+            if (!page || !page.metaobject_id) {
+                return NextResponse.json({ error: "Page not found" }, { status: 404 });
+            }
+            metaobjectId = page.metaobject_id;
         }
 
-        // 2. Delete it
-        await deletePageContent(page.metaobject_id);
+        // Delete the metaobject
+        await deletePageContent(metaobjectId as string);
 
+        console.log(`[DELETE] Successfully deleted page: handle=${handle}, id=${metaobjectId}`);
         return NextResponse.json({ success: true });
     } catch (error: any) {
         console.error("Failed to delete page:", error);
         return NextResponse.json({ error: error.message || "Failed to delete page" }, { status: 500 });
     }
 }
+
 
 import fs from 'fs';
 import path from 'path';
