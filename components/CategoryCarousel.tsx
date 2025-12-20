@@ -208,7 +208,7 @@ export default function CategoryCarousel({
                                         className="object-cover"
                                         sizes="(max-width: 768px) 166px, (max-width: 1200px) 332px, 664px"
                                         quality={90}
-                                        unoptimized={category.image.includes('shopify') || category.image.includes('cdn.shopify')}
+                                        unoptimized={category.image.includes('cdn.shopify')}
                                     />
                                     <div className="absolute inset-0 bg-black/30 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
                                         <Upload size={24} className="text-white" />
@@ -231,7 +231,7 @@ export default function CategoryCarousel({
                                             className="object-cover transition-transform duration-300 group-hover:scale-105"
                                             sizes="(max-width: 768px) 166px, (max-width: 1200px) 332px, 664px"
                                             quality={90}
-                                            unoptimized={category.image.includes('shopify') || category.image.includes('cdn.shopify')}
+                                            unoptimized={category.image.includes('cdn.shopify')}
                                         />
                                     </div>
                                 </Link>

@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    // Skip optimization for Shopify CDN - they already serve optimized images
+    unoptimized: false,
     remotePatterns: [
       {
         protocol: "https",
@@ -16,6 +21,8 @@ const nextConfig: NextConfig = {
         hostname: "pub-bc73237650a24175b763c871869b4cf9.r2.dev",
       },
     ],
+    // Increase minimumCacheTTL for production performance
+    minimumCacheTTL: 60 * 60 * 24, // 24 hours
   },
   async headers() {
     return [

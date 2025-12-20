@@ -133,7 +133,7 @@ export default function FocalOnYou({
                                 className="object-cover"
                                 sizes="(max-width: 768px) 96px, 166px"
                                 quality={90}
-                                unoptimized={item.image.includes('shopify') || item.image.includes('cdn.shopify')}
+                                unoptimized={item.image.includes('cdn.shopify')}
                             />
 
                             {/* Edit Mode Upload Overlay */}

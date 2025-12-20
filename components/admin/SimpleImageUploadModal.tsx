@@ -20,7 +20,7 @@ export default function SimpleImageUploadModal({
     onClose,
     onUpload,
     title = "Upload Image",
-    accept = "image/*",
+    accept = "image/*,.heic,.heif",
     aspectRatio
 }: SimpleImageUploadModalProps) {
     const isVideo = accept.includes("video");
@@ -199,7 +199,7 @@ export default function SimpleImageUploadModal({
                                 <>
                                     <Upload size={48} className="text-gray-400 mb-4" />
                                     <p className="text-sm text-gray-500 font-medium">Click to upload {isVideo ? "video" : "image"} <span className="text-gray-400 font-normal">(or Ctrl+V)</span></p>
-                                    <p className="text-xs text-gray-400 mt-1">{isVideo ? "MP4, WEBM up to 100MB" : "JPG, PNG, WEBP up to 2MB"}</p>
+                                    <p className="text-xs text-gray-400 mt-1">{isVideo ? "MP4, WEBM up to 100MB" : "JPG, PNG, WEBP, HEIC up to 10MB"}</p>
                                 </>
                             )}
                             <input
