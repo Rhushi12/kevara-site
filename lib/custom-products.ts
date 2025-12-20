@@ -65,8 +65,10 @@ export interface CustomProductInput {
   description: string;
   price: string;
   currency?: string;
-  imageGids?: string[]; // Shopify File GIDs
-  videoGid?: string; // Shopify Video GID
+  imageGids?: string[]; // Shopify File GIDs (legacy)
+  imageUrls?: string[]; // Direct R2 URLs (new)
+  videoGid?: string; // Shopify Video GID (legacy)
+  videoUrl?: string; // Direct R2 URL (new)
   colors?: Array<{ name: string; hex: string }>;
   sizes?: string[];
   status?: string;
@@ -140,7 +142,7 @@ export async function createCustomProduct(data: CustomProductInput) {
     { key: "slug", value: slug }
   ];
 
-  // Add image GIDs as JSON string if provided
+  // Add image GIDs as JSON string if provided (legacy Shopify Files flow)
   if (data.imageGids && data.imageGids.length > 0) {
     fields.push({
       key: "images",
@@ -148,11 +150,27 @@ export async function createCustomProduct(data: CustomProductInput) {
     });
   }
 
-  // Add video GID if provided
+  // Add R2 image URLs directly if provided (new R2 flow - preferred)
+  if (data.imageUrls && data.imageUrls.length > 0) {
+    fields.push({
+      key: "image_urls",
+      value: JSON.stringify(data.imageUrls)
+    });
+  }
+
+  // Add video GID if provided (legacy)
   if (data.videoGid) {
     fields.push({
       key: "video",
       value: data.videoGid
+    });
+  }
+
+  // Add video URL if provided (new R2 flow)
+  if (data.videoUrl) {
+    fields.push({
+      key: "video_url",
+      value: data.videoUrl
     });
   }
 
@@ -176,9 +194,16 @@ export async function createCustomProduct(data: CustomProductInput) {
 
   console.log(`[createCustomProduct] Product created with ID: ${metaobjectId}`);
 
-  // Poll for image URLs to ensure they're ready before returning
+  // Determine final image URLs
   let imageUrls: string[] = [];
-  if (data.imageGids && data.imageGids.length > 0) {
+
+  // If R2 URLs are provided, use them directly (no polling needed!)
+  if (data.imageUrls && data.imageUrls.length > 0) {
+    imageUrls = data.imageUrls;
+    console.log(`[createCustomProduct] Using ${imageUrls.length} R2 image URLs directly`);
+  }
+  // Legacy flow: poll for image URLs from Shopify File GIDs
+  else if (data.imageGids && data.imageGids.length > 0) {
     console.log(`[createCustomProduct] Polling for ${data.imageGids.length} image URLs in parallel...`);
 
     // Concurrently poll for all URLs

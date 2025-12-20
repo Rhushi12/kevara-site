@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Heart, Save, X, Plus, Trash2 } from "lucide-react";
+import { Heart, Save, X, Plus } from "lucide-react";
 import LiquidButton from "@/components/ui/LiquidButton";
 import { useSizeGuideStore } from "@/lib/store";
 import { useAuth } from "@/context/AuthContext";
@@ -20,19 +20,6 @@ interface EditableProductInfoProps {
 }
 
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
-const DEFAULT_COLORS = [
-    { name: "Black", hex: "#18181B" },
-    { name: "White", hex: "#FFFFFF" },
-    { name: "Blue", hex: "#1E3A8A" },
-    { name: "Red", hex: "#B91C1C" },
-    { name: "Beige", hex: "#D4D4D8" },
-    { name: "Grey", hex: "#71717A" },
-    { name: "Brown", hex: "#78350F" },
-    { name: "Olive", hex: "#555B46" },
-    { name: "Sand", hex: "#D8C8B8" },
-    { name: "Purple", hex: "#6B21A8" },
-    { name: "Green", hex: "#15803d" },
-];
 
 export default function EditableProductInfo({
     title,
@@ -45,7 +32,6 @@ export default function EditableProductInfo({
     onProductUpdate
 }: EditableProductInfoProps) {
     const { isAdmin } = useAuth();
-    const [selectedColor, setSelectedColor] = useState(colors[0]?.name || "");
     const [selectedSize, setSelectedSize] = useState(sizes[0] || "");
     const { openSizeGuide } = useSizeGuideStore();
 
@@ -57,13 +43,8 @@ export default function EditableProductInfo({
     const [editedTitle, setEditedTitle] = useState(title);
     const [editedPrice, setEditedPrice] = useState(price.toString());
     const [editedDescription, setEditedDescription] = useState(description);
-    const [editedColors, setEditedColors] = useState(colors);
     const [editedSizes, setEditedSizes] = useState(sizes);
 
-    // Color picker state
-    const [newColorName, setNewColorName] = useState("");
-    const [newColorHex, setNewColorHex] = useState("#000000");
-    const [showColorPicker, setShowColorPicker] = useState(false);
     const [showInquiryModal, setShowInquiryModal] = useState(false);
     const { showToast } = useToast();
 
@@ -75,14 +56,12 @@ export default function EditableProductInfo({
         setEditedTitle(title);
         setEditedPrice(price.toString());
         setEditedDescription(description);
-        setEditedColors([...colors]);
         setEditedSizes([...sizes]);
         setIsEditMode(true);
     };
 
     const handleCancelEdit = () => {
         setIsEditMode(false);
-        setShowColorPicker(false);
     };
 
     const handleSave = async () => {
@@ -96,7 +75,6 @@ export default function EditableProductInfo({
                     title: editedTitle,
                     price: editedPrice,
                     description: editedDescription,
-                    colors: editedColors,
                     sizes: editedSizes
                 })
             });
@@ -112,7 +90,6 @@ export default function EditableProductInfo({
                     title: editedTitle,
                     price: parseFloat(editedPrice),
                     descriptionHtml: editedDescription,
-                    colors: editedColors,
                     sizes: editedSizes
                 });
             }
@@ -129,25 +106,6 @@ export default function EditableProductInfo({
         }
     };
 
-    const addColor = () => {
-        if (newColorName.trim()) {
-            setEditedColors([...editedColors, { name: newColorName.trim(), hex: newColorHex }]);
-            setNewColorName("");
-            setNewColorHex("#000000");
-            setShowColorPicker(false);
-        }
-    };
-
-    const removeColor = (index: number) => {
-        setEditedColors(editedColors.filter((_, i) => i !== index));
-    };
-
-    const addColorFromPreset = (preset: { name: string; hex: string }) => {
-        if (!editedColors.find(c => c.name === preset.name)) {
-            setEditedColors([...editedColors, preset]);
-        }
-    };
-
     const toggleSize = (size: string) => {
         if (editedSizes.includes(size)) {
             setEditedSizes(editedSizes.filter(s => s !== size));
@@ -159,7 +117,6 @@ export default function EditableProductInfo({
     // Current display values
     const displayTitle = isEditMode ? editedTitle : title;
     const displayPrice = isEditMode ? parseFloat(editedPrice) || 0 : price;
-    const displayColors = isEditMode ? editedColors : colors;
     const displaySizes = isEditMode ? editedSizes : sizes;
 
     return (
@@ -270,108 +227,11 @@ export default function EditableProductInfo({
                 </div>
             )}
 
-            {/* Color Selection */}
-            {displayColors.length > 0 && (
-                <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm font-bold uppercase tracking-widest text-slate-900">
-                            Color: <span className="text-slate-500 font-normal capitalize">{selectedColor}</span>
-                        </span>
-                        {isEditMode && (
-                            <button
-                                onClick={() => setShowColorPicker(!showColorPicker)}
-                                className="text-xs text-[#006D77] underline hover:text-[#005a63]"
-                            >
-                                {showColorPicker ? "Hide Options" : "Add Color"}
-                            </button>
-                        )}
-                    </div>
-
-                    <div className="flex flex-wrap gap-4">
-                        {displayColors.map((color, index) => (
-                            <div key={color.name} className="relative">
-                                <button
-                                    onClick={() => !isEditMode && setSelectedColor(color.name)}
-                                    className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${selectedColor === color.name && !isEditMode
-                                        ? "border-slate-900 scale-110"
-                                        : "border-transparent hover:border-slate-300"
-                                        }`}
-                                >
-                                    <div
-                                        className="w-8 h-8 rounded-full border border-slate-200 shadow-sm"
-                                        style={{ backgroundColor: color.hex }}
-                                        title={color.name}
-                                    />
-                                </button>
-                                {isEditMode && (
-                                    <button
-                                        onClick={() => removeColor(index)}
-                                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"
-                                    >
-                                        <X size={10} />
-                                    </button>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Color Picker (Edit Mode) */}
-                    {isEditMode && showColorPicker && (
-                        <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-3">
-                            <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Add from presets:</p>
-                            <div className="flex flex-wrap gap-2">
-                                {DEFAULT_COLORS.filter(
-                                    dc => !editedColors.find(ec => ec.name === dc.name)
-                                ).map(preset => (
-                                    <button
-                                        key={preset.name}
-                                        onClick={() => addColorFromPreset(preset)}
-                                        className="flex items-center gap-1 px-2 py-1 bg-white border border-slate-200 rounded text-xs hover:border-[#006D77]"
-                                    >
-                                        <div
-                                            className="w-4 h-4 rounded-full border border-slate-200"
-                                            style={{ backgroundColor: preset.hex }}
-                                        />
-                                        {preset.name}
-                                    </button>
-                                ))}
-                            </div>
-
-                            <div className="h-px bg-slate-200" />
-
-                            <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Or add custom:</p>
-                            <div className="flex gap-2 items-center">
-                                <input
-                                    type="color"
-                                    value={newColorHex}
-                                    onChange={(e) => setNewColorHex(e.target.value)}
-                                    className="w-10 h-10 rounded cursor-pointer"
-                                />
-                                <input
-                                    type="text"
-                                    value={newColorName}
-                                    onChange={(e) => setNewColorName(e.target.value)}
-                                    placeholder="Color name"
-                                    className="flex-1 px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:border-[#006D77]"
-                                />
-                                <button
-                                    onClick={addColor}
-                                    disabled={!newColorName.trim()}
-                                    className="bg-[#006D77] text-white px-3 py-2 rounded text-sm disabled:opacity-50"
-                                >
-                                    <Plus size={16} />
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* Size Selection */}
+            {/* Size Selection - Always visible */}
             <div className="space-y-3">
                 <div className="flex justify-between items-center">
                     <span className="text-sm font-bold uppercase tracking-widest text-slate-900">
-                        Size: <span className="text-slate-500 font-normal">{selectedSize}</span>
+                        Size: <span className="text-slate-500 font-normal">{selectedSize || "Select"}</span>
                     </span>
                     {!isEditMode && (
                         <button
@@ -398,7 +258,7 @@ export default function EditableProductInfo({
                             </button>
                         ))}
                     </div>
-                ) : (
+                ) : displaySizes.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                         {displaySizes.map((size) => (
                             <button
@@ -413,24 +273,16 @@ export default function EditableProductInfo({
                             </button>
                         ))}
                     </div>
+                ) : (
+                    <p className="text-sm text-slate-500 italic">No sizes available</p>
                 )}
             </div>
 
-            {/* Actions: WhatsApp & Email */}
-            {/* Actions: Email Only */}
+            {/* Wholesale Inquiry Button */}
             {!isEditMode && (
-                <div className="flex flex-col gap-3 pt-4">
+                <div className="pt-4">
                     <LiquidButton
-                        className="w-full h-12 bg-white text-slate-900 border border-slate-900 hover:bg-slate-50 rounded-lg flex items-center justify-center gap-2"
-                        variant="secondary"
-                        onClick={() => window.location.href = `mailto:contact@kevara.com?subject=Inquiry about ${title}`}
-                    >
-                        <span className="font-medium">Send us an Email</span>
-                    </LiquidButton>
-
-                    <LiquidButton
-                        className="w-full h-12 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium text-sm"
-                        variant="secondary"
+                        className="w-full h-12 bg-[#0E4D55] text-white hover:bg-[#0a383f] rounded-lg font-medium text-sm"
                         onClick={() => setShowInquiryModal(true)}
                     >
                         <span className="font-medium">Send us a message (Wholesale)</span>
@@ -447,3 +299,4 @@ export default function EditableProductInfo({
         </div>
     );
 }
+

@@ -43,6 +43,7 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
     const [customColorName, setCustomColorName] = useState("");
     const [customColorHex, setCustomColorHex] = useState("#000000");
     const [loading, setLoading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState<string>("");
     const [error, setError] = useState("");
     const fileInputRef = useRef<HTMLInputElement>(null);
     const videoInputRef = useRef<HTMLInputElement>(null);
@@ -171,29 +172,75 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
 
         setLoading(true);
         setError("");
+        setUploadProgress("Preparing uploads...");
 
         try {
-            const formData = new FormData();
-            formData.append("title", title);
-            formData.append("price", price);
-            formData.append("description", description);
-            files.forEach(file => formData.append("images", file));
+            // Helper function to upload a single file to R2
+            const uploadFileToR2 = async (file: File, folder: string = "products"): Promise<string> => {
+                // Step 1: Get presigned URL from our API
+                const presignRes = await fetch("/api/r2/presign", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        filename: file.name,
+                        contentType: file.type,
+                        folder,
+                    }),
+                });
 
+                if (!presignRes.ok) {
+                    const err = await presignRes.json();
+                    throw new Error(err.error || "Failed to get upload URL");
+                }
+
+                const { uploadUrl, publicUrl } = await presignRes.json();
+
+                // Step 2: Upload file directly to R2 (bypasses Vercel limits)
+                const uploadRes = await fetch(uploadUrl, {
+                    method: "PUT",
+                    body: file,
+                    headers: {
+                        "Content-Type": file.type,
+                    },
+                });
+
+                if (!uploadRes.ok) {
+                    throw new Error(`Failed to upload ${file.name} to storage`);
+                }
+
+                return publicUrl;
+            };
+
+            // Upload all images to R2
+            const imageUrls: string[] = [];
+            for (let i = 0; i < files.length; i++) {
+                setUploadProgress(`Uploading image ${i + 1}/${files.length}...`);
+                const url = await uploadFileToR2(files[i], "products");
+                imageUrls.push(url);
+            }
+
+            // Upload video if provided
+            let videoUrl: string | undefined;
             if (videoFile) {
-                formData.append("video", videoFile);
+                setUploadProgress("Uploading video...");
+                videoUrl = await uploadFileToR2(videoFile, "videos");
             }
 
-            // Add colors and sizes as JSON
-            if (colors.length > 0) {
-                formData.append("colors", JSON.stringify(colors));
-            }
-            if (sizes.length > 0) {
-                formData.append("sizes", JSON.stringify(sizes));
-            }
+            setUploadProgress("Creating product...");
 
+            // Now send just the URLs to the API (no file data)
             const res = await fetch("/api/products/create", {
                 method: "POST",
-                body: formData,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title,
+                    price,
+                    description,
+                    imageUrls,
+                    videoUrl,
+                    colors: colors.length > 0 ? colors : undefined,
+                    sizes: sizes.length > 0 ? sizes : undefined,
+                }),
             });
 
             const data = await res.json();
@@ -208,6 +255,7 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
             setError(err.message || "Something went wrong");
         } finally {
             setLoading(false);
+            setUploadProgress("");
         }
     };
 
@@ -337,8 +385,8 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
                                             onDragOver={(e) => handleDragOver(e, index)}
                                             onDragEnd={handleDragEnd}
                                             className={`relative group aspect-square rounded-lg overflow-hidden bg-gray-100 border-2 cursor-move transition-all duration-200 ${draggedIndex === index
-                                                    ? 'border-slate-900 scale-95 opacity-50'
-                                                    : 'border-gray-200 hover:border-slate-400'
+                                                ? 'border-slate-900 scale-95 opacity-50'
+                                                : 'border-gray-200 hover:border-slate-400'
                                                 }`}
                                         >
                                             {/* Drag Handle */}
@@ -348,10 +396,10 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
 
                                             {/* Position Badge */}
                                             <div className={`absolute bottom-1 left-1 px-2 py-0.5 text-[10px] font-bold rounded z-10 ${index === 0
-                                                    ? 'bg-emerald-500 text-white'
-                                                    : index === 1
-                                                        ? 'bg-blue-500 text-white'
-                                                        : 'bg-gray-700 text-white'
+                                                ? 'bg-emerald-500 text-white'
+                                                : index === 1
+                                                    ? 'bg-blue-500 text-white'
+                                                    : 'bg-gray-700 text-white'
                                                 }`}>
                                                 {index === 0 ? 'DISPLAY' : index === 1 ? 'HOVER' : `#${index + 1}`}
                                             </div>
@@ -558,7 +606,7 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
                                 disabled={loading}
                                 className="w-full py-4 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
                             >
-                                {loading ? "Creating Product..." : "Create Now"}
+                                {loading ? (uploadProgress || "Creating Product...") : "Create Now"}
                             </button>
 
                             <button
