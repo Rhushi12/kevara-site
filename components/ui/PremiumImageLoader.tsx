@@ -18,9 +18,9 @@ export default function PremiumImageLoader({
 }: PremiumImageLoaderProps) {
     const [isLoading, setIsLoading] = useState(true);
 
-    // Auto-detect Shopify CDN images and skip Next.js optimization (prevents timeout)
+    // Auto-detect CDN images and skip Next.js optimization (prevents timeout)
     const srcString = typeof src === 'string' ? src : '';
-    const isShopifyCdn = srcString.includes('cdn.shopify');
+    const isCdnImage = srcString.includes('cdn.shopify') || srcString.includes('.r2.dev');
 
     return (
         <div className={`relative w-full h-full overflow-hidden ${containerClassName || ""}`}>
@@ -78,7 +78,7 @@ export default function PremiumImageLoader({
                 src={src}
                 priority={priority}
                 loading={priority ? undefined : "lazy"}
-                unoptimized={isShopifyCdn}
+                unoptimized={isCdnImage}
                 className={`${className || ""} transition-opacity duration-700 ${isLoading ? "opacity-0" : "opacity-100"}`}
                 onLoad={(e) => {
                     setIsLoading(false);

@@ -10,9 +10,9 @@ interface ImageWithLoaderProps extends ImageProps {
 export default function ImageWithLoader({ className, skipFadeIn = false, src, priority, ...props }: ImageWithLoaderProps) {
     const [isLoading, setIsLoading] = useState(true);
 
-    // Auto-detect Shopify CDN images and skip Next.js optimization (they're already optimized)
+    // Auto-detect CDN images and skip Next.js optimization (they're already optimized)
     const srcString = typeof src === 'string' ? src : '';
-    const isShopifyCdn = srcString.includes('cdn.shopify');
+    const isCdnImage = srcString.includes('cdn.shopify') || srcString.includes('.r2.dev');
 
     return (
         <>
@@ -26,7 +26,7 @@ export default function ImageWithLoader({ className, skipFadeIn = false, src, pr
                 src={src}
                 priority={priority}
                 loading={priority ? undefined : "lazy"}
-                unoptimized={isShopifyCdn}
+                unoptimized={isCdnImage}
                 className={`${className || ""} ${!skipFadeIn ? `transition-opacity duration-500 ${isLoading ? "opacity-0" : "opacity-100"}` : ""}`}
                 onLoad={() => setIsLoading(false)}
             />
