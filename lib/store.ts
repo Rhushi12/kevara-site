@@ -61,3 +61,21 @@ export const useSizeGuideStore = create<SizeGuideState>((set) => ({
     openSizeGuide: () => set({ isOpen: true }),
     closeSizeGuide: () => set({ isOpen: false }),
 }));
+
+// Wholesale Inquiry Modal Store
+interface WholesaleInquiryState {
+    isOpen: boolean;
+    productTitle: string;
+    productHandle: string;
+    openInquiry: (title?: string, handle?: string) => void;
+    closeInquiry: () => void;
+}
+
+export const useWholesaleInquiryStore = create<WholesaleInquiryState>((set) => ({
+    isOpen: false,
+    productTitle: "General Inquiry",
+    productHandle: "general",
+    openInquiry: (title = "General Inquiry", handle = "general") =>
+        set({ isOpen: true, productTitle: title, productHandle: handle }),
+    closeInquiry: () => set({ isOpen: false }),
+}));

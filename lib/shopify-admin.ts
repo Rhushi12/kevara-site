@@ -1258,3 +1258,160 @@ export async function getWholesaleLeads() {
     };
   });
 }
+
+// ============================================================================
+// OFFER SLIDES PERSISTENCE
+// ============================================================================
+
+/**
+ * Get offer slides from metaobject
+ */
+export async function getOfferSlides() {
+  const query = `
+    query {
+      metaobjectByHandle(handle: { type: "offer_config", handle: "main-offer" }) {
+        id
+        fields {
+          key
+          value
+          references(first: 20) {
+            nodes {
+              ... on MediaImage {
+                id
+                image {
+                  url
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const data = await shopifyFetch(query);
+  const metaobject = data.metaobjectByHandle;
+
+  if (!metaobject) {
+    console.log("[getOfferSlides] No offer config found, returning null");
+    return null;
+  }
+
+  let slidesJson: any = null;
+  const imageMap: Record<string, string> = {};
+
+  metaobject.fields.forEach((field: any) => {
+    if (field.key === "slides_json") {
+      try {
+        slidesJson = JSON.parse(field.value);
+      } catch (e) {
+        console.error("[getOfferSlides] Failed to parse slides_json:", e);
+      }
+    }
+    if (field.key === "slide_images" && field.references) {
+      field.references.nodes.forEach((node: any) => {
+        if (node.image?.url) {
+          imageMap[node.id] = node.image.url;
+        }
+      });
+    }
+  });
+
+  if (!slidesJson) return null;
+
+  // Resolve image GIDs to URLs
+  if (Array.isArray(slidesJson)) {
+    slidesJson.forEach((slide: any) => {
+      if (slide.image_id && imageMap[slide.image_id]) {
+        slide.image = imageMap[slide.image_id];
+      }
+    });
+  }
+
+  return slidesJson;
+}
+
+/**
+ * Ensure offer_config metaobject definition exists
+ */
+async function ensureOfferDefinition() {
+  const checkQuery = `
+    query {
+      metaobjectDefinitionByType(type: "offer_config") {
+        id
+      }
+    }
+  `;
+
+  const checkResult = await shopifyFetch(checkQuery);
+  if (checkResult.metaobjectDefinitionByType) {
+    return; // Already exists
+  }
+
+  const createMutation = `
+    mutation CreateMetaobjectDefinition($definition: MetaobjectDefinitionCreateInput!) {
+      metaobjectDefinitionCreate(definition: $definition) {
+        metaobjectDefinition {
+          id
+        }
+        userErrors {
+          field
+          message
+        }
+      }
+    }
+  `;
+
+  const definition = {
+    name: "Offer Config",
+    type: "offer_config",
+    fieldDefinitions: [
+      { key: "slides_json", name: "Slides JSON", type: "json" },
+      { key: "slide_images", name: "Slide Images", type: "list.file_reference" }
+    ]
+  };
+
+  const result = await shopifyFetch(createMutation, { definition });
+  if (result.metaobjectDefinitionCreate.userErrors?.length > 0) {
+    console.error("[ensureOfferDefinition] Failed:", result.metaobjectDefinitionCreate.userErrors);
+    throw new Error("Failed to create offer_config definition");
+  }
+  console.log("[ensureOfferDefinition] Created offer_config definition");
+}
+
+/**
+ * Save offer slides to metaobject
+ */
+export async function saveOfferSlides(slides: any[]) {
+  // Extract all image GIDs for references
+  const imageGids: string[] = [];
+  const slidesWithGids = slides.map(slide => {
+    const slideData = { ...slide };
+    if (slide.image_id && slide.image_id.startsWith("gid://")) {
+      imageGids.push(slide.image_id);
+    }
+    return slideData;
+  });
+
+  const fields = [
+    { key: "slides_json", value: JSON.stringify(slidesWithGids) },
+    { key: "slide_images", value: JSON.stringify(imageGids) }
+  ];
+
+  logDebug("saveOfferSlides payload", { fields, imageGids });
+
+  try {
+    const result = await upsertMetaobject("offer_config", "main-offer", fields);
+    logDebug("saveOfferSlides success", { id: result });
+    return result;
+  } catch (error: any) {
+    if (error.message && error.message.includes("No metaobject definition exists")) {
+      console.log("[saveOfferSlides] Definition missing, creating...");
+      await ensureOfferDefinition();
+      const result = await upsertMetaobject("offer_config", "main-offer", fields);
+      return result;
+    }
+    console.error("[saveOfferSlides] Failed:", error);
+    throw error;
+  }
+}

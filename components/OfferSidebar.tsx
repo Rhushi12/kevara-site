@@ -3,19 +3,66 @@
 import { useOffer } from "@/context/OfferContext";
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
-import { X } from "lucide-react";
+import { X, Save, Loader2 } from "lucide-react";
 import OfferSlider from "./OfferSlider";
 import { OFFER_SLIDES } from "@/lib/offerData";
+import { useToast } from "@/context/ToastContext";
 
 export default function OfferSidebar() {
     const { isOpen, closeSidebar, isAdminMode } = useOffer();
     const [slides, setSlides] = useState(OFFER_SLIDES);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    const { showToast } = useToast();
 
     const panelRef = useRef<HTMLDivElement>(null);
     const overlayRef = useRef<HTMLDivElement>(null);
     const preLayersRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
     const tl = useRef<gsap.core.Timeline | null>(null);
+
+    // Fetch offer slides from API on mount
+    useEffect(() => {
+        async function fetchOfferSlides() {
+            try {
+                const res = await fetch("/api/offer");
+                const data = await res.json();
+                if (data.slides && data.slides.length > 0) {
+                    setSlides(data.slides);
+                }
+            } catch (error) {
+                console.error("[OfferSidebar] Failed to fetch slides:", error);
+                // Keep default slides on error
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchOfferSlides();
+    }, []);
+
+    // Save handler for admin mode
+    const handleSaveSlides = async () => {
+        setIsSaving(true);
+        try {
+            const res = await fetch("/api/offer", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ slides }),
+            });
+
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.error || "Failed to save");
+            }
+
+            showToast("Offer slides saved successfully!", "success");
+        } catch (error: any) {
+            console.error("[OfferSidebar] Failed to save slides:", error);
+            showToast("Failed to save offer slides: " + error.message, "error");
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     // Prevent scrolling
     useEffect(() => {
@@ -139,15 +186,43 @@ export default function OfferSidebar() {
                     <X size={24} />
                 </button>
 
+                {/* Save Button (Admin Mode) */}
+                {isAdminMode && (
+                    <button
+                        onClick={handleSaveSlides}
+                        disabled={isSaving}
+                        className="absolute top-6 right-20 z-50 px-4 py-2 bg-[#006D77] hover:bg-[#005a63] rounded-full text-white transition-colors flex items-center gap-2 text-sm font-medium shadow-lg disabled:opacity-50"
+                    >
+                        {isSaving ? (
+                            <>
+                                <Loader2 size={16} className="animate-spin" />
+                                Saving...
+                            </>
+                        ) : (
+                            <>
+                                <Save size={16} />
+                                Save Changes
+                            </>
+                        )}
+                    </button>
+                )}
+
                 {/* Content */}
                 <div ref={contentRef} className="w-full h-full opacity-0">
-                    <OfferSlider
-                        slides={slides}
-                        isEditMode={isAdminMode}
-                        onUpdate={isAdminMode ? setSlides : undefined}
-                    />
+                    {isLoading ? (
+                        <div className="w-full h-full flex items-center justify-center">
+                            <Loader2 size={32} className="animate-spin text-[#006D77]" />
+                        </div>
+                    ) : (
+                        <OfferSlider
+                            slides={slides}
+                            isEditMode={isAdminMode}
+                            onUpdate={isAdminMode ? setSlides : undefined}
+                        />
+                    )}
                 </div>
             </div>
         </div>
     );
 }
+

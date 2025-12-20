@@ -73,6 +73,7 @@ import { ToastProvider } from "@/context/ToastContext";
 import OfferSidebar from "@/components/OfferSidebar";
 import AdminOfferButton from "@/components/admin/AdminOfferButton";
 import ToastContainer from "@/components/ToastContainer";
+import GlobalWholesaleInquiryModal from "@/components/GlobalWholesaleInquiryModal";
 
 export default function RootLayout({
   children,
@@ -108,6 +109,7 @@ export default function RootLayout({
               <ToastNotification />
               <AdminOfferButton />
               <ToastContainer />
+              <GlobalWholesaleInquiryModal />
             </OfferProvider>
           </ToastProvider>
         </AuthProvider>
