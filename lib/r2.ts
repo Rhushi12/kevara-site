@@ -82,6 +82,8 @@ export async function uploadToR2(
         Key: key,
         Body: body,
         ContentType: mimeType,
+        // Enable long-term browser and CDN caching (1 year, immutable since filename contains timestamp)
+        CacheControl: "public, max-age=31536000, immutable",
     });
 
     await r2Client.send(command);
