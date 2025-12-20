@@ -176,14 +176,14 @@ export default function VideoPromo({ data, isEditMode = false, onUpdate }: Video
                         {videos.map((video) => (
                             <div
                                 key={video.id}
-                                className="relative h-full overflow-hidden group"
+                                className="relative h-full overflow-hidden group bg-black flex items-center justify-center"
                             >
                                 <video
                                     autoPlay
                                     muted
                                     loop
                                     playsInline
-                                    className="absolute inset-0 w-full h-full object-cover"
+                                    className="w-full h-full object-contain"
                                 >
                                     <source src={video.videoUrl} type="video/mp4" />
                                 </video>
@@ -255,6 +255,6 @@ export default function VideoPromo({ data, isEditMode = false, onUpdate }: Video
                     </label>
                 )}
             </div>
-        </section>
+        </section >
     );
 }
