@@ -276,10 +276,11 @@ export default function WomenShopEssentials({ data = {}, isEditMode = false, onU
 
                 <div
                     id="products-carousel"
-                    className="overflow-x-auto md:overflow-x-auto -mx-4 px-4 md:px-8 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
+                    className="overflow-x-auto md:overflow-x-auto -mx-4 px-4 md:px-8 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden touch-pan-x"
                     style={{
                         scrollbarWidth: 'none',
-                        msOverflowStyle: 'none'
+                        msOverflowStyle: 'none',
+                        WebkitOverflowScrolling: 'touch'
                     }}
                 >
                     <AnimatePresence mode="wait">

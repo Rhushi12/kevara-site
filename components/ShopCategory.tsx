@@ -206,6 +206,7 @@ export default function ShopCategory({ data, isEditMode = false, onUpdate }: Sho
 
                     <div className="relative w-full group/carousel">
 
+                        {/* Arrows hidden on mobile - touch scroll instead */}
                         <CarouselArrowButton
                             direction="left"
                             onClick={() => {
@@ -213,7 +214,7 @@ export default function ShopCategory({ data, isEditMode = false, onUpdate }: Sho
                                     carousel.current.scrollBy({ left: -360, behavior: 'smooth' });
                                 }
                             }}
-                            className="absolute left-0 top-1/2 -translate-y-1/2 z-40 -translate-x-1/2"
+                            className="absolute left-0 top-1/2 -translate-y-1/2 z-40 -translate-x-1/2 hidden md:flex"
                             aria-label="Previous"
                         />
                         <CarouselArrowButton
@@ -223,19 +224,21 @@ export default function ShopCategory({ data, isEditMode = false, onUpdate }: Sho
                                     carousel.current.scrollBy({ left: 360, behavior: 'smooth' });
                                 }
                             }}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 z-40 translate-x-1/2"
+                            className="absolute right-0 top-1/2 -translate-y-1/2 z-40 translate-x-1/2 hidden md:flex"
                             aria-label="Next"
                         />
 
+                        {/* Carousel container - smooth touch scroll on mobile */}
                         <div
                             ref={carousel}
-                            className="overflow-x-auto cursor-grab active:cursor-grabbing scrollbar-hide"
+                            className="overflow-x-auto cursor-grab active:cursor-grabbing scrollbar-hide snap-x snap-mandatory touch-pan-x"
                             onMouseDown={handleMouseDown}
                             onMouseLeave={handleMouseLeave}
                             onMouseUp={handleMouseUp}
                             onMouseMove={handleMouseMove}
                             style={{
-                                scrollBehavior: isDragging ? 'auto' : 'smooth'
+                                scrollBehavior: isDragging ? 'auto' : 'smooth',
+                                WebkitOverflowScrolling: 'touch'
                             }}
                         >
                             <div
@@ -251,7 +254,7 @@ export default function ShopCategory({ data, isEditMode = false, onUpdate }: Sho
                                 {categories.map((category, index) => (
                                     <motion.div
                                         key={category.id}
-                                        className="relative group/card rounded-md overflow-hidden w-full h-full"
+                                        className="relative group/card rounded-md overflow-hidden w-full h-full snap-start"
                                     >
                                         {isEditMode ? (
                                             <div className="block w-full h-full relative">

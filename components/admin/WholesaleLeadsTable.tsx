@@ -15,6 +15,7 @@ interface Lead {
     address: string;
     description: string;
     product_title: string;
+    product_handle: string;
     date: string;
 }
 

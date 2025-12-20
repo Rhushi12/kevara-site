@@ -202,8 +202,8 @@ export default function WholesaleInquiryModal({
                                         <label
                                             key={option.value}
                                             className={`flex items-center gap-2 p-3 sm:p-2.5 rounded-lg border cursor-pointer transition-all duration-200 ${formData.requirementType === option.value
-                                                    ? 'border-[#0E4D55] bg-[#0E4D55]/5 ring-1 ring-[#0E4D55]/20'
-                                                    : 'border-slate-200 hover:border-slate-300 bg-white'
+                                                ? 'border-[#0E4D55] bg-[#0E4D55]/5 ring-1 ring-[#0E4D55]/20'
+                                                : 'border-slate-200 hover:border-slate-300 bg-white'
                                                 }`}
                                         >
                                             <input
@@ -216,8 +216,8 @@ export default function WholesaleInquiryModal({
                                             />
                                             <span className="text-base sm:text-lg">{option.icon}</span>
                                             <span className={`text-sm font-medium ${formData.requirementType === option.value
-                                                    ? 'text-[#0E4D55]'
-                                                    : 'text-slate-600'
+                                                ? 'text-[#0E4D55]'
+                                                : 'text-slate-600'
                                                 }`}>
                                                 {option.label}
                                             </span>
@@ -231,16 +231,7 @@ export default function WholesaleInquiryModal({
                                 </div>
                             </div>
 
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Quantity / Details</label>
-                                <input
-                                    type="text"
-                                    value={formData.requirement}
-                                    onChange={e => setFormData({ ...formData, requirement: e.target.value })}
-                                    className="w-full px-3 py-2.5 sm:py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0E4D55] focus:ring-2 focus:ring-[#0E4D55]/20 text-sm sm:text-base"
-                                    placeholder="e.g. 50 units, Custom Size..."
-                                />
-                            </div>
+
 
                             {/* State and City Dropdowns */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">

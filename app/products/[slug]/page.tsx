@@ -56,18 +56,16 @@ export default async function ProductPage({ params }: { params: { slug: string }
     // Transform images
     const productImages = images.edges.map((edge: any) => edge.node.url);
 
-    // Use colors and sizes from custom product data (if available)
-    // Otherwise fall back to extracting from variants
-    let colors = productColors && productColors.length > 0
-        ? productColors
-        : [];
+    // Use colors and sizes from custom product data
+    console.log(`[PDP Debug] Raw productColors:`, productColors);
+    console.log(`[PDP Debug] Raw productSizes:`, productSizes);
 
-    let sizes = productSizes && productSizes.length > 0
-        ? productSizes
-        : ["One Size"];
+    let colors = productColors && productColors.length > 0 ? productColors : [];
+    let sizes = productSizes && productSizes.length > 0 ? productSizes : [];
 
-    // If no colors from custom data, try to extract from variants (fallback for old products)
-    if (colors.length === 0) {
+    // Only fall back to variant extraction if BOTH colors and sizes are empty
+    // (for backwards compatibility with old Shopify products)
+    if (colors.length === 0 && sizes.length === 0) {
         const uniqueColors = new Set<string>();
         const uniqueSizes = new Set<string>();
 
@@ -76,21 +74,23 @@ export default async function ProductPage({ params }: { params: { slug: string }
             if (parts.length > 1) {
                 uniqueSizes.add(parts[0].trim());
                 uniqueColors.add(parts[1].trim());
-            } else {
-                uniqueSizes.add("One Size");
-                uniqueColors.add("Default");
             }
         });
 
-        colors = Array.from(uniqueColors).map(name => ({
-            name,
-            hex: getColorHex(name)
-        }));
+        if (uniqueColors.size > 0) {
+            colors = Array.from(uniqueColors).map(name => ({
+                name,
+                hex: getColorHex(name)
+            }));
+        }
 
         if (uniqueSizes.size > 0) {
             sizes = Array.from(uniqueSizes);
         }
     }
+
+    // Default fallbacks if still empty
+    // No fallback - if no sizes defined, sizes remains empty
 
     // Fetch related custom products
     const allProducts = await getCustomProducts();

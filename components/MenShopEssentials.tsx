@@ -79,7 +79,10 @@ export default function MenShopEssentials({ data = [], isEditMode = false, onUpd
             </motion.div>
 
             {/* Products Grid */}
-            <div className="overflow-x-auto md:overflow-hidden pb-8 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory scrollbar-hide">
+            <div
+                className="overflow-x-auto md:overflow-hidden pb-8 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory scrollbar-hide touch-pan-x"
+                style={{ WebkitOverflowScrolling: 'touch' }}
+            >
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={activeTabIndex}

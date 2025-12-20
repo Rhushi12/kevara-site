@@ -75,6 +75,7 @@ import OfferSidebar from "@/components/OfferSidebar";
 import AdminOfferButton from "@/components/admin/AdminOfferButton";
 import ToastContainer from "@/components/ToastContainer";
 import GlobalWholesaleInquiryModal from "@/components/GlobalWholesaleInquiryModal";
+import WholesaleFloatingButton from "@/components/WholesaleFloatingButton";
 
 export default function RootLayout({
   children,
@@ -109,6 +110,7 @@ export default function RootLayout({
               <SearchPanel />
               <ToastNotification />
               <AdminOfferButton />
+              <WholesaleFloatingButton />
               <ToastContainer />
               <GlobalWholesaleInquiryModal />
             </OfferProvider>

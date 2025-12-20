@@ -174,7 +174,10 @@ export default function CleanGrid({
                         {/* Products Carousel */}
                         <div className="overflow-hidden">
                             {/* Mobile: Horizontal Scroll (All Products) */}
-                            <div className="md:hidden overflow-x-auto pb-8 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide flex gap-4">
+                            <div
+                                className="md:hidden overflow-x-auto pb-8 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide flex gap-4 touch-pan-x"
+                                style={{ WebkitOverflowScrolling: 'touch' }}
+                            >
                                 {products.map((product, index) => (
                                     <motion.div
                                         key={`${product.node.id}-mobile-${index}`}

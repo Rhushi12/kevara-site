@@ -6,6 +6,7 @@ import { X, Minus, Plus } from "lucide-react";
 import Image from "next/image";
 import { useQuickViewStore } from "@/lib/store";
 import LiquidButton from "@/components/ui/LiquidButton";
+import WholesaleInquiryModal from "@/components/pdp/WholesaleInquiryModal";
 
 export default function QuickViewPanel() {
     const { isOpen, selectedProduct, closeQuickView } = useQuickViewStore();
@@ -17,6 +18,7 @@ export default function QuickViewPanel() {
     const [quantity, setQuantity] = useState(1);
     const [selectedColor, setSelectedColor] = useState<string>("");
     const [selectedSize, setSelectedSize] = useState<string>("");
+    const [showInquiryModal, setShowInquiryModal] = useState(false);
 
     // Reset state when product changes
     useEffect(() => {
@@ -115,7 +117,7 @@ export default function QuickViewPanel() {
 
     if (!selectedProduct) return null;
 
-    const { title, priceRange, images, colors, sizes } = selectedProduct.node;
+    const { title, priceRange, images, colors, sizes, handle } = selectedProduct.node;
     const price = priceRange.minVariantPrice.amount;
     const currency = priceRange.minVariantPrice.currencyCode;
     const imageUrl = images.edges[0]?.node.url;
@@ -174,9 +176,6 @@ export default function QuickViewPanel() {
                                 <span className="text-lg font-figtree font-bold text-slate-900">
                                     {new Intl.NumberFormat("en-IN", { style: "currency", currency }).format(parseFloat(price))}
                                 </span>
-                                <span className="text-sm font-figtree text-gray-400 line-through">
-                                    {new Intl.NumberFormat("en-IN", { style: "currency", currency }).format(parseFloat(price) * 1.2)}
-                                </span>
                             </div>
                         </div>
                     </div>
@@ -184,25 +183,27 @@ export default function QuickViewPanel() {
                     {/* Selectors */}
                     <div className="space-y-6 mb-8">
                         {/* Color */}
-                        <div className="qv-content-item">
-                            <label className="block text-xs font-bold tracking-widest uppercase text-slate-900 mb-3">
-                                Color: <span className="text-gray-500 font-normal normal-case">{selectedColor}</span>
-                            </label>
-                            <div className="flex flex-wrap gap-3">
-                                {productColors.map((color) => (
-                                    <button
-                                        key={color.name}
-                                        onClick={() => setSelectedColor(color.name)}
-                                        className={`w-8 h-8 rounded-full border transition-all ${selectedColor === color.name
-                                            ? "border-slate-900 ring-1 ring-slate-900 ring-offset-2"
-                                            : "border-gray-200 hover:border-gray-400"
-                                            }`}
-                                        style={{ backgroundColor: color.hex }}
-                                        title={color.name}
-                                    />
-                                ))}
+                        {productColors.length > 0 && (
+                            <div className="qv-content-item">
+                                <label className="block text-xs font-bold tracking-widest uppercase text-slate-900 mb-3">
+                                    Color: <span className="text-gray-500 font-normal normal-case">{selectedColor}</span>
+                                </label>
+                                <div className="flex flex-wrap gap-2">
+                                    {productColors.map((color) => (
+                                        <button
+                                            key={color.name}
+                                            onClick={() => setSelectedColor(color.name)}
+                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${selectedColor === color.name
+                                                ? "border-slate-900 bg-slate-900 text-white"
+                                                : "border-slate-200 text-slate-600 hover:border-slate-900 hover:text-slate-900"
+                                                }`}
+                                        >
+                                            {color.name}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Size */}
                         <div className="qv-content-item">
@@ -252,57 +253,24 @@ export default function QuickViewPanel() {
 
                     {/* Actions */}
                     <div className="mt-auto space-y-3 qv-content-item">
-                        {/* <LiquidButton
-                            className="w-full bg-[#25D366] text-white hover:bg-[#128C7E] border-none"
-                            onClick={() => {
-                                window.open(`https://wa.me/919876543210?text=Hi, I'm interested in ${title} (Color: ${selectedColor}, Size: ${selectedSize})`, '_blank');
-                                closeQuickView();
-                            }}
-                        >
-                            Chat with WhatsApp
-                        </LiquidButton> */}
                         <LiquidButton
-                            className="w-full"
-                            variant="secondary"
-                            onClick={() => {
-                                window.location.href = `mailto:contact@kevara.com?subject=Inquiry about ${title}&body=I'm interested in ${title} (Color: ${selectedColor}, Size: ${selectedSize})`;
-                                closeQuickView();
-                            }}
+                            className="w-full h-12 bg-[#0E4D55] text-white hover:bg-[#0a383f] rounded-lg font-medium text-sm"
+                            onClick={() => setShowInquiryModal(true)}
                         >
-                            Send us an Email
+                            <span className="font-medium">Send us a message (Wholesale)</span>
                         </LiquidButton>
                     </div>
                 </div>
             </div>
+
+            {/* Wholesale Inquiry Modal */}
+            <WholesaleInquiryModal
+                isOpen={showInquiryModal}
+                onClose={() => setShowInquiryModal(false)}
+                productTitle={title}
+                productHandle={handle || ""}
+            />
         </div>
     );
 }
 
-// Helper functions (reused from ProductCard logic)
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function extractColors(product: any) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return product.node.variants.edges.map((v: any) => {
-        const parts = v.node.title.split("/");
-        return parts.length > 1 ? parts[1].trim() : "Default";
-    });
-}
-
-function getColorHex(name: string) {
-    const map: Record<string, string> = {
-        Blue: "#1E3A8A",
-        Red: "#B91C1C",
-        Beige: "#D4D4D8",
-        Black: "#18181B",
-        Grey: "#71717A",
-        Brown: "#78350F",
-        White: "#FFFFFF",
-        Green: "#064E3B",
-        Khaki: "#C2B280",
-        Navy: "#0F172A",
-        Cream: "#FFFDD0",
-        Default: "#000000",
-    };
-    return map[name] || "#000000";
-}

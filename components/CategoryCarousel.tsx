@@ -125,33 +125,35 @@ export default function CategoryCarousel({
 
             <div className="relative w-full h-full flex items-center">
                 {/* Left Arrow */}
+                {/* Arrows hidden on mobile - touch scroll instead */}
                 {showLeftArrow && (
                     <button
                         onClick={() => scroll("left")}
-                        className="absolute left-0 z-10 bg-white/80 hover:bg-white shadow-md rounded-full p-2 transition-all"
+                        className="absolute left-0 z-10 bg-white/80 hover:bg-white shadow-md rounded-full p-2 transition-all hidden md:block"
                         style={{ transform: "translateX(-50%)" }}
                     >
                         <ChevronLeft size={20} className="text-slate-700" />
                     </button>
                 )}
 
-                {/* Carousel Container */}
+                {/* Carousel Container - Smooth touch scroll on mobile */}
                 <div
                     ref={scrollRef}
                     onScroll={handleScroll}
-                    className="flex items-center overflow-x-auto scrollbar-hide"
+                    className="flex items-center overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory touch-pan-x"
                     style={{
                         gap: "22px",
                         scrollbarWidth: "none",
                         msOverflowStyle: "none",
                         paddingLeft: "40px",
-                        paddingRight: "22px"
+                        paddingRight: "22px",
+                        WebkitOverflowScrolling: "touch" // Momentum scrolling on iOS
                     }}
                 >
                     {categories.map((category, index) => (
                         <div
                             key={category.id}
-                            className="flex-shrink-0 flex flex-col items-center group relative"
+                            className="flex-shrink-0 flex flex-col items-center group relative snap-start"
                         >
                             {/* Edit Mode Controls */}
                             {isEditMode && (
@@ -298,10 +300,11 @@ export default function CategoryCarousel({
                 </div>
 
                 {/* Right Arrow */}
+                {/* Arrows hidden on mobile - touch scroll instead */}
                 {showRightArrow && (
                     <button
                         onClick={() => scroll("right")}
-                        className="absolute right-0 z-10 bg-white/80 hover:bg-white shadow-md rounded-full p-2 transition-all"
+                        className="absolute right-0 z-10 bg-white/80 hover:bg-white shadow-md rounded-full p-2 transition-all hidden md:block"
                         style={{ transform: "translateX(50%)" }}
                     >
                         <ChevronRight size={20} className="text-slate-700" />

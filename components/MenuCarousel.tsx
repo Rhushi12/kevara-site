@@ -26,15 +26,16 @@ export default function MenuCarousel({
 
     return (
         <div className="relative group/carousel h-full">
-            {/* Scrollable Carousel Container */}
+            {/* Scrollable Carousel Container - Smooth touch scroll on mobile */}
             <div
                 ref={scrollContainerRef}
-                className="flex gap-8 overflow-x-auto h-full items-start [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
+                className="flex gap-8 overflow-x-auto h-full items-start [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] snap-x snap-mandatory touch-pan-x"
+                style={{ WebkitOverflowScrolling: 'touch' }}
             >
                 {images.map((img, idx) => (
                     <div
                         key={idx}
-                        className="relative group shrink-0"
+                        className="relative group shrink-0 snap-start"
                         style={{ width: `${imageWidth}px` }}
                     >
                         <Link href={img.href} className="block relative">

@@ -185,8 +185,8 @@ export default function AboutCarouselSection({ data = {}, isEditMode = false, on
                     {/* Scrollable Images */}
                     <div
                         ref={scrollContainerRef}
-                        className="flex gap-[40px] md:gap-[60px] overflow-x-auto scrollbar-hide pb-4"
-                        style={{ scrollSnapType: 'x mandatory' }}
+                        className="flex gap-[40px] md:gap-[60px] overflow-x-auto scrollbar-hide pb-4 touch-pan-x"
+                        style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
                     >
                         {images.map((img, idx) => (
                             <div

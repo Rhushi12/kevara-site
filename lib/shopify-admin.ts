@@ -1190,10 +1190,14 @@ async function ensureWholesaleDefinition() {
     { key: "name", name: "Name", type: "single_line_text_field" },
     { key: "email", name: "Email", type: "single_line_text_field" },
     { key: "phone", name: "Phone", type: "single_line_text_field" },
+    { key: "requirement_type", name: "Requirement Type", type: "single_line_text_field" },
     { key: "requirement", name: "Requirement", type: "single_line_text_field" },
+    { key: "state", name: "State", type: "single_line_text_field" },
+    { key: "city", name: "City", type: "single_line_text_field" },
     { key: "address", name: "Address", type: "multi_line_text_field" },
     { key: "description", name: "Description", type: "multi_line_text_field" },
     { key: "product_title", name: "Product Title", type: "single_line_text_field" },
+    { key: "product_handle", name: "Product Handle", type: "single_line_text_field" },
     { key: "date", name: "Date", type: "single_line_text_field" }
   ];
 
@@ -1207,10 +1211,14 @@ export async function createWholesaleInquiry(data: any) {
     { key: "name", value: data.name },
     { key: "email", value: data.email },
     { key: "phone", value: data.phone },
-    { key: "requirement", value: data.requirement },
-    { key: "address", value: data.address },
-    { key: "description", value: data.description },
-    { key: "product_title", value: data.product_title },
+    { key: "requirement_type", value: data.requirementType || "" },
+    { key: "requirement", value: data.requirement || "" },
+    { key: "state", value: data.state || "" },
+    { key: "city", value: data.city || "" },
+    { key: "address", value: data.address || "" },
+    { key: "description", value: data.description || "" },
+    { key: "product_title", value: data.product_title || "" },
+    { key: "product_handle", value: data.product_handle || "" },
     { key: "date", value: data.date }
   ];
 
