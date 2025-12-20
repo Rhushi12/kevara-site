@@ -1,5 +1,3 @@
-"use server";
-
 import { NextRequest, NextResponse } from "next/server";
 import { getOfferSlides, saveOfferSlides } from "@/lib/shopify-admin";
 

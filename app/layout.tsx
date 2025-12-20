@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Figtree, Lora, Prata } from "next/font/google";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 import QuickViewPanel from "@/components/QuickViewPanel";
 import SearchPanel from "@/components/SearchPanel";
 import ToastNotification from "@/components/admin/ToastNotification";
@@ -113,6 +114,7 @@ export default function RootLayout({
             </OfferProvider>
           </ToastProvider>
         </AuthProvider>
+        <Analytics />
       </body>
     </html>
   );
