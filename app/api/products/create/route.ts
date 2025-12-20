@@ -3,6 +3,10 @@ import { uploadFileToShopify } from '@/lib/shopify-admin';
 import { createCustomProduct } from '@/lib/custom-products';
 import { requireAdmin } from '@/lib/auth';
 
+// Route segment config for App Router
+export const maxDuration = 60; // 60 seconds timeout for file uploads
+export const dynamic = 'force-dynamic';
+
 // Helper for safe JSON parsing
 function parseJsonSafe(str: string | null): any | undefined {
     if (!str) return undefined;
