@@ -1,8 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Video, Plus, X } from "lucide-react";
 import EditableText from "@/components/admin/EditableText";
+
+// Sub-component to handle video playback with retry
+function AutoPlayVideo({ src, className }: { src: string; className: string }) {
+    const videoRef = useRef<HTMLVideoElement>(null);
+
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        // Try to play the video
+        const playVideo = async () => {
+            try {
+                video.muted = true; // Ensure muted for autoplay
+                await video.play();
+            } catch (error) {
+                console.log("Autoplay prevented, trying again...", error);
+                // Try again after a short delay
+                setTimeout(() => {
+                    video.play().catch(() => { });
+                }, 1000);
+            }
+        };
+
+        playVideo();
+    }, [src]);
+
+    return (
+        <video
+            ref={videoRef}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className={className}
+        >
+            <source src={src} type="video/mp4" />
+        </video>
+    );
+}
 
 interface VideoItem {
     id: string;
@@ -178,15 +217,10 @@ export default function VideoPromo({ data, isEditMode = false, onUpdate }: Video
                                 key={video.id}
                                 className="relative h-full overflow-hidden group bg-black flex items-center justify-center"
                             >
-                                <video
-                                    autoPlay
-                                    muted
-                                    loop
-                                    playsInline
+                                <AutoPlayVideo
+                                    src={video.videoUrl}
                                     className="w-full h-full object-contain"
-                                >
-                                    <source src={video.videoUrl} type="video/mp4" />
-                                </video>
+                                />
 
                                 {/* Remove button in edit mode */}
                                 {isEditMode && (
