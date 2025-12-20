@@ -79,9 +79,29 @@ export default function VideoPromo({ data, isEditMode = false, onUpdate }: Video
         onUpdate({ ...data, [field]: value });
     };
 
+    // Max file size: 30MB for smooth playback
+    const MAX_VIDEO_SIZE_MB = 30;
+    const MAX_VIDEO_SIZE_BYTES = MAX_VIDEO_SIZE_MB * 1024 * 1024;
+
     const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file || !onUpdate) return;
+
+        // Check file size
+        if (file.size > MAX_VIDEO_SIZE_BYTES) {
+            const fileSizeMB = (file.size / 1024 / 1024).toFixed(1);
+            alert(
+                `⚠️ Video too large (${fileSizeMB}MB)\n\n` +
+                `Maximum size: ${MAX_VIDEO_SIZE_MB}MB\n\n` +
+                `For best results:\n` +
+                `• Compress with HandBrake (free)\n` +
+                `• Use 720p resolution\n` +
+                `• Keep videos under 15 seconds\n` +
+                `• Use MP4 format with H.264 codec`
+            );
+            e.target.value = "";
+            return;
+        }
 
         setIsUploading(true);
         setUploadProgress(0);
