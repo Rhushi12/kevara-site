@@ -13,6 +13,14 @@ export async function POST(request: Request) {
             );
         }
 
+        console.log("[/api/products/update] Received update request:", {
+            handle,
+            title,
+            sizes,
+            sizesType: typeof sizes,
+            sizesIsArray: Array.isArray(sizes)
+        });
+
         const result = await updateCustomProduct({
             handle,
             title,

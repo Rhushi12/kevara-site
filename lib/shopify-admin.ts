@@ -531,7 +531,12 @@ export async function updateHeroSlide(handle: string, data: any) {
     { key: "link", value: data.link }
   ];
 
-  if (data.image_id || data.fileId) {
+  // Support both R2 URLs (fileUrl) and Shopify file IDs (fileId)
+  if (data.fileUrl) {
+    // R2 URL - store directly as image_url (text field)
+    fields.push({ key: "image_url", value: data.fileUrl });
+  } else if (data.image_id || data.fileId) {
+    // Shopify file ID - store in image field (file reference)
     fields.push({ key: "image", value: data.image_id || data.fileId });
   }
 
@@ -608,8 +613,13 @@ export async function getHeroSlides(prefix: string = "") {
     const node = edge.node;
     const fields = node.fields.reduce((acc: any, field: any) => {
       acc[field.key] = field.value;
+      // Handle Shopify file reference (legacy)
       if (field.key === "image" && field.reference) {
         acc.imageUrl = field.reference.image?.url;
+      }
+      // Handle R2 URL stored as text field (new)
+      if (field.key === "image_url" && field.value) {
+        acc.imageUrl = field.value;
       }
       return acc;
     }, {});

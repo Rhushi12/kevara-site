@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "cdn.shopify.com",
       },
+      {
+        protocol: "https",
+        hostname: "pub-bc73237650a24175b763c871869b4cf9.r2.dev",
+      },
     ],
   },
   async headers() {

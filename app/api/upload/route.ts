@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { uploadFileToShopify, pollForFileUrl } from "@/lib/shopify-admin";
+import { uploadToR2, generateFileKey } from "@/lib/r2";
 import { requireAdmin } from "@/lib/auth";
+
+export const maxDuration = 60; // 60 seconds timeout for file uploads
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
     try {
@@ -10,39 +13,21 @@ export async function POST(req: NextRequest) {
 
         const formData = await req.formData();
         const file = formData.get("file") as File | null;
+        const folder = (formData.get("folder") as string) || "uploads";
 
         if (!file) {
             return NextResponse.json({ error: "No file provided" }, { status: 400 });
         }
 
-        const fileId = await uploadFileToShopify(file);
+        console.log(`[API Upload] Starting R2 upload for ${file.name} (${file.size} bytes)`);
 
-        // We can't easily get the URL immediately because Shopify processes it asynchronously.
-        // However, for the purpose of the UI, we might need it.
-        // The `uploadFileToShopify` function returns the ID.
-        // We might need to poll or just return the ID and let the frontend handle it?
-        // Or we can return a temporary URL or just the ID.
-        // The frontend expects { src: url }.
-        // Let's return the ID and maybe a placeholder or try to construct the URL if possible?
-        // Actually, `uploadFileToShopify` returns the ID.
-        // We can return { id: fileId, src: "gid://..." } effectively.
-        // But the frontend needs a displayable URL.
-        // For now, let's return the ID. The frontend might need to refetch or we accept that it won't show immediately?
-        // Wait, `uploadFileToShopify` logic:
-        /*
-          ... on GenericFile { url }
-          ... on MediaImage { image { url } }
-        */
-        // It returns `fileData.fileCreate.files[0].id`.
-        // It doesn't return the URL because it's not ready yet.
-        // This is a limitation.
-        // For now, we will return the ID. The frontend can use `URL.createObjectURL(file)` for immediate preview,
-        // and store the ID for the backend.
+        // Generate unique key and upload to R2
+        const key = generateFileKey(file.name, folder);
+        const url = await uploadToR2(file, key, file.type);
 
-        // Poll for the URL so we can return a permanent link
-        const url = await pollForFileUrl(fileId);
+        console.log(`[API Upload] Upload complete. URL: ${url}`);
 
-        return NextResponse.json({ success: true, fileId, url });
+        return NextResponse.json({ success: true, fileId: key, url });
     } catch (error: any) {
         console.error("Upload failed:", error);
         return NextResponse.json({ error: error.message || "Upload failed" }, { status: 500 });

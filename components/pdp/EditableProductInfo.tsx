@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Heart, Save, X, Plus } from "lucide-react";
+import { Heart, Save, X } from "lucide-react";
 import LiquidButton from "@/components/ui/LiquidButton";
 import { useSizeGuideStore } from "@/lib/store";
 import { useAuth } from "@/context/AuthContext";
@@ -15,7 +15,7 @@ interface EditableProductInfoProps {
     colors: { name: string; hex: string }[];
     sizes: string[];
     description: string;
-    handle: string; // Product handle for updates
+    handle: string;
     onProductUpdate?: (updatedProduct: any) => void;
 }
 
@@ -32,6 +32,7 @@ export default function EditableProductInfo({
     onProductUpdate
 }: EditableProductInfoProps) {
     const { isAdmin } = useAuth();
+    const [selectedColor, setSelectedColor] = useState(colors[0]?.name || "");
     const [selectedSize, setSelectedSize] = useState(sizes[0] || "");
     const { openSizeGuide } = useSizeGuideStore();
 
@@ -43,7 +44,7 @@ export default function EditableProductInfo({
     const [editedTitle, setEditedTitle] = useState(title);
     const [editedPrice, setEditedPrice] = useState(price.toString());
     const [editedDescription, setEditedDescription] = useState(description);
-    const [editedSizes, setEditedSizes] = useState(sizes);
+    const [editedSizes, setEditedSizes] = useState<string[]>(sizes);
 
     const [showInquiryModal, setShowInquiryModal] = useState(false);
     const { showToast } = useToast();
@@ -67,6 +68,8 @@ export default function EditableProductInfo({
     const handleSave = async () => {
         setIsSaving(true);
         try {
+            console.log("[EditableProductInfo] Saving sizes:", editedSizes);
+
             const res = await fetch("/api/products/update", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -84,7 +87,6 @@ export default function EditableProductInfo({
                 throw new Error(error.error || "Failed to save");
             }
 
-            // Call callback to refresh product data
             if (onProductUpdate) {
                 onProductUpdate({
                     title: editedTitle,
@@ -96,7 +98,6 @@ export default function EditableProductInfo({
 
             setIsEditMode(false);
             showToast("Product updated successfully!", "success");
-            // Reload the page to show updated data
             window.location.reload();
         } catch (error: any) {
             console.error("Failed to save product:", error);
@@ -107,11 +108,13 @@ export default function EditableProductInfo({
     };
 
     const toggleSize = (size: string) => {
-        if (editedSizes.includes(size)) {
-            setEditedSizes(editedSizes.filter(s => s !== size));
-        } else {
-            setEditedSizes([...editedSizes, size]);
-        }
+        setEditedSizes(prev => {
+            if (prev.includes(size)) {
+                return prev.filter(s => s !== size);
+            } else {
+                return [...prev, size];
+            }
+        });
     };
 
     // Current display values
@@ -120,7 +123,7 @@ export default function EditableProductInfo({
     const displaySizes = isEditMode ? editedSizes : sizes;
 
     return (
-        <div className="flex flex-col gap-8 sticky top-24 relative group">
+        <div className="flex flex-col gap-6 sticky top-24 relative group">
             {/* Admin Edit Controls */}
             {isAdmin && !isEditMode && (
                 <button
@@ -227,7 +230,30 @@ export default function EditableProductInfo({
                 </div>
             )}
 
-            {/* Size Selection - Always visible */}
+            {/* Color Selection - Text based */}
+            {!isEditMode && colors.length > 0 && (
+                <div className="space-y-3">
+                    <span className="text-sm font-bold uppercase tracking-widest text-slate-900">
+                        Color: <span className="text-slate-500 font-normal capitalize">{selectedColor}</span>
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                        {colors.map((color) => (
+                            <button
+                                key={color.name}
+                                onClick={() => setSelectedColor(color.name)}
+                                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${selectedColor === color.name
+                                        ? "border-slate-900 bg-slate-900 text-white"
+                                        : "border-slate-200 text-slate-600 hover:border-slate-900 hover:text-slate-900"
+                                    }`}
+                            >
+                                {color.name}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Size Selection */}
             <div className="space-y-3">
                 <div className="flex justify-between items-center">
                     <span className="text-sm font-bold uppercase tracking-widest text-slate-900">
@@ -250,8 +276,8 @@ export default function EditableProductInfo({
                                 key={size}
                                 onClick={() => toggleSize(size)}
                                 className={`h-10 min-w-[3rem] px-3 rounded border text-sm font-medium transition-all ${editedSizes.includes(size)
-                                    ? "border-[#006D77] bg-[#006D77] text-white"
-                                    : "border-slate-200 text-slate-400 hover:border-slate-400"
+                                        ? "border-[#006D77] bg-[#006D77] text-white"
+                                        : "border-slate-200 text-slate-400 hover:border-slate-400"
                                     }`}
                             >
                                 {size}
@@ -264,9 +290,9 @@ export default function EditableProductInfo({
                             <button
                                 key={size}
                                 onClick={() => setSelectedSize(size)}
-                                className={`h-10 min-w-[3rem] px-3 rounded border text-sm font-medium transition-all relative overflow-hidden ${selectedSize === size
-                                    ? "border-slate-900 bg-slate-900 text-white"
-                                    : "border-slate-200 text-slate-600 hover:border-slate-900 hover:text-slate-900"
+                                className={`h-10 min-w-[3rem] px-3 rounded border text-sm font-medium transition-all ${selectedSize === size
+                                        ? "border-slate-900 bg-slate-900 text-white"
+                                        : "border-slate-200 text-slate-600 hover:border-slate-900 hover:text-slate-900"
                                     }`}
                             >
                                 {size}
@@ -274,7 +300,7 @@ export default function EditableProductInfo({
                         ))}
                     </div>
                 ) : (
-                    <p className="text-sm text-slate-500 italic">No sizes available</p>
+                    <p className="text-sm text-slate-500 italic">No sizes available - click Edit to add sizes</p>
                 )}
             </div>
 
@@ -299,4 +325,5 @@ export default function EditableProductInfo({
         </div>
     );
 }
+
 

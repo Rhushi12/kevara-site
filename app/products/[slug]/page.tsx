@@ -15,6 +15,10 @@ import RelatedProductsCarousel from "@/components/pdp/RelatedProductsCarousel";
 import SustainabilityBanner from "@/components/pdp/SustainabilityBanner";
 import { MOCK_SHOPIFY_PRODUCTS } from "@/lib/mockData";
 
+// Force dynamic rendering to always fetch fresh product data
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function ProductPage({ params }: { params: { slug: string } }) {
     // Await params for Next.js 15 compatibility
     // @ts-ignore

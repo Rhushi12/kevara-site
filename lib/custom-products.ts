@@ -21,12 +21,8 @@ async function upsertMetaobject(type: string, handle: string, fields: any[]) {
   const variables = {
     handle: { type, handle },
     metaobject: {
-      fields,
-      capabilities: {
-        publishable: {
-          status: "ACTIVE"
-        }
-      }
+      fields
+      // Removed publishable capability - not all metaobject types support it
     }
   };
 
@@ -142,35 +138,37 @@ export async function createCustomProduct(data: CustomProductInput) {
     { key: "slug", value: slug }
   ];
 
-  // Add image GIDs as JSON string if provided (legacy Shopify Files flow)
+  // Handle images based on input type:
+  // - For R2 URLs: Write to 'image_urls' field (text field that stores JSON)
+  // - For Shopify File GIDs: Write to 'images' field (file reference type)
+  if (data.imageUrls && data.imageUrls.length > 0) {
+    // New R2 flow - store URLs in the text field 'image_urls'
+    fields.push({
+      key: "image_urls",
+      value: JSON.stringify(data.imageUrls)
+    });
+  }
   if (data.imageGids && data.imageGids.length > 0) {
+    // Legacy Shopify Files flow - store GIDs (these are valid file references)
     fields.push({
       key: "images",
       value: JSON.stringify(data.imageGids)
     });
   }
 
-  // Add R2 image URLs directly if provided (new R2 flow - preferred)
-  if (data.imageUrls && data.imageUrls.length > 0) {
+  // Add video GID or URL - both use the same 'video' field
+  // R2 video URL takes priority over Shopify GID
+  if (data.videoUrl) {
+    // New R2 flow - store URL directly
     fields.push({
-      key: "image_urls",
-      value: JSON.stringify(data.imageUrls)
+      key: "video",
+      value: data.videoUrl
     });
-  }
-
-  // Add video GID if provided (legacy)
-  if (data.videoGid) {
+  } else if (data.videoGid) {
+    // Legacy Shopify Files flow - store GID
     fields.push({
       key: "video",
       value: data.videoGid
-    });
-  }
-
-  // Add video URL if provided (new R2 flow)
-  if (data.videoUrl) {
-    fields.push({
-      key: "video_url",
-      value: data.videoUrl
     });
   }
 
