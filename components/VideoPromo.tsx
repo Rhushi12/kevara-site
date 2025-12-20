@@ -27,6 +27,7 @@ const DEFAULT_DATA = {
 
 export default function VideoPromo({ data, isEditMode = false, onUpdate }: VideoPromoProps) {
     const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
 
     const {
         title = DEFAULT_DATA.title,
@@ -44,6 +45,7 @@ export default function VideoPromo({ data, isEditMode = false, onUpdate }: Video
         if (!file || !onUpdate) return;
 
         setIsUploading(true);
+        setUploadProgress(0);
         try {
             const { getAuthToken } = await import("@/lib/auth-client");
             const token = await getAuthToken();
@@ -61,16 +63,32 @@ export default function VideoPromo({ data, isEditMode = false, onUpdate }: Video
                 throw new Error(result.error || "Failed to get upload URL");
             }
 
-            // Upload directly to R2 using presigned URL
-            const uploadRes = await fetch(result.uploadUrl, {
-                method: "PUT",
-                body: file,
-                headers: {
-                    "Content-Type": file.type,
-                },
-            });
+            // Upload directly to R2 using XMLHttpRequest for progress tracking
+            await new Promise<void>((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
 
-            if (!uploadRes.ok) throw new Error("Upload to storage failed");
+                xhr.upload.addEventListener("progress", (event) => {
+                    if (event.lengthComputable) {
+                        const percent = Math.round((event.loaded / event.total) * 100);
+                        setUploadProgress(percent);
+                    }
+                });
+
+                xhr.addEventListener("load", () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        resolve();
+                    } else {
+                        reject(new Error("Upload to storage failed"));
+                    }
+                });
+
+                xhr.addEventListener("error", () => reject(new Error("Upload failed")));
+                xhr.addEventListener("abort", () => reject(new Error("Upload cancelled")));
+
+                xhr.open("PUT", result.uploadUrl);
+                xhr.setRequestHeader("Content-Type", file.type);
+                xhr.send(file);
+            });
 
             const newVideo: VideoItem = {
                 id: `vid-${Date.now()}`,
@@ -84,6 +102,7 @@ export default function VideoPromo({ data, isEditMode = false, onUpdate }: Video
             alert(`Failed to upload video: ${error.message}`);
         } finally {
             setIsUploading(false);
+            setUploadProgress(0);
             e.target.value = ""; // Reset input
         }
     };
@@ -203,15 +222,29 @@ export default function VideoPromo({ data, isEditMode = false, onUpdate }: Video
                     </div>
                 )}
 
+                {/* Upload Progress Overlay */}
+                {isUploading && (
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-30 rounded-2xl">
+                        <div className="text-white text-center">
+                            <div className="text-5xl font-bold mb-4">{uploadProgress}%</div>
+                            <p className="text-white/70 mb-6">Uploading video...</p>
+
+                            {/* Progress Bar */}
+                            <div className="w-64 h-2 bg-white/20 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-[#006D77] transition-all duration-300 ease-out rounded-full"
+                                    style={{ width: `${uploadProgress}%` }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Add More Button - Overlay in corner */}
-                {isEditMode && videos.length > 0 && videos.length < 5 && (
+                {isEditMode && videos.length > 0 && videos.length < 5 && !isUploading && (
                     <label className="absolute bottom-4 right-4 z-20 cursor-pointer bg-white/90 backdrop-blur-sm text-slate-900 px-4 py-2 rounded-full font-medium hover:bg-white transition-colors flex items-center gap-2 shadow-lg">
-                        {isUploading ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-slate-900 border-t-transparent" />
-                        ) : (
-                            <Plus size={16} />
-                        )}
-                        <span>{isUploading ? "Uploading..." : `Add Video (${videos.length}/5)`}</span>
+                        <Plus size={16} />
+                        <span>Add Video ({videos.length}/5)</span>
                         <input
                             type="file"
                             accept="video/*"
