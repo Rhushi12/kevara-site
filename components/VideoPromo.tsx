@@ -67,6 +67,7 @@ const DEFAULT_DATA = {
 export default function VideoPromo({ data, isEditMode = false, onUpdate }: VideoPromoProps) {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [statusMessage, setStatusMessage] = useState("");
 
     const {
         title = DEFAULT_DATA.title,
@@ -79,32 +80,18 @@ export default function VideoPromo({ data, isEditMode = false, onUpdate }: Video
         onUpdate({ ...data, [field]: value });
     };
 
-    // Max file size: 30MB for smooth playback
-    const MAX_VIDEO_SIZE_MB = 30;
-    const MAX_VIDEO_SIZE_BYTES = MAX_VIDEO_SIZE_MB * 1024 * 1024;
+    // Compress videos larger than 5MB
+    const COMPRESSION_THRESHOLD_MB = 5;
+    const COMPRESSION_THRESHOLD_BYTES = COMPRESSION_THRESHOLD_MB * 1024 * 1024;
 
     const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file || !onUpdate) return;
 
-        // Check file size
-        if (file.size > MAX_VIDEO_SIZE_BYTES) {
-            const fileSizeMB = (file.size / 1024 / 1024).toFixed(1);
-            alert(
-                `⚠️ Video too large (${fileSizeMB}MB)\n\n` +
-                `Maximum size: ${MAX_VIDEO_SIZE_MB}MB\n\n` +
-                `For best results:\n` +
-                `• Compress with HandBrake (free)\n` +
-                `• Use 720p resolution\n` +
-                `• Keep videos under 15 seconds\n` +
-                `• Use MP4 format with H.264 codec`
-            );
-            e.target.value = "";
-            return;
-        }
-
         setIsUploading(true);
         setUploadProgress(0);
+        setStatusMessage("Preparing video...");
+
         try {
             const { getAuthToken } = await import("@/lib/auth-client");
             const token = await getAuthToken();
@@ -114,13 +101,45 @@ export default function VideoPromo({ data, isEditMode = false, onUpdate }: Video
                 return;
             }
 
-            // Use presigned URL for large video uploads
+            let fileToUpload: File | Blob = file;
+            let fileName = file.name;
+
+            // Compress if file is larger than threshold
+            if (file.size > COMPRESSION_THRESHOLD_BYTES) {
+                try {
+                    // Dynamic import for code splitting
+                    const { compressVideo, isCompressionSupported } = await import("@/lib/video-compressor");
+
+                    if (isCompressionSupported()) {
+                        setStatusMessage("Compressing video...");
+                        const result = await compressVideo(file, {
+                            maxWidth: 720,
+                            quality: 28,
+                            onProgress: (progress) => setUploadProgress(Math.round(progress * 0.5)), // First 50% for compression
+                            onMessage: (msg) => setStatusMessage(msg)
+                        });
+
+                        fileToUpload = result.blob;
+                        fileName = file.name.replace(/\.[^/.]+$/, ".mp4");
+                        setStatusMessage(`Compressed! ${result.compressionRatio.toFixed(0)}% smaller`);
+                    }
+                } catch (compressionError) {
+                    console.warn("Compression failed, uploading original:", compressionError);
+                    setStatusMessage("Compression unavailable, uploading original...");
+                }
+            }
+
+            setStatusMessage("Getting upload URL...");
+
+            // Use presigned URL for video uploads
             const { getPresignedUploadUrl } = await import("@/app/actions/upload-media");
-            const result = await getPresignedUploadUrl(token, file.name, file.type, "videos");
+            const result = await getPresignedUploadUrl(token, fileName, "video/mp4", "videos");
 
             if (!result.success || !result.uploadUrl || !result.publicUrl) {
                 throw new Error(result.error || "Failed to get upload URL");
             }
+
+            setStatusMessage("Uploading video...");
 
             // Upload directly to R2 using XMLHttpRequest for progress tracking
             await new Promise<void>((resolve, reject) => {
@@ -128,8 +147,9 @@ export default function VideoPromo({ data, isEditMode = false, onUpdate }: Video
 
                 xhr.upload.addEventListener("progress", (event) => {
                     if (event.lengthComputable) {
-                        const percent = Math.round((event.loaded / event.total) * 100);
-                        setUploadProgress(percent);
+                        // 50-100% for upload (compression was 0-50%)
+                        const uploadPercent = Math.round((event.loaded / event.total) * 50);
+                        setUploadProgress(50 + uploadPercent);
                     }
                 });
 
@@ -145,8 +165,8 @@ export default function VideoPromo({ data, isEditMode = false, onUpdate }: Video
                 xhr.addEventListener("abort", () => reject(new Error("Upload cancelled")));
 
                 xhr.open("PUT", result.uploadUrl);
-                xhr.setRequestHeader("Content-Type", file.type);
-                xhr.send(file);
+                xhr.setRequestHeader("Content-Type", "video/mp4");
+                xhr.send(fileToUpload);
             });
 
             const newVideo: VideoItem = {
@@ -281,7 +301,7 @@ export default function VideoPromo({ data, isEditMode = false, onUpdate }: Video
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-30 rounded-2xl">
                         <div className="text-white text-center">
                             <div className="text-5xl font-bold mb-4">{uploadProgress}%</div>
-                            <p className="text-white/70 mb-6">Uploading video...</p>
+                            <p className="text-white/70 mb-6">{statusMessage || "Processing..."}</p>
 
                             {/* Progress Bar */}
                             <div className="w-64 h-2 bg-white/20 rounded-full overflow-hidden">
