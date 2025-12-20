@@ -1,66 +1,51 @@
 "use client";
 
 import { useState } from "react";
-import { Heart, Upload, Video, Image as ImageIcon } from "lucide-react";
-import LiquidButton from "@/components/ui/LiquidButton";
+import { Upload, Video, Plus, X } from "lucide-react";
 import EditableText from "@/components/admin/EditableText";
 import SimpleImageUploadModal from "@/components/admin/SimpleImageUploadModal";
-import DimensionBadge from "@/components/admin/DimensionBadge";
-import { authUpload } from "@/lib/auth-client";
+
+interface VideoItem {
+    id: string;
+    videoUrl: string;
+}
 
 interface VideoPromoProps {
     data?: {
-        subtitle?: string;
         title?: string;
-        buttonText?: string;
-        buttonLink?: string;
-        videoUrl?: string;
-        fallbackImage?: string;
-        logoImage?: string;
-        video_id?: string;
-        logo_id?: string;
-        fallback_id?: string;
+        subtitle?: string;
+        videos?: VideoItem[];
     };
     isEditMode?: boolean;
     onUpdate?: (data: any) => void;
 }
 
 const DEFAULT_DATA = {
-    subtitle: "Trendy Collection",
-    title: "Connect. Communicate. Collaborate.",
-    buttonText: "Shop Collection",
-    buttonLink: "/collections/all",
-    videoUrl: "https://videos.pexels.com/video-files/3205916/3205916-hd_1920_1080_25fps.mp4",
-    fallbackImage: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=1000&auto=format&fit=crop",
-    logoImage: "",
+    title: "Our Story in Motion",
+    subtitle: "Experience the elegance",
+    videos: [] as VideoItem[],
 };
 
 export default function VideoPromo({ data, isEditMode = false, onUpdate }: VideoPromoProps) {
-    const [uploadType, setUploadType] = useState<"video" | "logo" | "fallback" | null>(null);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
 
     const {
-        subtitle = DEFAULT_DATA.subtitle,
         title = DEFAULT_DATA.title,
-        buttonText = DEFAULT_DATA.buttonText,
-        buttonLink = DEFAULT_DATA.buttonLink,
-        videoUrl = DEFAULT_DATA.videoUrl,
-        fallbackImage = DEFAULT_DATA.fallbackImage,
-        logoImage = DEFAULT_DATA.logoImage,
+        subtitle = DEFAULT_DATA.subtitle,
+        videos = DEFAULT_DATA.videos,
     } = data || {};
 
-    const updateField = (field: string, value: string) => {
+    const updateField = (field: string, value: any) => {
         if (!onUpdate) return;
         onUpdate({ ...data, [field]: value });
     };
 
-    const handleFileUpload = async (file: File) => {
-        if (!onUpdate || !uploadType) return;
+    const handleVideoUpload = async (file: File) => {
+        if (!onUpdate) return;
 
         setIsUploading(true);
         try {
-            // Get token for Server Action
             const { getAuthToken } = await import("@/lib/auth-client");
             const token = await getAuthToken();
 
@@ -73,184 +58,147 @@ export default function VideoPromo({ data, isEditMode = false, onUpdate }: Video
             formData.append("file", file);
             formData.append("token", token);
 
-            // Import Server Action dynamically or at top-level?
-            // Next.js actions can be imported.
-            // We need to import it at the top level usually, but inside client component is fine.
             const { uploadMediaAction } = await import("@/app/actions/upload-media");
-
             const result = await uploadMediaAction(formData);
 
             if (!result.success) throw new Error(result.error);
 
-            const { url, fileId } = result;
+            const newVideo: VideoItem = {
+                id: `vid-${Date.now()}`,
+                videoUrl: result.url,
+            };
 
-            switch (uploadType) {
-                case "video":
-                    onUpdate({ ...data, videoUrl: url, video_id: fileId });
-                    break;
-                case "logo":
-                    onUpdate({ ...data, logoImage: url, logo_id: fileId });
-                    break;
-                case "fallback":
-                    onUpdate({ ...data, fallbackImage: url, fallback_id: fileId });
-                    break;
-            }
-
+            const updatedVideos = [...videos, newVideo];
+            onUpdate({ ...data, videos: updatedVideos });
             setIsUploadModalOpen(false);
-            setUploadType(null);
         } catch (error: any) {
             console.error("Upload failed:", error);
-            alert(`Failed to upload file: ${error.message}`);
+            alert(`Failed to upload video: ${error.message}`);
         } finally {
             setIsUploading(false);
         }
     };
 
-    const openUploadModal = (type: "video" | "logo" | "fallback") => {
-        setUploadType(type);
-        setIsUploadModalOpen(true);
+    const removeVideo = (id: string) => {
+        if (!onUpdate) return;
+        const updatedVideos = videos.filter(v => v.id !== id);
+        onUpdate({ ...data, videos: updatedVideos });
     };
 
+    // Calculate grid columns based on number of videos
+    const getGridClasses = () => {
+        const count = videos.length;
+        if (count === 0) return "grid-cols-1";
+        if (count === 1) return "grid-cols-1 max-w-xs mx-auto";
+        if (count === 2) return "grid-cols-2 max-w-lg mx-auto";
+        if (count === 3) return "grid-cols-3 max-w-2xl mx-auto";
+        if (count === 4) return "grid-cols-2 md:grid-cols-4 max-w-3xl mx-auto";
+        return "grid-cols-2 md:grid-cols-3 lg:grid-cols-5"; // 5 videos
+    };
+
+    // No videos - show placeholder / upload button
+    if (videos.length === 0 && !isEditMode) {
+        return null; // Hide section if no videos and not in edit mode
+    }
+
     return (
-        <section className="container mx-auto px-4 py-20">
-            <div className="relative h-[600px] w-full rounded-2xl overflow-hidden">
-                {/* Background Video */}
-                <video
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="absolute inset-0 w-full h-full object-cover"
-                    key={videoUrl}
-                >
-                    <source src={videoUrl} type="video/mp4" />
-                    <img
-                        src={fallbackImage}
-                        alt="Fashion Promo"
-                        className="absolute inset-0 w-full h-full object-cover"
-                    />
-                </video>
-
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-black/30" />
-
-                {/* Dimension Badge for Admin */}
-                <DimensionBadge isAdmin={isEditMode} />
-
-                {/* Admin Controls */}
-                {isEditMode && (
-                    <div className="absolute top-4 right-4 z-20 flex gap-2 flex-wrap justify-end max-w-[300px]">
-                        <button
-                            onClick={() => openUploadModal("video")}
-                            disabled={isUploading}
-                            className="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-3 py-2 rounded-full text-sm transition-colors flex items-center gap-2 disabled:opacity-50"
-                        >
-                            <Video size={14} />
-                            {isUploading && uploadType === "video" ? "Uploading..." : "Change Video"}
-                        </button>
-                        <button
-                            onClick={() => openUploadModal("logo")}
-                            disabled={isUploading}
-                            className="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-3 py-2 rounded-full text-sm transition-colors flex items-center gap-2 disabled:opacity-50"
-                        >
-                            <ImageIcon size={14} />
-                            {logoImage ? "Change Logo" : "Add Logo"}
-                        </button>
-                        <button
-                            onClick={() => openUploadModal("fallback")}
-                            disabled={isUploading}
-                            className="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-3 py-2 rounded-full text-sm transition-colors flex items-center gap-2 disabled:opacity-50"
-                        >
-                            <ImageIcon size={14} />
-                            Fallback Image
-                        </button>
-                    </div>
-                )}
-
-                {/* Content */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-4 z-10">
-                    {/* Logo or Heart Icon */}
-                    <div className="mb-6 animate-fade-in-up">
-                        {logoImage ? (
-                            <img
-                                src={logoImage}
-                                alt="Brand Logo"
-                                className="w-16 h-16 object-contain"
-                            />
-                        ) : (
-                            <Heart className="w-12 h-12 text-white" strokeWidth={1.5} />
-                        )}
-                    </div>
-
+        <section className="py-16 md:py-24 bg-[#FDFBF7]">
+            <div className="container mx-auto px-4">
+                {/* Header */}
+                <div className="text-center mb-12">
                     {isEditMode ? (
                         <>
                             <EditableText
                                 value={subtitle}
                                 onSave={(val) => updateField("subtitle", val)}
                                 isAdmin={true}
-                                className="text-sm md:text-base font-bold tracking-[0.2em] uppercase mb-4 bg-transparent border-b border-white/20"
+                                className="text-sm font-bold tracking-[0.2em] uppercase text-[#006D77] mb-3"
                             />
                             <EditableText
                                 value={title}
                                 onSave={(val) => updateField("title", val)}
                                 isAdmin={true}
-                                className="text-4xl md:text-5xl font-lora font-medium mb-8 leading-tight max-w-3xl bg-transparent border-b border-white/20 text-center"
+                                className="text-3xl md:text-5xl font-lora text-slate-900"
                             />
-                            <div className="flex gap-2 items-center">
-                                <EditableText
-                                    value={buttonText}
-                                    onSave={(val) => updateField("buttonText", val)}
-                                    isAdmin={true}
-                                    className="text-sm bg-transparent border-b border-white/20"
-                                />
-                                <EditableText
-                                    value={buttonLink}
-                                    onSave={(val) => updateField("buttonLink", val)}
-                                    isAdmin={true}
-                                    className="text-xs bg-transparent border-b border-white/20 text-white/70"
-                                    placeholder="/collections/..."
-                                />
-                            </div>
                         </>
                     ) : (
                         <>
-                            <span className="text-sm md:text-base font-bold tracking-[0.2em] uppercase mb-4 animate-fade-in-up delay-100">
+                            <span className="text-sm font-bold tracking-[0.2em] uppercase text-[#006D77] mb-3 block">
                                 {subtitle}
                             </span>
-
-                            <h2 className="text-4xl md:text-6xl font-lora font-medium mb-8 leading-tight max-w-3xl animate-fade-in-up delay-200">
-                                {title.split(". ").map((part, i, arr) => (
-                                    <span key={i}>
-                                        {part}{i < arr.length - 1 ? ". " : ""}
-                                        {i === 1 && <br />}
-                                    </span>
-                                ))}
+                            <h2 className="text-3xl md:text-5xl font-lora text-slate-900">
+                                {title}
                             </h2>
-
-                            <div className="animate-fade-in-up delay-300">
-                                <LiquidButton
-                                    href={buttonLink}
-                                    variant="secondary"
-                                    className="bg-white text-slate-900 hover:text-slate-900 border-none"
-                                >
-                                    {buttonText}
-                                </LiquidButton>
-                            </div>
                         </>
                     )}
                 </div>
+
+                {/* Video Grid */}
+                <div className={`grid gap-4 md:gap-6 ${getGridClasses()}`}>
+                    {videos.map((video) => (
+                        <div
+                            key={video.id}
+                            className="relative aspect-[9/16] rounded-xl overflow-hidden bg-gray-100 shadow-lg group"
+                        >
+                            <video
+                                autoPlay
+                                muted
+                                loop
+                                playsInline
+                                className="absolute inset-0 w-full h-full object-cover"
+                            >
+                                <source src={video.videoUrl} type="video/mp4" />
+                            </video>
+
+                            {/* Remove button in edit mode */}
+                            {isEditMode && (
+                                <button
+                                    onClick={() => removeVideo(video.id)}
+                                    className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-10"
+                                    title="Remove video"
+                                >
+                                    <X size={14} />
+                                </button>
+                            )}
+                        </div>
+                    ))}
+
+                    {/* Add Video Button (Edit Mode Only) */}
+                    {isEditMode && videos.length < 5 && (
+                        <button
+                            onClick={() => setIsUploadModalOpen(true)}
+                            disabled={isUploading}
+                            className="aspect-[9/16] rounded-xl border-2 border-dashed border-gray-300 hover:border-[#006D77] transition-colors flex flex-col items-center justify-center gap-3 text-gray-400 hover:text-[#006D77] disabled:opacity-50"
+                        >
+                            {isUploading ? (
+                                <div className="animate-spin rounded-full h-8 w-8 border-2 border-current border-t-transparent" />
+                            ) : (
+                                <>
+                                    <Plus size={32} />
+                                    <span className="text-sm font-medium">Add Video</span>
+                                    <span className="text-xs opacity-60">{videos.length}/5</span>
+                                </>
+                            )}
+                        </button>
+                    )}
+                </div>
+
+                {/* Empty State for Edit Mode */}
+                {isEditMode && videos.length === 0 && (
+                    <div className="text-center text-gray-400 mt-8">
+                        <Video size={48} className="mx-auto mb-3 opacity-50" />
+                        <p className="text-sm">Add up to 5 portrait videos to showcase your collection</p>
+                    </div>
+                )}
             </div>
 
+            {/* Upload Modal */}
             <SimpleImageUploadModal
                 isOpen={isUploadModalOpen}
-                onClose={() => {
-                    setIsUploadModalOpen(false);
-                    setUploadType(null);
-                }}
-                onUpload={handleFileUpload}
-                accept={uploadType === "video" ? "video/*" : "image/*"}
-                title={uploadType === "video" ? "Upload Video (max 100MB)" : "Upload Image"}
-                aspectRatio={uploadType === "video" ? undefined : 16 / 9}
+                onClose={() => setIsUploadModalOpen(false)}
+                onUpload={handleVideoUpload}
+                accept="video/*"
+                title="Upload Portrait Video"
             />
         </section>
     );
