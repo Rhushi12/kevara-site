@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import ProductImage from "@/components/ui/ProductImage";
 import { motion, AnimatePresence } from "framer-motion";
 import { ZoomIn, X, ChevronLeft, ChevronRight, Play } from "lucide-react";
 
@@ -115,13 +116,14 @@ export default function ProductGallery({ images, video }: ProductGalleryProps) {
                                     className="w-full h-full object-cover"
                                 />
                             ) : (
-                                <Image
+                                <ProductImage
                                     src={selectedMedia.url}
                                     alt={selectedMedia.alt}
                                     fill
                                     className="object-cover"
                                     priority
                                     sizes="(max-width: 768px) 100vw, 50vw"
+                                    containerClassName="absolute inset-0"
                                 />
                             )}
                         </motion.div>

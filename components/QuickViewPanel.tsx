@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { X, Minus, Plus } from "lucide-react";
 import Image from "next/image";
+import ProductImage from "@/components/ui/ProductImage";
 import { useQuickViewStore } from "@/lib/store";
 import LiquidButton from "@/components/ui/LiquidButton";
 import WholesaleInquiryModal from "@/components/pdp/WholesaleInquiryModal";
@@ -161,11 +162,12 @@ export default function QuickViewPanel() {
                     <div className="qv-content-item flex gap-6 mb-8">
                         <div className="relative w-24 aspect-[3/4] bg-gray-100 rounded-sm overflow-hidden shrink-0">
                             {imageUrl && (
-                                <Image
+                                <ProductImage
                                     src={imageUrl}
                                     alt={title}
                                     fill
                                     className="object-cover"
+                                    containerClassName="absolute inset-0"
                                 />
                             )}
                         </div>
