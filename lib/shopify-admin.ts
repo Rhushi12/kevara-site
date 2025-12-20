@@ -1401,14 +1401,15 @@ export async function saveOfferSlides(slides: any[]) {
   logDebug("saveOfferSlides payload", { fields, imageGids });
 
   try {
-    const result = await upsertMetaobject("offer_config", "main-offer", fields);
+    // Pass false for publish to avoid "Capability is not enabled: publishable" error
+    const result = await upsertMetaobject("offer_config", "main-offer", fields, false);
     logDebug("saveOfferSlides success", { id: result });
     return result;
   } catch (error: any) {
     if (error.message && error.message.includes("No metaobject definition exists")) {
       console.log("[saveOfferSlides] Definition missing, creating...");
       await ensureOfferDefinition();
-      const result = await upsertMetaobject("offer_config", "main-offer", fields);
+      const result = await upsertMetaobject("offer_config", "main-offer", fields, false);
       return result;
     }
     console.error("[saveOfferSlides] Failed:", error);
