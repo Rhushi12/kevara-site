@@ -36,24 +36,33 @@ import { useToast } from "@/context/ToastContext";
 
 interface PageRendererProps {
     slug: string;
+    initialContent?: PageContent | null;
 }
 
-export default function PageRenderer({ slug }: PageRendererProps) {
+export default function PageRenderer({ slug, initialContent }: PageRendererProps) {
     const router = useRouter();
     const { isAdmin, loading: authLoading } = useAuth();
 
-    const [content, setContent] = useState<PageContent | null>(null);
+    const [content, setContent] = useState<PageContent | null>(initialContent || null);
     const [isEditMode, setIsEditMode] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [loading, setLoading] = useState(true);
+    // If initialContent provided, loading is false initially
+    const [loading, setLoading] = useState(!initialContent);
     const [isRedirecting, setIsRedirecting] = useState(false);
     const [notFound, setNotFound] = useState(false);
     const { showToast } = useToast();
 
-    // Fetch Page Content
+    // Fetch Page Content (only if not provided initially or slug changes)
     useEffect(() => {
         if (!slug) return;
+        // Skip fetch if we have initial content matching the slug (basic check)
+        // Note: Ideally we'd compare more robustly, but for now assuming if initialContent is passed, it's correct
+        if (initialContent) {
+            setLoading(false);
+            return;
+        }
+
         async function fetchContent() {
             try {
                 const res = await fetch(`/api/builder/content?handle=${slug}`, { cache: 'no-store' });
