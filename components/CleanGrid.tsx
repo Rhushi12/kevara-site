@@ -175,7 +175,7 @@ export default function CleanGrid({
                         <div className="overflow-hidden">
                             {/* Mobile: Horizontal Scroll (All Products) */}
                             <div
-                                className="md:hidden overflow-x-auto pb-8 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide flex gap-4 touch-pan-x"
+                                className="md:hidden overflow-x-auto pb-8 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide flex gap-4 touch-pan-y"
                                 style={{ WebkitOverflowScrolling: 'touch' }}
                             >
                                 {products.map((product, index) => (

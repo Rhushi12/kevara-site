@@ -140,7 +140,7 @@ export default function CategoryCarousel({
                 <div
                     ref={scrollRef}
                     onScroll={handleScroll}
-                    className="flex items-center overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory touch-pan-x"
+                    className="flex items-center overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory touch-pan-y"
                     style={{
                         gap: "22px",
                         scrollbarWidth: "none",

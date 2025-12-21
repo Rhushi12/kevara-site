@@ -249,7 +249,7 @@ export default function ShopByOccasion({
 
                         {/* Products Grid - Mobile Scroll / Desktop Grid */}
                         <div
-                            className="overflow-x-auto md:overflow-hidden pb-8 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory scrollbar-hide touch-pan-x"
+                            className="overflow-x-auto md:overflow-hidden pb-8 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory scrollbar-hide touch-pan-y"
                             style={{ WebkitOverflowScrolling: 'touch' }}
                         >
                             <AnimatePresence initial={false} custom={direction} mode="popLayout">

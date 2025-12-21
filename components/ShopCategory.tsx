@@ -231,7 +231,7 @@ export default function ShopCategory({ data, isEditMode = false, onUpdate }: Sho
                         {/* Carousel container - smooth touch scroll on mobile */}
                         <div
                             ref={carousel}
-                            className="overflow-x-auto cursor-grab active:cursor-grabbing scrollbar-hide snap-x snap-mandatory touch-pan-x"
+                            className="overflow-x-auto cursor-grab active:cursor-grabbing scrollbar-hide snap-x snap-mandatory touch-pan-y"
                             onMouseDown={handleMouseDown}
                             onMouseLeave={handleMouseLeave}
                             onMouseUp={handleMouseUp}
