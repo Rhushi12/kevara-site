@@ -9,6 +9,7 @@ import { useState } from "react";
 import { Upload } from "lucide-react";
 import { authUpload } from "@/lib/auth-client";
 import { useToast } from "@/context/ToastContext";
+import SimpleImageUploadModal from "@/components/admin/SimpleImageUploadModal";
 
 interface EssentialsHeroProps {
     data?: {
@@ -43,11 +44,9 @@ export default function EssentialsHero({ data = {}, isEditMode = false, onUpdate
         onUpdate({ ...data, [field]: value });
     };
 
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+    const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
-        setIsUploading(true);
+    const handleUploadComplete = async (file: File) => {
         const formData = new FormData();
         formData.append('file', file);
 
@@ -62,7 +61,7 @@ export default function EssentialsHero({ data = {}, isEditMode = false, onUpdate
             console.error('Upload failed:', error);
             showToast('Failed to upload image', 'error');
         } finally {
-            setIsUploading(false);
+            setUploadModalOpen(false);
         }
     };
 
@@ -98,25 +97,13 @@ export default function EssentialsHero({ data = {}, isEditMode = false, onUpdate
 
                             {/* Upload Button (Edit Mode) */}
                             {isEditMode && (
-                                <label className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg cursor-pointer hover:bg-white transition-colors flex items-center gap-2 z-30">
+                                <button
+                                    onClick={() => setUploadModalOpen(true)}
+                                    className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg cursor-pointer hover:bg-white transition-colors flex items-center gap-2 z-30"
+                                >
                                     <Upload size={14} />
                                     <span className="text-xs font-medium text-black">Change</span>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleImageUpload}
-                                        className="hidden"
-                                        disabled={isUploading}
-                                    />
-                                </label>
-                            )}
-
-                            {isUploading && (
-                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-40">
-                                    <div className="bg-white px-4 py-2 rounded-lg">
-                                        <p className="text-xs font-medium text-black">Uploading...</p>
-                                    </div>
-                                </div>
+                                </button>
                             )}
                         </motion.div>
                     </div>
@@ -219,7 +206,14 @@ export default function EssentialsHero({ data = {}, isEditMode = false, onUpdate
                     </div>
                 </div>
             </div>
-        </section>
+            <SimpleImageUploadModal
+                isOpen={uploadModalOpen}
+                onClose={() => setUploadModalOpen(false)}
+                onUpload={handleUploadComplete}
+                title="Upload Hero Image"
+                aspectRatio={1} // Square aspect ratio
+            />
+        </section >
     );
 }
 

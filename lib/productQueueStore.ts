@@ -50,6 +50,42 @@ export const useProductQueueStore = create<ProductQueueStore>((set, get) => ({
 
         set({ isProcessing: true });
 
+        // Helper function to upload a single file to R2
+        const uploadFileToR2 = async (file: File, folder: string = "products"): Promise<string> => {
+            // Step 1: Get presigned URL
+            const presignRes = await fetch("/api/r2/presign", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    filename: file.name,
+                    contentType: file.type,
+                    folder,
+                }),
+            });
+
+            if (!presignRes.ok) {
+                const err = await presignRes.json();
+                throw new Error(err.error || "Failed to get upload URL");
+            }
+
+            const { uploadUrl, publicUrl } = await presignRes.json();
+
+            // Step 2: Upload file directly to R2
+            const uploadRes = await fetch(uploadUrl, {
+                method: "PUT",
+                body: file,
+                headers: {
+                    "Content-Type": file.type,
+                },
+            });
+
+            if (!uploadRes.ok) {
+                throw new Error(`Failed to upload ${file.name} to storage`);
+            }
+
+            return publicUrl;
+        };
+
         // Process items one by one
         for (const item of queue) {
             if (item.status !== 'pending') continue;
@@ -62,25 +98,37 @@ export const useProductQueueStore = create<ProductQueueStore>((set, get) => ({
             }));
 
             try {
-                const formData = new FormData();
-                formData.append('title', item.title);
-                formData.append('price', item.price);
-                formData.append('description', item.description);
-                item.files.forEach((file) => formData.append('images', file));
-
-                if (item.colors.length > 0) {
-                    formData.append('colors', JSON.stringify(item.colors));
-                }
-                if (item.sizes.length > 0) {
-                    formData.append('sizes', JSON.stringify(item.sizes));
+                // Upload all images to R2
+                const imageUrls: string[] = [];
+                for (let i = 0; i < item.files.length; i++) {
+                    const url = await uploadFileToR2(item.files[i], "products");
+                    imageUrls.push(url);
                 }
 
+                // Send JSON payload to API
                 const res = await fetch('/api/products/create', {
                     method: 'POST',
-                    body: formData,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: item.title,
+                        price: item.price,
+                        description: item.description,
+                        imageUrls: imageUrls,
+                        colors: item.colors.length > 0 ? item.colors : undefined,
+                        sizes: item.sizes.length > 0 ? item.sizes : undefined,
+                    }),
                 });
 
-                const data = await res.json();
+                // Handle non-JSON responses (e.g. HTML error pages from proxies)
+                const contentType = res.headers.get("content-type");
+                let data;
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    data = await res.json();
+                } else {
+                    const text = await res.text();
+                    console.error("Non-JSON Response in Queue:", text.substring(0, 500));
+                    throw new Error(`Server returned ${res.status} (Potential firewall block during background upload)`);
+                }
 
                 if (!res.ok) throw new Error(data.error || 'Failed to create product');
 

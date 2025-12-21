@@ -5,6 +5,7 @@ import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import PremiumImageLoader from "@/components/ui/PremiumImageLoader";
 import EditableText from "@/components/admin/EditableText";
 import { authUpload } from "@/lib/auth-client";
+import SimpleImageUploadModal from "@/components/admin/SimpleImageUploadModal";
 
 interface ScrollFadeBannerProps {
     data?: {
@@ -57,16 +58,13 @@ export default function ScrollFadeBanner({ data = {}, isEditMode = false, onUpda
         onUpdate({ ...data, [field]: value });
     };
 
-    const [isUploading, setIsUploading] = useState(false);
-    const [uploadingIndex, setUploadingIndex] = useState<1 | 2 | null>(null);
 
+    const [uploadModalOpen, setUploadModalOpen] = useState(false);
+    const [currentUploadField, setCurrentUploadField] = useState<'image' | 'image2' | null>(null);
 
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, imageField: 'image' | 'image2') => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+    const handleUploadComplete = async (file: File) => {
+        if (!currentUploadField) return;
 
-        setIsUploading(true);
-        setUploadingIndex(imageField === 'image' ? 1 : 2);
         const formData = new FormData();
         formData.append('file', file);
 
@@ -75,15 +73,20 @@ export default function ScrollFadeBanner({ data = {}, isEditMode = false, onUpda
 
             if (res.ok) {
                 const data = await res.json();
-                updateField(imageField, data.url);
+                updateField(currentUploadField, data.url);
             }
         } catch (error) {
             console.error('Upload failed:', error);
             alert('Failed to upload image');
         } finally {
-            setIsUploading(false);
-            setUploadingIndex(null);
+            setUploadModalOpen(false);
+            setCurrentUploadField(null);
         }
+    };
+
+    const openUploadModal = (field: 'image' | 'image2') => {
+        setCurrentUploadField(field);
+        setUploadModalOpen(true);
     };
 
     return (
@@ -123,24 +126,12 @@ export default function ScrollFadeBanner({ data = {}, isEditMode = false, onUpda
 
                     {/* Left Image Upload Button (Edit Mode) */}
                     {isEditMode && (
-                        <label className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg cursor-pointer hover:bg-white transition-colors flex items-center gap-2 z-30 opacity-0 group-hover/left:opacity-100">
+                        <button
+                            onClick={() => openUploadModal('image')}
+                            className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg cursor-pointer hover:bg-white transition-colors flex items-center gap-2 z-30 opacity-0 group-hover/left:opacity-100"
+                        >
                             <span className="text-xs font-medium text-black">Change Image 1</span>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => handleImageUpload(e, 'image')}
-                                className="hidden"
-                                disabled={isUploading}
-                            />
-                        </label>
-                    )}
-
-                    {isUploading && uploadingIndex === 1 && (
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-30">
-                            <div className="bg-white px-4 py-2 rounded-lg">
-                                <p className="text-xs font-medium text-black">Uploading...</p>
-                            </div>
-                        </div>
+                        </button>
                     )}
                 </motion.div>
 
@@ -161,24 +152,12 @@ export default function ScrollFadeBanner({ data = {}, isEditMode = false, onUpda
 
                     {/* Right Image Upload Button (Edit Mode) */}
                     {isEditMode && (
-                        <label className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg cursor-pointer hover:bg-white transition-colors flex items-center gap-2 z-30 opacity-0 group-hover/right:opacity-100">
+                        <button
+                            onClick={() => openUploadModal('image2')}
+                            className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg cursor-pointer hover:bg-white transition-colors flex items-center gap-2 z-30 opacity-0 group-hover/right:opacity-100"
+                        >
                             <span className="text-xs font-medium text-black">Change Image 2</span>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => handleImageUpload(e, 'image2')}
-                                className="hidden"
-                                disabled={isUploading}
-                            />
-                        </label>
-                    )}
-
-                    {isUploading && uploadingIndex === 2 && (
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-30">
-                            <div className="bg-white px-4 py-2 rounded-lg">
-                                <p className="text-xs font-medium text-black">Uploading...</p>
-                            </div>
-                        </div>
+                        </button>
                     )}
                 </motion.div>
 
@@ -251,6 +230,14 @@ export default function ScrollFadeBanner({ data = {}, isEditMode = false, onUpda
                     )}
                 </motion.div>
             </div>
-        </section>
+
+            <SimpleImageUploadModal
+                isOpen={uploadModalOpen}
+                onClose={() => setUploadModalOpen(false)}
+                onUpload={handleUploadComplete}
+                title={`Upload Banner Image`}
+                aspectRatio={singleImageOnMobile && isMobile ? 3 / 4 : 16 / 9}
+            />
+        </section >
     );
 }

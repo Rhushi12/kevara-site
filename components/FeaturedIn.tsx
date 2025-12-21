@@ -1,7 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Upload } from "lucide-react";
 import EditableText from "@/components/admin/EditableText";
+import SimpleImageUploadModal from "@/components/admin/SimpleImageUploadModal";
+import { authUpload } from "@/lib/auth-client";
+import { useState } from "react";
 
 interface FeaturedInProps {
     data?: {
@@ -31,6 +35,38 @@ export default function FeaturedIn({ data = {}, isEditMode = false, onUpdate }: 
     const updateField = (field: string, value: string) => {
         if (!onUpdate) return;
         onUpdate({ ...data, [field]: value });
+    };
+
+    const [uploadModalOpen, setUploadModalOpen] = useState(false);
+    const [uploadIndex, setUploadIndex] = useState<number | null>(null);
+
+    const handleUploadComplete = async (file: File) => {
+        if (uploadIndex === null || !onUpdate) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const res = await authUpload('/api/upload', formData);
+
+            if (res.ok) {
+                const result = await res.json();
+                const newBrands = [...brands];
+                newBrands[uploadIndex] = { ...newBrands[uploadIndex], logo: result.url };
+                onUpdate({ ...data, brands: newBrands });
+            }
+        } catch (error) {
+            console.error('Upload failed:', error);
+            alert('Failed to upload image');
+        } finally {
+            setUploadModalOpen(false);
+            setUploadIndex(null);
+        }
+    };
+
+    const openUploadModal = (index: number) => {
+        setUploadIndex(index);
+        setUploadModalOpen(true);
     };
 
     return (
@@ -64,8 +100,9 @@ export default function FeaturedIn({ data = {}, isEditMode = false, onUpdate }: 
                             whileInView={{ opacity: 1 }}
                             viewport={{ once: true }}
                             transition={{ delay: index * 0.1 }}
-                            className="flex items-center justify-center"
+                            className="flex items-center justify-center relative group p-4"
                         >
+                            {/* Logo or Text */}
                             {brand.logo ? (
                                 <img
                                     src={brand.logo}
@@ -79,10 +116,30 @@ export default function FeaturedIn({ data = {}, isEditMode = false, onUpdate }: 
                                     </span>
                                 </div>
                             )}
+
+                            {/* Edit Mode Upload Overlay */}
+                            {isEditMode && (
+                                <button
+                                    onClick={() => openUploadModal(index)}
+                                    className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300"
+                                    title="Upload Logo"
+                                >
+                                    <Upload size={20} className="text-gray-600" />
+                                </button>
+                            )}
                         </motion.div>
                     ))}
                 </div>
             </div>
-        </section>
+
+
+            <SimpleImageUploadModal
+                isOpen={uploadModalOpen}
+                onClose={() => setUploadModalOpen(false)}
+                onUpload={handleUploadComplete}
+                title="Upload Brand Logo"
+                aspectRatio={undefined} // Free crop for logos
+            />
+        </section >
     );
 }

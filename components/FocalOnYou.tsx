@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import PremiumImageLoader from "@/components/ui/PremiumImageLoader";
 import { Upload } from "lucide-react";
 import EditableText from "@/components/admin/EditableText";
 import { authUpload } from "@/lib/auth-client";
+import SimpleImageUploadModal from "@/components/admin/SimpleImageUploadModal";
 
 interface FocalItem {
     id: string;
@@ -40,9 +41,24 @@ export default function FocalOnYou({
     const [localHeading, setLocalHeading] = useState(heading);
     const [localSubheading, setLocalSubheading] = useState(subheading);
 
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+    // Sync with props
+    useEffect(() => {
+        setLocalHeading(heading);
+    }, [heading]);
+
+    useEffect(() => {
+        setLocalSubheading(subheading);
+    }, [subheading]);
+
+    useEffect(() => {
+        setLocalItems(items);
+    }, [items]);
+
+    const [uploadModalOpen, setUploadModalOpen] = useState(false);
+    const [uploadIndex, setUploadIndex] = useState<number | null>(null);
+
+    const handleUploadComplete = async (file: File) => {
+        if (uploadIndex === null) return;
 
         const formData = new FormData();
         formData.append('file', file);
@@ -53,7 +69,7 @@ export default function FocalOnYou({
             if (res.ok) {
                 const data = await res.json();
                 const newItems = [...localItems];
-                newItems[index] = { ...newItems[index], image: data.url };
+                newItems[uploadIndex] = { ...newItems[uploadIndex], image: data.url };
                 setLocalItems(newItems);
                 if (onUpdate) {
                     onUpdate({ heading: localHeading, subheading: localSubheading, items: newItems });
@@ -62,7 +78,15 @@ export default function FocalOnYou({
         } catch (error) {
             console.error('Upload failed:', error);
             alert('Failed to upload image');
+        } finally {
+            setUploadModalOpen(false);
+            setUploadIndex(null);
         }
+    };
+
+    const openUploadModal = (index: number) => {
+        setUploadIndex(index);
+        setUploadModalOpen(true);
     };
 
     const updateHeading = (val: string) => {
@@ -138,20 +162,25 @@ export default function FocalOnYou({
 
                             {/* Edit Mode Upload Overlay */}
                             {isEditMode && (
-                                <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center">
+                                <button
+                                    onClick={() => openUploadModal(index)}
+                                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center w-full h-full"
+                                >
                                     <Upload size={24} className="text-white" />
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) => handleImageUpload(e, index)}
-                                        className="hidden"
-                                    />
-                                </label>
+                                </button>
                             )}
                         </div>
                     ))}
                 </div>
             </div>
+
+            <SimpleImageUploadModal
+                isOpen={uploadModalOpen}
+                onClose={() => setUploadModalOpen(false)}
+                onUpload={handleUploadComplete}
+                title="Upload Focal Image"
+                aspectRatio={1} // Square
+            />
         </section>
     );
 }

@@ -44,7 +44,7 @@ const PUBLIC_EXTENSIONS = ['.svg', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.we
 // Rate limiting (simple in-memory, use Redis for production at scale)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const RATE_LIMIT_MAX = 100; // 100 requests per minute
+const RATE_LIMIT_MAX = 500; // Increased from 100 to 500 to support shared office IPs (NAT)
 
 function checkRateLimit(ip: string): boolean {
     const now = Date.now();

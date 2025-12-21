@@ -243,7 +243,20 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
                 }),
             });
 
-            const data = await res.json();
+            // Handle non-JSON responses (e.g. HTML error pages from proxies)
+            const contentType = res.headers.get("content-type");
+            let data;
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                data = await res.json();
+            } else {
+                const text = await res.text();
+                console.error("Non-JSON Response:", text.substring(0, 500)); // Log first 500 chars
+                // Try to extract a meaningful error if it's HTML
+                const titleMatch = text.match(/<title>(.*?)<\/title>/i);
+                throw new Error(
+                    `Server returned ${res.status} ${res.statusText} (${titleMatch ? titleMatch[1] : "Not proper JSON"}). Potential proxy/firewall block.`
+                );
+            }
 
             if (!res.ok) throw new Error(data.error || "Failed to create product");
 

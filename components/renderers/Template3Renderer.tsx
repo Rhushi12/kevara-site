@@ -46,7 +46,7 @@ export default function Template3Renderer({ content, slug }: Template3RendererPr
     // Product Data & Filtering
     const [products, setProducts] = useState<any[]>([]);
     const [sortedMode, setSortedMode] = useState(false);
-    const [filterKeyword, setFilterKeyword] = useState("");
+    const [filterKeywords, setFilterKeywords] = useState<string[]>([]);
     const [activeFilters, setActiveFilters] = useState<FilterState>({
         categories: [],
         priceRange: { min: "", max: "" },
@@ -55,7 +55,9 @@ export default function Template3Renderer({ content, slug }: Template3RendererPr
     });
     const [selectedProductHandles, setSelectedProductHandles] = useState<string[]>([]);
     const [sortBy, setSortBy] = useState("featured");
+    const [defaultSort, setDefaultSort] = useState("featured");
     const [categoryCarouselItems, setCategoryCarouselItems] = useState<any[]>([]);
+    const [focalOnYouData, setFocalOnYouData] = useState<any>(null);
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
@@ -90,9 +92,15 @@ export default function Template3Renderer({ content, slug }: Template3RendererPr
         if (content) {
             const data = content as any;
             if (data.sortedMode !== undefined) setSortedMode(data.sortedMode);
-            if (data.filterKeyword) setFilterKeyword(data.filterKeyword);
+            if (data.activeFilterKeywords) {
+                setFilterKeywords(data.activeFilterKeywords);
+            } else if (data.filterKeyword) {
+                setFilterKeywords([data.filterKeyword]);
+            }
+            if (data.defaultSort) setDefaultSort(data.defaultSort);
             if (data.selectedProductHandles) setSelectedProductHandles(data.selectedProductHandles);
             if (data.categoryCarouselItems) setCategoryCarouselItems(data.categoryCarouselItems);
+            if (data.focalOnYouData) setFocalOnYouData(data.focalOnYouData);
             setPageContent(content);
         }
         setLoading(false);
@@ -138,9 +146,11 @@ export default function Template3Renderer({ content, slug }: Template3RendererPr
             const dataToSave = {
                 ...pageContent,
                 sortedMode,
-                filterKeyword,
+                activeFilterKeywords: filterKeywords,
                 selectedProductHandles,
-                categoryCarouselItems
+                defaultSort,
+                categoryCarouselItems,
+                focalOnYouData
             };
             const res = await fetch("/api/builder/content", {
                 method: "POST",
@@ -215,9 +225,11 @@ export default function Template3Renderer({ content, slug }: Template3RendererPr
         }
 
         // 1. Keyword Filter
-        if (sortedMode && filterKeyword) {
+        if (sortedMode && filterKeywords.length > 0) {
             finalProducts = finalProducts.filter(product =>
-                product.node.title.toLowerCase().includes(filterKeyword.toLowerCase())
+                filterKeywords.some(keyword =>
+                    keyword.trim() !== "" && product.node.title.toLowerCase().includes(keyword.toLowerCase().trim())
+                )
             );
         }
 
@@ -247,14 +259,16 @@ export default function Template3Renderer({ content, slug }: Template3RendererPr
         }
 
         // 3. Sorting Logic
-        if (sortBy !== "featured") {
+        const effectiveSort = sortBy !== "featured" ? sortBy : defaultSort;
+
+        if (effectiveSort !== "featured") {
             finalProducts = [...finalProducts].sort((a, b) => {
                 const priceA = parseFloat(a.node.priceRange.minVariantPrice.amount);
                 const priceB = parseFloat(b.node.priceRange.minVariantPrice.amount);
                 const titleA = a.node.title.toLowerCase();
                 const titleB = b.node.title.toLowerCase();
 
-                switch (sortBy) {
+                switch (effectiveSort) {
                     case "price-asc": return priceA - priceB;
                     case "price-desc": return priceB - priceA;
                     case "name-asc": return titleA.localeCompare(titleB);
@@ -290,6 +304,25 @@ export default function Template3Renderer({ content, slug }: Template3RendererPr
                     {isEditMode && (
                         <div className="fixed top-24 right-6 z-50 bg-white p-6 rounded-lg shadow-xl border border-gray-200 max-w-sm">
                             <h3 className="text-sm font-bold uppercase tracking-wider mb-4">Product Sorting</h3>
+
+                            {/* Default Sort Order (Admin Setting) */}
+                            <div className="mb-4">
+                                <label className="block text-xs font-medium text-gray-600 mb-2">
+                                    Default Sort Order
+                                </label>
+                                <select
+                                    value={defaultSort}
+                                    onChange={(e) => setDefaultSort(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-[#006D77] bg-white"
+                                >
+                                    <option value="featured">Featured (Manual)</option>
+                                    <option value="newest">Newest Arrivals</option>
+                                    <option value="price-asc">Price: Low to High</option>
+                                    <option value="price-desc">Price: High to Low</option>
+                                    <option value="name-asc">Name: A-Z</option>
+                                    <option value="name-desc">Name: Z-A</option>
+                                </select>
+                            </div>
                             <div className="flex items-center gap-3 mb-4">
                                 <button
                                     onClick={() => setSortedMode(!sortedMode)}
@@ -303,14 +336,42 @@ export default function Template3Renderer({ content, slug }: Template3RendererPr
                             </div>
                             {sortedMode && (
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-2">Filter by keyword</label>
-                                    <input
-                                        type="text"
-                                        value={filterKeyword}
-                                        onChange={(e) => setFilterKeyword(e.target.value)}
-                                        placeholder="Enter keyword..."
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-[#006D77]"
-                                    />
+                                    <label className="block text-xs font-medium text-gray-600 mb-2">
+                                        Filter by keywords (e.g., "T-shirt")
+                                    </label>
+                                    <div className="flex flex-col gap-2 mb-2">
+                                        {filterKeywords.map((keyword, index) => (
+                                            <div key={index} className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={keyword}
+                                                    onChange={(e) => {
+                                                        const newKeywords = [...filterKeywords];
+                                                        newKeywords[index] = e.target.value;
+                                                        setFilterKeywords(newKeywords);
+                                                    }}
+                                                    placeholder="Enter keyword..."
+                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-[#006D77]"
+                                                />
+                                                <button
+                                                    onClick={() => {
+                                                        const newKeywords = filterKeywords.filter((_, i) => i !== index);
+                                                        setFilterKeywords(newKeywords);
+                                                    }}
+                                                    className="p-2 text-red-500 hover:bg-red-50 rounded-md"
+                                                    title="Remove keyword"
+                                                >
+                                                    <X size={16} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <button
+                                        onClick={() => setFilterKeywords([...filterKeywords, ""])}
+                                        className="text-xs text-[#006D77] font-medium hover:underline mb-2"
+                                    >
+                                        + Add another keyword
+                                    </button>
                                     <p className="text-xs text-gray-500 mt-2">
                                         Showing {displayedProducts.length} of {products.length} products
                                     </p>
@@ -389,10 +450,10 @@ export default function Template3Renderer({ content, slug }: Template3RendererPr
 
                             {/* Product Grid */}
                             <div className="mb-4">
-                                {sortedMode && filterKeyword && (
+                                {sortedMode && filterKeywords.length > 0 && (
                                     <div className="bg-[#006D77]/10 border border-[#006D77]/20 rounded-lg p-4 mb-6">
                                         <p className="text-sm text-[#006D77] font-medium">
-                                            📊 Filtered by: <span className="font-bold">"{filterKeyword}"</span> - Showing {displayedProducts.length} products
+                                            📊 Filtered by: <span className="font-bold">{filterKeywords.filter(k => k.trim()).map(k => `"${k}"`).join(" or ")}</span> - Showing {displayedProducts.length} products
                                         </p>
                                     </div>
                                 )}
@@ -426,7 +487,7 @@ export default function Template3Renderer({ content, slug }: Template3RendererPr
 
                                 {displayedProducts.length === 0 && !isEditMode && (
                                     <div className="text-center py-12 bg-gray-50 rounded-lg">
-                                        <p className="text-gray-500">No products found matching "{filterKeyword}"</p>
+                                        <p className="text-gray-500">No products found matching {filterKeywords.filter(k => k.trim()).map(k => `"${k}"`).join(" or ")}</p>
                                     </div>
                                 )}
 
@@ -486,7 +547,11 @@ export default function Template3Renderer({ content, slug }: Template3RendererPr
                 </div>
 
                 {/* Focal On You Section */}
-                <FocalOnYou isEditMode={isEditMode} />
+                <FocalOnYou
+                    isEditMode={isEditMode}
+                    {...(focalOnYouData || {})}
+                    onUpdate={(newData) => setFocalOnYouData(newData)}
+                />
 
                 {/* Featured In Section */}
                 {pageContent.sections.map((section) => {

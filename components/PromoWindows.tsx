@@ -7,6 +7,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import EditableText from "@/components/admin/EditableText";
 import { authUpload } from "@/lib/auth-client";
+import SimpleImageUploadModal from "@/components/admin/SimpleImageUploadModal";
 
 interface PromoWindowsProps {
     data?: {
@@ -52,15 +53,12 @@ export default function PromoWindows({ data = {}, isEditMode = false, onUpdate }
         onUpdate({ windows: newWindows });
     };
 
-    const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
-    const [isUploading, setIsUploading] = useState(false);
+    const [uploadModalOpen, setUploadModalOpen] = useState(false);
+    const [uploadIndex, setUploadIndex] = useState<number | null>(null);
 
-    const handleImageUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+    const handleUploadComplete = async (file: File) => {
+        if (uploadIndex === null) return;
 
-        setUploadingIndex(index);
-        setIsUploading(true);
         const formData = new FormData();
         formData.append('file', file);
 
@@ -70,16 +68,21 @@ export default function PromoWindows({ data = {}, isEditMode = false, onUpdate }
             if (res.ok) {
                 const data = await res.json();
                 const newWindows = [...windows];
-                newWindows[index] = { ...newWindows[index], image: data.url };
+                newWindows[uploadIndex] = { ...newWindows[uploadIndex], image: data.url };
                 if (onUpdate) onUpdate({ windows: newWindows });
             }
         } catch (error) {
             console.error('Upload failed:', error);
             alert('Failed to upload image');
         } finally {
-            setIsUploading(false);
-            setUploadingIndex(null);
+            setUploadModalOpen(false);
+            setUploadIndex(null);
         }
+    };
+
+    const openUploadModal = (index: number) => {
+        setUploadIndex(index);
+        setUploadModalOpen(true);
     };
 
     return (
@@ -105,24 +108,12 @@ export default function PromoWindows({ data = {}, isEditMode = false, onUpdate }
 
                     {/* Upload Button (Edit Mode) */}
                     {isEditMode && (
-                        <label className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg cursor-pointer hover:bg-white transition-colors flex items-center gap-2 z-50">
+                        <button
+                            onClick={() => openUploadModal(index)}
+                            className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg cursor-pointer hover:bg-white transition-colors flex items-center gap-2 z-50"
+                        >
                             <span className="text-xs font-medium text-black">Change Image</span>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => handleImageUpload(index, e)}
-                                className="hidden"
-                                disabled={isUploading}
-                            />
-                        </label>
-                    )}
-
-                    {isUploading && uploadingIndex === index && (
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
-                            <div className="bg-white px-4 py-2 rounded-lg">
-                                <p className="text-xs font-medium text-black">Uploading...</p>
-                            </div>
-                        </div>
+                        </button>
                     )}
 
                     {/* Content */}
@@ -147,26 +138,52 @@ export default function PromoWindows({ data = {}, isEditMode = false, onUpdate }
                                     isAdmin={true}
                                     className="text-[11px] md:text-[13px] font-semibold text-white font-sans tracking-[1px] leading-[23.4px] mt-2 md:mt-4 uppercase underline hover:no-underline bg-white/10 border-b border-white/30 px-2 py-1 w-fit"
                                 />
+                                <div className="mt-2 w-full">
+                                    <label className="text-[10px] text-gray-300 uppercase tracking-wider font-semibold block mb-1">
+                                        Link URL:
+                                    </label>
+                                    <EditableText
+                                        value={window.link}
+                                        onSave={(val) => updateWindow(index, "link", val)}
+                                        isAdmin={true}
+                                        className="text-[11px] font-mono text-gray-300 bg-black/40 border-b border-white/30 px-2 py-1 w-full"
+                                    />
+                                </div>
                             </>
                         ) : (
                             <>
-                                <p className="text-[11px] md:text-[13px] font-semibold text-white font-sans tracking-[1px] leading-[16px] mb-2 md:mb-4 uppercase shadow-sm">
-                                    {window.subtitle}
-                                </p>
-                                <h3 className="text-[24px] md:text-[30px] font-lora text-white tracking-[-0.7px] leading-[34px] my-3 md:my-6 shadow-sm">
-                                    {window.title}
-                                </h3>
+                                {/* Full Card Link Overlay */}
                                 <Link
                                     href={window.link}
-                                    className="text-[11px] md:text-[13px] font-semibold text-white font-sans tracking-[1px] leading-[23.4px] mt-2 md:mt-4 uppercase underline hover:no-underline transition-all inline-block group-hover:translate-x-1 shadow-sm"
+                                    className="absolute inset-0 z-10"
+                                >
+                                    <span className="sr-only">View {window.title}</span>
+                                </Link>
+
+                                <p className="text-[11px] md:text-[13px] font-semibold text-white font-sans tracking-[1px] leading-[16px] mb-2 md:mb-4 uppercase shadow-sm relative z-0">
+                                    {window.subtitle}
+                                </p>
+                                <h3 className="text-[24px] md:text-[30px] font-lora text-white tracking-[-0.7px] leading-[34px] my-3 md:my-6 shadow-sm relative z-0">
+                                    {window.title}
+                                </h3>
+                                <span
+                                    className="text-[11px] md:text-[13px] font-semibold text-white font-sans tracking-[1px] leading-[23.4px] mt-2 md:mt-4 uppercase underline hover:no-underline transition-all inline-block group-hover:translate-x-1 shadow-sm relative z-0"
                                 >
                                     {window.linkText}
-                                </Link>
+                                </span>
                             </>
                         )}
                     </div>
                 </motion.div>
             ))}
+
+            <SimpleImageUploadModal
+                isOpen={uploadModalOpen}
+                onClose={() => setUploadModalOpen(false)}
+                onUpload={handleUploadComplete}
+                title="Upload Promo Image"
+                aspectRatio={3 / 2}
+            />
         </div>
     );
 }

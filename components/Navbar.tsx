@@ -15,6 +15,7 @@ import MenuCarousel from "./MenuCarousel";
 import { useSearchStore } from "@/components/SearchPanel";
 import { authUpload } from "@/lib/auth-client";
 import { useToast } from "@/context/ToastContext";
+import { compressImage } from "@/lib/imageCompression";
 
 export default function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -134,17 +135,23 @@ export default function Navbar() {
         if (!uploadTarget) return;
 
         try {
+            // Compress Image Client-Side
+            const compressedFile = await compressImage(file, {
+                maxWidth: 1600,
+                quality: 0.8,
+                type: "image/jpeg"
+            });
+
             const formData = new FormData();
-            formData.append("file", file);
+            formData.append("file", compressedFile);
 
             const res = await authUpload('/api/upload', formData);
             const data = await res.json();
 
-            if (!data.success) throw new Error("Upload failed");
+            if (!data.success || !data.url) throw new Error("Upload failed");
 
             const fileId = data.fileId;
-            const previewUrl = URL.createObjectURL(file);
-            const imageUrl = data.url || previewUrl;
+            const imageUrl = data.url; // Use ONLY the returned remote URL
 
             const updatedMenu = menuData.map(item => {
                 if (item.id === uploadTarget.menuId) {
@@ -163,9 +170,10 @@ export default function Navbar() {
             await saveMenuToShopify(updatedMenu);
             setIsUploadModalOpen(false);
             setUploadTarget(null);
-        } catch (error) {
+            showToast("Image uploaded successfully!", "success");
+        } catch (error: any) {
             console.error("Failed to upload image:", error);
-            showToast("Failed to upload image.", "error");
+            showToast(`Failed to upload image: ${error.message || "Unknown error"}`, "error");
         }
     };
 
@@ -556,27 +564,34 @@ export default function Navbar() {
                                 {/* VISUAL LAYOUT (About) */}
                                 {activeMenuItem.shopify_layout_type === "visual" && (
                                     <div className="flex gap-8 justify-center">
-                                        {activeMenuItem.images?.map((img, idx) => (
-                                            <motion.div key={idx} variants={itemVariants}>
-                                                <Link href={img.href} className="group block text-center">
-                                                    <div
-                                                        className="relative overflow-hidden mb-4 rounded-sm"
-                                                        style={{ width: '180px', height: '225px' }}
-                                                    >
-                                                        <Image
-                                                            src={img.src}
-                                                            alt={img.label}
-                                                            fill
-                                                            className="object-cover transition-transform duration-700 group-hover:scale-105"
-                                                        />
-                                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
-                                                    </div>
-                                                    <h3 className="text-xs font-geist uppercase tracking-[0.2em] text-slate-900">
-                                                        {img.label}
-                                                    </h3>
-                                                </Link>
-                                            </motion.div>
-                                        ))}
+                                        {activeMenuItem.images?.map((img, idx) => {
+                                            if (!img.src) return null;
+
+                                            // Normalize src
+                                            const imgSrc = img.src.startsWith('uploads/') ? `/${img.src}` : img.src;
+
+                                            return (
+                                                <motion.div key={idx} variants={itemVariants}>
+                                                    <Link href={img.href} className="group block text-center">
+                                                        <div
+                                                            className="relative overflow-hidden mb-4 rounded-sm"
+                                                            style={{ width: '180px', height: '225px' }}
+                                                        >
+                                                            <Image
+                                                                src={imgSrc}
+                                                                alt={img.label}
+                                                                fill
+                                                                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                                            />
+                                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
+                                                        </div>
+                                                        <h3 className="text-xs font-geist uppercase tracking-[0.2em] text-slate-900">
+                                                            {img.label}
+                                                        </h3>
+                                                    </Link>
+                                                </motion.div>
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
