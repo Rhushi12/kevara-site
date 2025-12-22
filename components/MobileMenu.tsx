@@ -172,7 +172,7 @@ export default function MobileMenu({ isOpen, onClose, menuItems }: MobileMenuPro
                                                             {/* Images Carousel */}
                                                             {item.images && (
                                                                 <div className="mt-6 -mx-6">
-                                                                    <div className="flex gap-3 overflow-x-auto px-6 snap-x snap-mandatory scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] touch-pan-y">
+                                                                    <div className="flex gap-3 overflow-x-auto px-6 snap-x snap-mandatory scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] touch-manipulation">
                                                                         {item.images.map((img, idx) => (
                                                                             <Link
                                                                                 key={idx}

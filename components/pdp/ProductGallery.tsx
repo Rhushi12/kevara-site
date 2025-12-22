@@ -59,7 +59,7 @@ export default function ProductGallery({ images, video }: ProductGalleryProps) {
         <>
             <div className="flex flex-col-reverse md:flex-row gap-4 sticky top-24">
                 {/* Thumbnails (Left Side on Desktop) */}
-                <div className="flex md:flex-col gap-4 overflow-x-auto md:overflow-y-auto md:max-h-[calc(100vh-12rem)] scrollbar-hide touch-pan-y">
+                <div className="flex md:flex-col gap-4 overflow-x-auto md:overflow-y-auto md:max-h-[calc(100vh-12rem)] scrollbar-hide touch-manipulation">
                     {mediaList.map((media, index) => (
                         <motion.button
                             key={index}

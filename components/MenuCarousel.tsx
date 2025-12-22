@@ -29,7 +29,7 @@ export default function MenuCarousel({
             {/* Scrollable Carousel Container - Smooth touch scroll on mobile */}
             <div
                 ref={scrollContainerRef}
-                className="flex gap-8 overflow-x-auto h-full items-start [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] snap-x snap-mandatory touch-pan-y"
+                className="flex gap-8 overflow-x-auto h-full items-start [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] snap-x snap-mandatory touch-manipulation"
                 style={{ WebkitOverflowScrolling: 'touch' }}
             >
                 {images.map((img, idx) => {

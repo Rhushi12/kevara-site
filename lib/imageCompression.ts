@@ -3,9 +3,36 @@ export async function compressImage(file: File, options?: { maxWidth?: number, q
     const quality = options?.quality || 0.8;
     const type = options?.type || "image/jpeg"; // Default to JPEG for compatibility
 
+    // Check if HEIC/HEIF
+    let processFile = file;
+    if (file.type === "image/heic" || file.type === "image/heif" || file.name.toLowerCase().endsWith('.heic')) {
+        try {
+            console.log("Converting HEIC to JPEG...");
+            // Dynamic import to avoid SSR "window is not defined" error
+            const heic2any = (await import("heic2any")).default;
+
+            const convertedBlob = await heic2any({
+                blob: file,
+                toType: "image/jpeg",
+                quality: quality
+            });
+
+            // Handle potential array return
+            const finalBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+            processFile = new File([finalBlob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+                type: "image/jpeg",
+                lastModified: Date.now()
+            });
+        } catch (error) {
+            console.error("HEIC conversion failed:", error);
+            // Fallback or rethrow? Let's try to proceed if possible or throw
+            throw new Error("HEIC conversion failed. Please try a different format.");
+        }
+    }
+
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(processFile);
         reader.onload = (event) => {
             const img = new Image();
             img.src = event.target?.result as string;

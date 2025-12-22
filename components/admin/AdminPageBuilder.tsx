@@ -85,8 +85,9 @@ export default function AdminPageBuilder({ slug }: AdminPageBuilderProps) {
 
             if (!res.ok) throw new Error("Failed to create redirect");
 
-            showToast("Redirect created! Reloading...", "success");
-            window.location.reload();
+            showToast("Redirect created! Navigating...", "success");
+            // Directly navigate to the target
+            window.location.href = redirectUrl;
 
         } catch (error) {
             console.error("Failed to create redirect:", error);

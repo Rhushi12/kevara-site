@@ -81,7 +81,7 @@ export default function RelatedProductsCarousel({ products }: RelatedProductsCar
                 {/* Carousel Container */}
                 <div
                     ref={sliderRef}
-                    className={`flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 touch-pan-y ${isDown ? "cursor-grabbing" : "cursor-grab"
+                    className={`flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 touch-manipulation ${isDown ? "cursor-grabbing" : "cursor-grab"
                         }`}
                     onMouseDown={handleMouseDown}
                     onMouseLeave={handleMouseLeave}

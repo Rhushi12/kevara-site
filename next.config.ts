@@ -38,16 +38,16 @@ const nextConfig: NextConfig = {
             value: 'max-age=63072000; includeSubDomains; preload'
           },
           {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN'
-          },
-          {
             key: 'X-Content-Type-Options',
             value: 'nosniff'
           },
           {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin'
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; connect-src 'self' https://*.r2.dev https://cdn.shopify.com; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.shopify.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data: https://cdn.shopify.com https://images.unsplash.com https://*.r2.dev; font-src 'self' https://fonts.gstatic.com; frame-ancestors 'self' https://admin.shopify.com https://*.myshopify.com;"
           }
           // Note: COOP/COEP headers for ffmpeg.wasm removed - they block cross-origin resources
           // Video compression will show a message if SharedArrayBuffer is unavailable

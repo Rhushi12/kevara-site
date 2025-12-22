@@ -16,7 +16,7 @@ export default function ProductTabs({ description }: { description?: string }) {
     return (
         <div className="mt-12 md:mt-0">
             {/* Tab Headers */}
-            <div className="flex gap-8 border-b border-gray-100 mb-6 overflow-x-auto touch-pan-y">
+            <div className="flex gap-8 border-b border-gray-100 mb-6 overflow-x-auto touch-manipulation">
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
