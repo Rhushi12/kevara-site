@@ -20,9 +20,43 @@ export async function POST(request: Request) {
         const body = await request.json();
         console.log("[Wholesale API] Request body:", JSON.stringify(body, null, 2));
 
-        // Basic validation
-        if (!body.name || !body.email || !body.phone) {
-            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+        // Validate required fields
+        const requiredFields = [
+            { key: 'name', label: 'Name' },
+            { key: 'email', label: 'Email' },
+            { key: 'phone', label: 'Phone Number' },
+            { key: 'requirementType', label: 'Type of Requirement' },
+            { key: 'state', label: 'State' },
+            { key: 'city', label: 'City' },
+            { key: 'address', label: 'Address' }
+        ];
+
+        const missingFields = requiredFields
+            .filter(field => !body[field.key] || body[field.key].trim() === '')
+            .map(field => field.label);
+
+        if (missingFields.length > 0) {
+            console.log("[Wholesale API] Missing required fields:", missingFields);
+            return NextResponse.json({
+                error: `Please fill in the following required fields: ${missingFields.join(', ')}`,
+                missingFields
+            }, { status: 400 });
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(body.email)) {
+            return NextResponse.json({
+                error: 'Please enter a valid email address'
+            }, { status: 400 });
+        }
+
+        // Validate phone number (at least 10 digits)
+        const phoneDigits = body.phone.replace(/\D/g, '');
+        if (phoneDigits.length < 10) {
+            return NextResponse.json({
+                error: 'Please enter a valid phone number (at least 10 digits)'
+            }, { status: 400 });
         }
 
         const id = await createWholesaleInquiry(body);
