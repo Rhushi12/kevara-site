@@ -50,7 +50,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; connect-src 'self' https://*.myshopify.com https://*.r2.dev https://*.cloudflarestorage.com https://cdn.shopify.com; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.shopify.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data: https://cdn.shopify.com https://images.unsplash.com https://*.r2.dev; font-src 'self' https://fonts.gstatic.com; frame-ancestors 'self' https://admin.shopify.com https://*.myshopify.com;"
+            value: "default-src 'self'; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.myshopify.com https://*.r2.dev https://*.cloudflarestorage.com https://cdn.shopify.com; script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: https://cdn.shopify.com https://*.firebaseapp.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data: https://cdn.shopify.com https://images.unsplash.com https://*.r2.dev https://*.googleusercontent.com; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://*.google.com; frame-ancestors 'self' https://admin.shopify.com https://*.myshopify.com;"
           }
           // Note: COOP/COEP headers for ffmpeg.wasm removed - they block cross-origin resources
           // Video compression will show a message if SharedArrayBuffer is unavailable
