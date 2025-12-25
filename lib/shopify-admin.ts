@@ -1186,8 +1186,9 @@ async function createMetaobjectDefinition(type: string, name: string, fieldDefin
 }
 
 async function ensureWholesaleDefinition() {
-  console.log("Attempting to create wholesale_inquiry definition...");
-  const fields = [
+  console.log("Checking wholesale_inquiry definition...");
+
+  const allRequiredFields = [
     { key: "name", name: "Name", type: "single_line_text_field" },
     { key: "email", name: "Email", type: "single_line_text_field" },
     { key: "phone", name: "Phone", type: "single_line_text_field" },
@@ -1202,8 +1203,76 @@ async function ensureWholesaleDefinition() {
     { key: "date", name: "Date", type: "single_line_text_field" }
   ];
 
-  await createMetaobjectDefinition("wholesale_inquiry", "Wholesale Inquiry", fields);
-  console.log("Successfully created wholesale_inquiry definition.");
+  // First check if definition exists and what fields it has
+  const checkQuery = `
+    query {
+      metaobjectDefinitionByType(type: "wholesale_inquiry") {
+        id
+        fieldDefinitions {
+          key
+        }
+      }
+    }
+  `;
+
+  const checkResult = await shopifyFetch(checkQuery);
+
+  if (!checkResult.metaobjectDefinitionByType) {
+    // Definition doesn't exist, create it
+    console.log("Creating wholesale_inquiry definition...");
+    await createMetaobjectDefinition("wholesale_inquiry", "Wholesale Inquiry", allRequiredFields);
+    console.log("Successfully created wholesale_inquiry definition.");
+    return;
+  }
+
+  // Definition exists, check for missing fields
+  const existingFieldKeys = new Set(
+    checkResult.metaobjectDefinitionByType.fieldDefinitions.map((f: any) => f.key)
+  );
+
+  const missingFields = allRequiredFields.filter(f => !existingFieldKeys.has(f.key));
+
+  if (missingFields.length === 0) {
+    console.log("wholesale_inquiry definition is up to date.");
+    return;
+  }
+
+  console.log("Adding missing fields to wholesale_inquiry:", missingFields.map(f => f.key));
+
+  // Update the definition with missing fields
+  const updateMutation = `
+    mutation UpdateMetaobjectDefinition($id: ID!, $definition: MetaobjectDefinitionUpdateInput!) {
+      metaobjectDefinitionUpdate(id: $id, definition: $definition) {
+        metaobjectDefinition {
+          id
+        }
+        userErrors {
+          field
+          message
+        }
+      }
+    }
+  `;
+
+  const updateResult = await shopifyFetch(updateMutation, {
+    id: checkResult.metaobjectDefinitionByType.id,
+    definition: {
+      fieldDefinitions: missingFields.map(f => ({
+        create: {
+          key: f.key,
+          name: f.name,
+          type: f.type
+        }
+      }))
+    }
+  });
+
+  if (updateResult.metaobjectDefinitionUpdate.userErrors?.length > 0) {
+    console.error("Failed to update wholesale_inquiry definition:", updateResult.metaobjectDefinitionUpdate.userErrors);
+    throw new Error("Failed to update wholesale_inquiry definition: " + JSON.stringify(updateResult.metaobjectDefinitionUpdate.userErrors));
+  }
+
+  console.log("Successfully updated wholesale_inquiry definition with missing fields.");
 }
 
 export async function createWholesaleInquiry(data: any) {
@@ -1230,8 +1299,12 @@ export async function createWholesaleInquiry(data: any) {
     logDebug("createWholesaleInquiry success", { id: result });
     return result;
   } catch (error: any) {
-    if (error.message && error.message.includes("No metaobject definition exists")) {
-      console.log("Metaobject definition missing. Creating it now...");
+    // Handle missing definition or missing field definitions
+    if (error.message && (
+      error.message.includes("No metaobject definition exists") ||
+      error.message.includes("Field definition") && error.message.includes("does not exist")
+    )) {
+      console.log("Metaobject definition missing or incomplete. Updating it now...");
       await ensureWholesaleDefinition();
       // Retry
       const result = await upsertMetaobject("wholesale_inquiry", handle, fields, false);
