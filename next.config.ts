@@ -50,7 +50,28 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.myshopify.com https://*.r2.dev https://*.cloudflarestorage.com https://cdn.shopify.com; script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: https://cdn.shopify.com https://*.firebaseapp.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data: https://cdn.shopify.com https://images.unsplash.com https://*.r2.dev https://*.googleusercontent.com; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://*.google.com; frame-ancestors 'self' https://admin.shopify.com https://*.myshopify.com;"
+            value: [
+              // Default fallback
+              "default-src 'self'",
+              // API connections - Firebase, Shopify, Cloudflare R2
+              "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.myshopify.com https://*.shopify.com https://*.r2.dev https://*.cloudflarestorage.com https://cdn.shopify.com https://www.google.com",
+              // Scripts - Firebase, Google APIs, blob for dynamic scripts
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: https://cdn.shopify.com https://*.firebaseapp.com https://apis.google.com https://www.gstatic.com",
+              // Styles
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              // Images - all sources used including user uploads
+              "img-src 'self' blob: data: https: http:",
+              // Fonts
+              "font-src 'self' https://fonts.gstatic.com data:",
+              // Frames for auth popups
+              "frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://*.google.com",
+              // Who can frame this site
+              "frame-ancestors 'self' https://admin.shopify.com https://*.myshopify.com",
+              // Media (video/audio)
+              "media-src 'self' blob: https://*.r2.dev https://*.cloudflarestorage.com https://cdn.shopify.com",
+              // Web workers
+              "worker-src 'self' blob:"
+            ].join("; ")
           }
           // Note: COOP/COEP headers for ffmpeg.wasm removed - they block cross-origin resources
           // Video compression will show a message if SharedArrayBuffer is unavailable
