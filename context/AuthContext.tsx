@@ -11,7 +11,8 @@ import {
     signInWithEmailAndPassword,
     updateProfile
 } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 interface AuthContextType {
     user: User | null;
@@ -34,6 +35,44 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export const useAuth = () => useContext(AuthContext);
+
+// Helper function to save user to Firestore
+async function saveUserToFirestore(user: User) {
+    try {
+        const userRef = doc(db, "users", user.uid);
+        await setDoc(userRef, {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName || "User",
+            photoURL: user.photoURL || null,
+            lastLogin: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        }, { merge: true }); // merge: true preserves existing fields like createdAt
+        console.log("[Auth] User saved to Firestore:", user.email);
+    } catch (error) {
+        console.error("[Auth] Failed to save user to Firestore:", error);
+        // Don't throw - login should still work even if Firestore save fails
+    }
+}
+
+// Helper to set createdAt on first signup
+async function createUserInFirestore(user: User, displayName: string) {
+    try {
+        const userRef = doc(db, "users", user.uid);
+        await setDoc(userRef, {
+            uid: user.uid,
+            email: user.email,
+            displayName: displayName || "User",
+            photoURL: user.photoURL || null,
+            createdAt: serverTimestamp(),
+            lastLogin: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        });
+        console.log("[Auth] New user created in Firestore:", user.email);
+    } catch (error) {
+        console.error("[Auth] Failed to create user in Firestore:", error);
+    }
+}
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
@@ -62,16 +101,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
 
-            // Sync to Shopify
-            await fetch('/api/auth/shopify-sync', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: user.email,
-                    displayName: user.displayName,
-                    uid: user.uid
-                })
-            });
+            // Save to Firebase Firestore
+            await saveUserToFirestore(user);
 
         } catch (error: any) {
             console.error("Error signing in with Google", error);
@@ -91,16 +122,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const result = await createUserWithEmailAndPassword(auth, email, pass);
             await updateProfile(result.user, { displayName: name });
 
-            // Sync to Shopify
-            await fetch('/api/auth/shopify-sync', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: email,
-                    displayName: name,
-                    uid: result.user.uid
-                })
-            });
+            // Create user in Firebase Firestore
+            await createUserInFirestore(result.user, name);
         } catch (error) {
             console.error("Signup failed", error);
             throw error;
@@ -111,16 +134,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
             const result = await signInWithEmailAndPassword(auth, email, pass);
 
-            // Sync to Shopify (Updates existing or creates if missing)
-            await fetch('/api/auth/shopify-sync', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: email,
-                    displayName: result.user.displayName,
-                    uid: result.user.uid
-                })
-            });
+            // Update lastLogin in Firebase Firestore
+            await saveUserToFirestore(result.user);
 
         } catch (error) {
             console.error("Email login failed", error);
