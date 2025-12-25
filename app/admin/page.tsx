@@ -8,6 +8,7 @@ import DashboardStats from "@/components/admin/DashboardStats";
 import AnalyticsCharts from "@/components/admin/AnalyticsCharts";
 import UsersTable from "@/components/admin/UsersTable";
 import MenuEditor from "@/components/admin/MenuEditor";
+import AdminManager from "@/components/admin/AdminManager";
 import WholesaleLeadsTable from "@/components/admin/WholesaleLeadsTable";
 import { db } from "@/lib/firebase";
 import { collection, writeBatch, doc } from "firebase/firestore";
@@ -106,9 +107,16 @@ export default function AdminPage() {
                     <div className="space-y-6 animate-in fade-in duration-500">
                         <div>
                             <h1 className="text-2xl font-lora font-bold text-slate-900">System Settings</h1>
-                            <p className="text-gray-500 text-sm">Database tools and configuration.</p>
+                            <p className="text-gray-500 text-sm">Manage admins and system configuration.</p>
                         </div>
-                        <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 max-w-xl">
+
+                        {/* Admin Management */}
+                        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 max-w-2xl">
+                            <AdminManager />
+                        </div>
+
+                        {/* Database Tools */}
+                        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 max-w-xl">
                             <h3 className="font-bold mb-4">Database Seeding</h3>
                             <LiquidButton
                                 onClick={seedDatabase}

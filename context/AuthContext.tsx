@@ -80,17 +80,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [isAdmin, setIsAdmin] = useState(false);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setUser(user);
-            // Check if user is an admin - uses environment variable or defaults
-            const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "rhushimanumehta@gmail.com").split(",").map(e => e.trim().toLowerCase());
-            if (user && user.email && adminEmails.includes(user.email.toLowerCase())) {
-                setIsAdmin(true);
-                if (typeof window !== 'undefined') localStorage.setItem('isAdmin', 'true');
+
+            if (user && user.email) {
+                // Check admin status from Firestore first, then fall back to env variable
+                try {
+                    const res = await fetch('/api/admin/admins');
+                    if (res.ok) {
+                        const data = await res.json();
+                        const adminEmails = (data.emails || []).map((e: string) => e.toLowerCase());
+                        if (adminEmails.includes(user.email.toLowerCase())) {
+                            setIsAdmin(true);
+                            if (typeof window !== 'undefined') localStorage.setItem('isAdmin', 'true');
+                        } else {
+                            setIsAdmin(false);
+                            if (typeof window !== 'undefined') localStorage.removeItem('isAdmin');
+                        }
+                    } else {
+                        throw new Error('API failed');
+                    }
+                } catch {
+                    // Fallback to environment variable
+                    const envAdminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "rhushimanumehta@gmail.com")
+                        .split(",").map(e => e.trim().toLowerCase());
+                    if (envAdminEmails.includes(user.email.toLowerCase())) {
+                        setIsAdmin(true);
+                        if (typeof window !== 'undefined') localStorage.setItem('isAdmin', 'true');
+                    } else {
+                        setIsAdmin(false);
+                        if (typeof window !== 'undefined') localStorage.removeItem('isAdmin');
+                    }
+                }
             } else {
                 setIsAdmin(false);
                 if (typeof window !== 'undefined') localStorage.removeItem('isAdmin');
             }
+
             setLoading(false);
         });
 
