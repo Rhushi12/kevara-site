@@ -5,9 +5,17 @@ import { useAuth } from '@/context/AuthContext';
 import { useProductQueueStore } from '@/lib/productQueueStore';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Loader2, CheckCircle, XCircle, Clock, Package, RefreshCw, Plus } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, Clock, Package, RefreshCw, Plus, Trash2, X, Check, Upload, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import CreateProductModal from '@/components/admin/CreateProductModal';
+
+interface BulkUploadResult {
+    row: number;
+    title: string;
+    handle?: string;
+    status: 'success' | 'error';
+    error?: string;
+}
 
 export default function AdminProductManager() {
     const { user, isAdmin, loading: authLoading } = useAuth();
@@ -17,6 +25,18 @@ export default function AdminProductManager() {
     const [loadingProducts, setLoadingProducts] = useState(true);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+
+    // Multi-select state
+    const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+    const [isSelectMode, setIsSelectMode] = useState(false);
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
+    // Bulk upload progress state
+    const [bulkUploading, setBulkUploading] = useState(false);
+    const [bulkProgress, setBulkProgress] = useState('');
+    const [bulkResults, setBulkResults] = useState<BulkUploadResult[]>([]);
+    const [bulkErrors, setBulkErrors] = useState<string[]>([]);
+    const [showBulkModal, setShowBulkModal] = useState(false);
 
     // Protect route
     useEffect(() => {
@@ -65,12 +85,7 @@ export default function AdminProductManager() {
             });
 
             if (!res.ok) throw new Error("Failed to delete product");
-
-            // Remove from local state immediately
             setLiveProducts(prev => prev.filter(p => p.node.id !== id));
-
-            // Show success toast (optional, but good UX)
-            alert(`"${title}" deleted successfully.`);
         } catch (error) {
             console.error("Delete failed:", error);
             alert("Failed to delete product.");
@@ -79,63 +94,104 @@ export default function AdminProductManager() {
         }
     };
 
-    const handleBulkUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Bulk delete handler
+    const handleBulkDelete = async () => {
+        if (selectedProducts.size === 0) return;
+
+        const count = selectedProducts.size;
+        if (!confirm(`Are you sure you want to delete ${count} product${count > 1 ? 's' : ''}? This cannot be undone.`)) return;
+
+        setIsBulkDeleting(true);
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const id of selectedProducts) {
+            try {
+                const res = await fetch('/api/products/delete', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id }),
+                });
+
+                if (res.ok) {
+                    setLiveProducts(prev => prev.filter(p => p.node.id !== id));
+                    successCount++;
+                } else {
+                    failCount++;
+                }
+            } catch {
+                failCount++;
+            }
+        }
+
+        alert(`Deleted ${successCount} product${successCount !== 1 ? 's' : ''}${failCount > 0 ? `. ${failCount} failed.` : ''}`);
+        setSelectedProducts(new Set());
+        setIsSelectMode(false);
+        setIsBulkDeleting(false);
+    };
+
+    // Toggle product selection
+    const toggleProductSelection = (id: string) => {
+        setSelectedProducts(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) {
+                newSet.delete(id);
+            } else {
+                newSet.add(id);
+            }
+            return newSet;
+        });
+    };
+
+    // Select/Deselect all
+    const toggleSelectAll = () => {
+        if (selectedProducts.size === liveProducts.length) {
+            setSelectedProducts(new Set());
+        } else {
+            setSelectedProducts(new Set(liveProducts.map(p => p.node.id)));
+        }
+    };
+
+    const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const text = event.target?.result as string;
-            if (!text) return;
+        setBulkUploading(true);
+        setBulkProgress('Uploading CSV...');
+        setBulkResults([]);
+        setBulkErrors([]);
+        setShowBulkModal(true);
 
-            // Simple CSV Parser
-            const lines = text.split('\n').filter(l => l.trim());
-            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
 
-            let addedCount = 0;
+            setBulkProgress('Processing products...');
 
-            for (let i = 1; i < lines.length; i++) {
-                // Handle basic CSV splitting (not robust for commas in quotes, but works for simple data)
-                const values = lines[i].split(',');
-                const row: any = {};
-                headers.forEach((h, index) => {
-                    row[h] = values[index]?.trim();
-                });
+            const res = await fetch('/api/products/import', {
+                method: 'POST',
+                body: formData,
+            });
 
-                if (row.title && row.price) {
-                    // Add to Queue
-                    queue.push({ // Direct push won't trigger store update, use action
-                        // Actually we need to call addToQueue from store
-                        // But we can't call it inside loop easily if it triggers state updates? 
-                        // Zustand is fine with it.
-                    } as any);
+            const data = await res.json();
 
-                    // Parse colors/sizes if present
-                    const colors = row.colors ? row.colors.split('|').map((c: string) => ({ name: c.trim(), hex: '#000000' })) : [];
-                    const sizes = row.sizes ? row.sizes.split('|').map((s: string) => s.trim()) : [];
-
-                    useProductQueueStore.getState().addToQueue({
-                        title: row.title,
-                        price: row.price,
-                        description: row.description || "",
-                        files: [], // No images for CSV upload yet
-                        colors,
-                        sizes
-                    });
-                    addedCount++;
-                }
+            if (!res.ok) {
+                throw new Error(data.error || 'Bulk upload failed');
             }
 
-            if (addedCount > 0) {
-                alert(`Added ${addedCount} products to the queue!`);
-            } else {
-                alert("No valid products found in CSV. Ensure headers are: title, price, description, colors, sizes");
-            }
+            setBulkResults(data.results || []);
+            setBulkErrors(data.errors || []);
+            setBulkProgress('Complete!');
+            fetchProducts();
 
-            // Reset input
+        } catch (error: any) {
+            console.error('Bulk upload error:', error);
+            setBulkErrors([error.message]);
+            setBulkProgress('Failed');
+        } finally {
+            setBulkUploading(false);
             e.target.value = '';
-        };
-        reader.readAsText(file);
+        }
     };
 
     if (authLoading || !isAdmin) {
@@ -151,16 +207,25 @@ export default function AdminProductManager() {
             <div className="max-w-7xl mx-auto space-y-12">
 
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-lora font-medium text-slate-900">Product Manager</h1>
                         <p className="text-slate-500 mt-1">Manage your inventory and track uploads</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <label className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-slate-900 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-                            <input type="file" accept=".csv" className="hidden" onChange={handleBulkUpload} />
-                            <Package size={18} />
-                            Bulk Upload CSV
+                    <div className="flex flex-wrap items-center gap-3">
+                        <label className={`flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-slate-900 rounded-lg transition-colors ${bulkUploading ? 'opacity-50 cursor-wait' : 'hover:bg-gray-50 cursor-pointer'}`}>
+                            <input type="file" accept=".csv" className="hidden" onChange={handleBulkUpload} disabled={bulkUploading} />
+                            {bulkUploading ? (
+                                <>
+                                    <Loader2 size={18} className="animate-spin" />
+                                    Processing...
+                                </>
+                            ) : (
+                                <>
+                                    <Upload size={18} />
+                                    Bulk Upload
+                                </>
+                            )}
                         </label>
                         <button
                             onClick={() => setIsCreateModalOpen(true)}
@@ -247,7 +312,7 @@ export default function AdminProductManager() {
 
                 {/* Live Inventory Section */}
                 <div className="space-y-6">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between flex-wrap gap-4">
                         <div className="flex items-center gap-2">
                             <Package className="text-slate-900" size={24} />
                             <h2 className="text-2xl font-lora font-medium text-slate-900">Live Inventory</h2>
@@ -255,15 +320,57 @@ export default function AdminProductManager() {
                                 {liveProducts.length}
                             </span>
                         </div>
-                        <button
-                            onClick={fetchProducts}
-                            disabled={loadingProducts}
-                            className="p-2 hover:bg-white rounded-full transition-colors text-slate-600 hover:text-slate-900"
-                            title="Refresh Inventory"
-                        >
-                            <RefreshCw size={20} className={loadingProducts ? "animate-spin" : ""} />
-                        </button>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => {
+                                    setIsSelectMode(!isSelectMode);
+                                    if (isSelectMode) setSelectedProducts(new Set());
+                                }}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isSelectMode ? 'bg-slate-900 text-white' : 'bg-white border border-gray-200 text-slate-700 hover:bg-gray-50'}`}
+                            >
+                                {isSelectMode ? 'Cancel Selection' : 'Select Products'}
+                            </button>
+                            <button
+                                onClick={fetchProducts}
+                                disabled={loadingProducts}
+                                className="p-2 hover:bg-white rounded-full transition-colors text-slate-600 hover:text-slate-900"
+                                title="Refresh Inventory"
+                            >
+                                <RefreshCw size={20} className={loadingProducts ? "animate-spin" : ""} />
+                            </button>
+                        </div>
                     </div>
+
+                    {/* Select All Bar */}
+                    {isSelectMode && liveProducts.length > 0 && (
+                        <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-200">
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={toggleSelectAll}
+                                    className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${selectedProducts.size === liveProducts.length ? 'bg-slate-900 border-slate-900 text-white' : 'border-gray-300 hover:border-gray-400'}`}
+                                >
+                                    {selectedProducts.size === liveProducts.length && <Check size={14} />}
+                                </button>
+                                <span className="text-sm text-slate-600">
+                                    {selectedProducts.size === 0 ? 'Select all' : `${selectedProducts.size} of ${liveProducts.length} selected`}
+                                </span>
+                            </div>
+                            {selectedProducts.size > 0 && (
+                                <button
+                                    onClick={handleBulkDelete}
+                                    disabled={isBulkDeleting}
+                                    className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium disabled:opacity-50"
+                                >
+                                    {isBulkDeleting ? (
+                                        <Loader2 size={16} className="animate-spin" />
+                                    ) : (
+                                        <Trash2 size={16} />
+                                    )}
+                                    Delete Selected ({selectedProducts.size})
+                                </button>
+                            )}
+                        </div>
+                    )}
 
                     {loadingProducts ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -276,11 +383,20 @@ export default function AdminProductManager() {
                             {liveProducts.map((product: any) => (
                                 <div
                                     key={product.node.id}
-                                    className="group bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-md transition-all duration-300 relative"
+                                    className={`group bg-white rounded-xl overflow-hidden border transition-all duration-300 relative ${selectedProducts.has(product.node.id) ? 'border-slate-900 ring-2 ring-slate-900' : 'border-gray-100 hover:shadow-md'}`}
+                                    onClick={() => isSelectMode && toggleProductSelection(product.node.id)}
                                 >
-                                    <Link href={`/products/${product.node.slug || product.node.handle}`}>
+                                    {/* Selection Checkbox */}
+                                    {isSelectMode && (
+                                        <div className="absolute top-3 left-3 z-40">
+                                            <div className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${selectedProducts.has(product.node.id) ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white/90 border-gray-300'}`}>
+                                                {selectedProducts.has(product.node.id) && <Check size={14} />}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <Link href={isSelectMode ? '#' : `/products/${product.node.slug || product.node.handle}`} onClick={(e) => isSelectMode && e.preventDefault()}>
                                         <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
-                                            {/* Video Layer */}
                                             {product.node.video && (
                                                 <div className="absolute inset-0 z-10">
                                                     <video
@@ -293,8 +409,6 @@ export default function AdminProductManager() {
                                                     />
                                                 </div>
                                             )}
-
-                                            {/* Image Layer - Shows if no video, or underneath video (though video covers it) */}
                                             {product.node.images?.edges?.[0]?.node?.url ? (
                                                 <Image
                                                     src={product.node.images.edges[0].node.url}
@@ -311,23 +425,25 @@ export default function AdminProductManager() {
                                         </div>
                                     </Link>
 
-                                    {/* Delete Button */}
-                                    <button
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            handleDelete(product.node.id, product.node.title);
-                                        }}
-                                        disabled={deletingId === product.node.id}
-                                        className="absolute top-2 right-2 p-2 bg-white/90 backdrop-blur-sm rounded-full text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm opacity-0 group-hover:opacity-100 focus:opacity-100 z-30"
-                                        title="Delete Product"
-                                    >
-                                        {deletingId === product.node.id ? (
-                                            <Loader2 size={16} className="animate-spin" />
-                                        ) : (
-                                            <XCircle size={18} />
-                                        )}
-                                    </button>
+                                    {/* Delete Button (only in non-select mode) */}
+                                    {!isSelectMode && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                handleDelete(product.node.id, product.node.title);
+                                            }}
+                                            disabled={deletingId === product.node.id}
+                                            className="absolute top-2 right-2 p-2 bg-white/90 backdrop-blur-sm rounded-full text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm opacity-0 group-hover:opacity-100 focus:opacity-100 z-30"
+                                            title="Delete Product"
+                                        >
+                                            {deletingId === product.node.id ? (
+                                                <Loader2 size={16} className="animate-spin" />
+                                            ) : (
+                                                <XCircle size={18} />
+                                            )}
+                                        </button>
+                                    )}
 
                                     <div className="p-4">
                                         <h3 className="font-medium text-slate-900 truncate mb-1">{product.node.title}</h3>
@@ -364,6 +480,100 @@ export default function AdminProductManager() {
                 </div>
             </div>
 
+            {/* Bulk Upload Progress Modal */}
+            {showBulkModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[80vh] overflow-hidden">
+                        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                {bulkUploading ? (
+                                    <Loader2 className="animate-spin text-blue-600" size={24} />
+                                ) : bulkErrors.length > 0 && bulkResults.length === 0 ? (
+                                    <AlertCircle className="text-red-500" size={24} />
+                                ) : (
+                                    <CheckCircle className="text-green-500" size={24} />
+                                )}
+                                <h3 className="text-lg font-semibold text-slate-900">
+                                    {bulkUploading ? 'Processing Bulk Upload' : 'Bulk Upload Complete'}
+                                </h3>
+                            </div>
+                            {!bulkUploading && (
+                                <button onClick={() => setShowBulkModal(false)} className="p-2 hover:bg-gray-100 rounded-full">
+                                    <X size={20} />
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="p-6 space-y-4 overflow-y-auto max-h-[60vh]">
+                            {bulkUploading && (
+                                <div className="text-center py-8">
+                                    <Loader2 className="animate-spin mx-auto text-blue-600 mb-4" size={48} />
+                                    <p className="text-slate-600">{bulkProgress}</p>
+                                    <p className="text-sm text-slate-400 mt-2">This may take a while for large files...</p>
+                                </div>
+                            )}
+
+                            {!bulkUploading && (
+                                <>
+                                    {/* Summary */}
+                                    <div className="flex gap-4">
+                                        <div className="flex-1 p-4 bg-green-50 rounded-xl text-center">
+                                            <p className="text-2xl font-bold text-green-700">{bulkResults.length}</p>
+                                            <p className="text-sm text-green-600">Successful</p>
+                                        </div>
+                                        <div className="flex-1 p-4 bg-red-50 rounded-xl text-center">
+                                            <p className="text-2xl font-bold text-red-700">{bulkErrors.length}</p>
+                                            <p className="text-sm text-red-600">Errors</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Success List */}
+                                    {bulkResults.length > 0 && (
+                                        <div>
+                                            <h4 className="text-sm font-medium text-slate-700 mb-2">Created Products</h4>
+                                            <div className="space-y-2 max-h-40 overflow-y-auto">
+                                                {bulkResults.map((r, i) => (
+                                                    <div key={i} className="flex items-center gap-2 text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg">
+                                                        <CheckCircle size={14} />
+                                                        <span className="truncate">{r.title}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Error List */}
+                                    {bulkErrors.length > 0 && (
+                                        <div>
+                                            <h4 className="text-sm font-medium text-slate-700 mb-2">Errors</h4>
+                                            <div className="space-y-2 max-h-40 overflow-y-auto">
+                                                {bulkErrors.map((err, i) => (
+                                                    <div key={i} className="flex items-start gap-2 text-sm text-red-700 bg-red-50 px-3 py-2 rounded-lg">
+                                                        <XCircle size={14} className="flex-shrink-0 mt-0.5" />
+                                                        <span>{err}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+
+                        {!bulkUploading && (
+                            <div className="p-6 border-t border-gray-100">
+                                <button
+                                    onClick={() => setShowBulkModal(false)}
+                                    className="w-full py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-colors font-medium"
+                                >
+                                    Done
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
             <CreateProductModal
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
@@ -374,3 +584,4 @@ export default function AdminProductManager() {
         </div>
     );
 }
+

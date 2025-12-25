@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Heart, Save, X } from "lucide-react";
+import { Heart, Save, X, Plus, Trash2, Palette } from "lucide-react";
 import LiquidButton from "@/components/ui/LiquidButton";
 import { useSizeGuideStore } from "@/lib/store";
 import { useAuth } from "@/context/AuthContext";
@@ -19,7 +19,22 @@ interface EditableProductInfoProps {
     onProductUpdate?: (updatedProduct: any) => void;
 }
 
-const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"];
+
+const PRESET_COLORS = [
+    { name: "Black", hex: "#000000" },
+    { name: "White", hex: "#FFFFFF" },
+    { name: "Red", hex: "#DC2626" },
+    { name: "Blue", hex: "#2563EB" },
+    { name: "Green", hex: "#16A34A" },
+    { name: "Yellow", hex: "#EAB308" },
+    { name: "Pink", hex: "#EC4899" },
+    { name: "Purple", hex: "#9333EA" },
+    { name: "Gray", hex: "#6B7280" },
+    { name: "Beige", hex: "#D4C5B0" },
+    { name: "Navy Blue", hex: "#1E3A5F" },
+    { name: "Burgundy", hex: "#800020" },
+];
 
 export default function EditableProductInfo({
     title,
@@ -45,6 +60,9 @@ export default function EditableProductInfo({
     const [editedPrice, setEditedPrice] = useState(price.toString());
     const [editedDescription, setEditedDescription] = useState(description);
     const [editedSizes, setEditedSizes] = useState<string[]>(sizes);
+    const [editedColors, setEditedColors] = useState<{ name: string; hex: string }[]>(colors);
+    const [customColorName, setCustomColorName] = useState("");
+    const [customColorHex, setCustomColorHex] = useState("#000000");
 
     const [showInquiryModal, setShowInquiryModal] = useState(false);
     const { showToast } = useToast();
@@ -58,6 +76,9 @@ export default function EditableProductInfo({
         setEditedPrice(price.toString());
         setEditedDescription(description);
         setEditedSizes([...sizes]);
+        setEditedColors([...colors]);
+        setCustomColorName("");
+        setCustomColorHex("#000000");
         setIsEditMode(true);
     };
 
@@ -78,7 +99,8 @@ export default function EditableProductInfo({
                     title: editedTitle,
                     price: editedPrice,
                     description: editedDescription,
-                    sizes: editedSizes
+                    sizes: editedSizes,
+                    colors: editedColors
                 })
             });
 
@@ -92,7 +114,8 @@ export default function EditableProductInfo({
                     title: editedTitle,
                     price: parseFloat(editedPrice),
                     descriptionHtml: editedDescription,
-                    sizes: editedSizes
+                    sizes: editedSizes,
+                    colors: editedColors
                 });
             }
 
@@ -115,6 +138,24 @@ export default function EditableProductInfo({
                 return [...prev, size];
             }
         });
+    };
+
+    const addPresetColor = (color: { name: string; hex: string }) => {
+        if (!editedColors.find(c => c.hex === color.hex)) {
+            setEditedColors([...editedColors, color]);
+        }
+    };
+
+    const addCustomColor = () => {
+        if (customColorName && !editedColors.find(c => c.hex === customColorHex)) {
+            setEditedColors([...editedColors, { name: customColorName, hex: customColorHex }]);
+            setCustomColorName("");
+            setCustomColorHex("#000000");
+        }
+    };
+
+    const removeColor = (hex: string) => {
+        setEditedColors(editedColors.filter(c => c.hex !== hex));
     };
 
     // Current display values
@@ -230,28 +271,118 @@ export default function EditableProductInfo({
                 </div>
             )}
 
-            {/* Color Selection - Text based */}
-            {!isEditMode && colors.length > 0 && (
-                <div className="space-y-3">
+            {/* Color Selection */}
+            <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                    <Palette size={16} className="text-slate-600" />
                     <span className="text-sm font-bold uppercase tracking-widest text-slate-900">
-                        Color: <span className="text-slate-500 font-normal capitalize">{selectedColor}</span>
+                        Colors {!isEditMode && selectedColor && <span className="text-slate-500 font-normal capitalize">: {selectedColor}</span>}
                     </span>
+                </div>
+
+                {isEditMode ? (
+                    <div className="space-y-4">
+                        {/* Preset Colors */}
+                        <div className="flex flex-wrap gap-2">
+                            {PRESET_COLORS.map((color) => (
+                                <button
+                                    key={color.hex}
+                                    type="button"
+                                    onClick={() => addPresetColor(color)}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${editedColors.find(c => c.hex === color.hex)
+                                        ? 'border-[#006D77] bg-[#006D77]/10'
+                                        : 'border-slate-200 hover:border-slate-400'
+                                        }`}
+                                    title={color.name}
+                                >
+                                    <div
+                                        className="w-4 h-4 rounded-full border border-gray-300"
+                                        style={{ backgroundColor: color.hex }}
+                                    />
+                                    {color.name}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Custom Color Input */}
+                        <div className="flex gap-2 items-end">
+                            <div className="flex-1">
+                                <label className="block text-xs font-medium text-slate-600 mb-1">Custom Color</label>
+                                <input
+                                    type="text"
+                                    value={customColorName}
+                                    onChange={(e) => setCustomColorName(e.target.value)}
+                                    placeholder="Color name"
+                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#006D77]"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-slate-600 mb-1">Hex</label>
+                                <input
+                                    type="color"
+                                    value={customColorHex}
+                                    onChange={(e) => setCustomColorHex(e.target.value)}
+                                    className="h-10 w-16 border border-slate-200 rounded-lg cursor-pointer"
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={addCustomColor}
+                                disabled={!customColorName}
+                                className="px-3 py-2 bg-[#006D77] text-white rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                            >
+                                <Plus size={14} />
+                                Add
+                            </button>
+                        </div>
+
+                        {/* Selected Colors */}
+                        {editedColors.length > 0 && (
+                            <div className="p-3 bg-slate-50 rounded-lg">
+                                <p className="text-xs font-medium text-slate-600 mb-2">Selected Colors ({editedColors.length})</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {editedColors.map((color) => (
+                                        <div
+                                            key={color.hex}
+                                            className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-slate-200 group"
+                                        >
+                                            <div
+                                                className="w-4 h-4 rounded-full border border-gray-300"
+                                                style={{ backgroundColor: color.hex }}
+                                            />
+                                            <span className="text-sm font-medium text-slate-700">{color.name}</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeColor(color.hex)}
+                                                className="text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <Trash2 size={12} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                ) : colors.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                         {colors.map((color) => (
                             <button
                                 key={color.name}
                                 onClick={() => setSelectedColor(color.name)}
                                 className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${selectedColor === color.name
-                                        ? "border-slate-900 bg-slate-900 text-white"
-                                        : "border-slate-200 text-slate-600 hover:border-slate-900 hover:text-slate-900"
+                                    ? "border-slate-900 bg-slate-900 text-white"
+                                    : "border-slate-200 text-slate-600 hover:border-slate-900 hover:text-slate-900"
                                     }`}
                             >
                                 {color.name}
                             </button>
                         ))}
                     </div>
-                </div>
-            )}
+                ) : (
+                    <p className="text-sm text-slate-500 italic">No colors available - click Edit to add colors</p>
+                )}
+            </div>
 
             {/* Size Selection */}
             <div className="space-y-3">
@@ -276,8 +407,8 @@ export default function EditableProductInfo({
                                 key={size}
                                 onClick={() => toggleSize(size)}
                                 className={`h-10 min-w-[3rem] px-3 rounded border text-sm font-medium transition-all ${editedSizes.includes(size)
-                                        ? "border-[#006D77] bg-[#006D77] text-white"
-                                        : "border-slate-200 text-slate-400 hover:border-slate-400"
+                                    ? "border-[#006D77] bg-[#006D77] text-white"
+                                    : "border-slate-200 text-slate-400 hover:border-slate-400"
                                     }`}
                             >
                                 {size}
@@ -285,19 +416,26 @@ export default function EditableProductInfo({
                         ))}
                     </div>
                 ) : displaySizes.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                        {displaySizes.map((size) => (
-                            <button
-                                key={size}
-                                onClick={() => setSelectedSize(size)}
-                                className={`h-10 min-w-[3rem] px-3 rounded border text-sm font-medium transition-all ${selectedSize === size
+                    <div className="relative">
+                        {/* Mobile: Horizontal scroll carousel | Desktop: Flex wrap */}
+                        <div className="flex gap-2 overflow-x-auto md:overflow-visible md:flex-wrap scrollbar-hide pb-2 md:pb-0 -mx-1 px-1">
+                            {displaySizes.map((size) => (
+                                <button
+                                    key={size}
+                                    onClick={() => setSelectedSize(size)}
+                                    className={`h-10 min-w-[3rem] px-3 rounded border text-sm font-medium transition-all flex-shrink-0 ${selectedSize === size
                                         ? "border-slate-900 bg-slate-900 text-white"
                                         : "border-slate-200 text-slate-600 hover:border-slate-900 hover:text-slate-900"
-                                    }`}
-                            >
-                                {size}
-                            </button>
-                        ))}
+                                        }`}
+                                >
+                                    {size}
+                                </button>
+                            ))}
+                        </div>
+                        {/* Scroll fade indicator on mobile (right edge) */}
+                        {displaySizes.length > 5 && (
+                            <div className="absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none md:hidden" />
+                        )}
                     </div>
                 ) : (
                     <p className="text-sm text-slate-500 italic">No sizes available - click Edit to add sizes</p>

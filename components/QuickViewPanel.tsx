@@ -125,7 +125,7 @@ export default function QuickViewPanel() {
 
     // Use real colors and sizes from metaobject, fallback to empty arrays
     const productColors = colors || [];
-    const productSizes = sizes || ["XS", "S", "M", "L", "XL"]; // Fallback if no sizes
+    const productSizes = sizes || ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"]; // Fallback if no sizes
 
     return (
         <div
@@ -212,19 +212,26 @@ export default function QuickViewPanel() {
                             <label className="block text-xs font-bold tracking-widest uppercase text-slate-900 mb-3">
                                 Size: <span className="text-gray-500 font-normal normal-case">{selectedSize}</span>
                             </label>
-                            <div className="flex flex-wrap gap-2">
-                                {productSizes.map((size) => (
-                                    <button
-                                        key={size}
-                                        onClick={() => setSelectedSize(size)}
-                                        className={`min-w-[3rem] h-10 px-3 flex items-center justify-center border text-sm font-medium transition-all ${selectedSize === size
-                                            ? "border-slate-900 bg-slate-900 text-white"
-                                            : "border-gray-200 text-slate-900 hover:border-slate-900"
-                                            }`}
-                                    >
-                                        {size}
-                                    </button>
-                                ))}
+                            <div className="relative">
+                                {/* Mobile: Horizontal scroll carousel */}
+                                <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1">
+                                    {productSizes.map((size) => (
+                                        <button
+                                            key={size}
+                                            onClick={() => setSelectedSize(size)}
+                                            className={`min-w-[3rem] h-10 px-3 flex items-center justify-center border text-sm font-medium transition-all flex-shrink-0 ${selectedSize === size
+                                                ? "border-slate-900 bg-slate-900 text-white"
+                                                : "border-gray-200 text-slate-900 hover:border-slate-900"
+                                                }`}
+                                        >
+                                            {size}
+                                        </button>
+                                    ))}
+                                </div>
+                                {/* Scroll fade indicator (right edge) */}
+                                {productSizes.length > 5 && (
+                                    <div className="absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none" />
+                                )}
                             </div>
                         </div>
 

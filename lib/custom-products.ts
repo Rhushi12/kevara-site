@@ -454,7 +454,9 @@ function transformMetaobjectToProduct(metaobject: any) {
       colors,
       sizes,
       relatedProducts,
-      video: fields.videoUrl || null,
+      // R2 video URLs are stored as plain text in fields.video
+      // Shopify references are resolved to fields.videoUrl  
+      video: (fields.video && fields.video.startsWith('http')) ? fields.video : (fields.videoUrl || null),
       status: fields.status
     },
     // Attach internal params for getCustomProducts to use if needed

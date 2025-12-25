@@ -44,9 +44,7 @@ export const useProductQueueStore = create<ProductQueueStore>((set, get) => ({
     },
 
     processQueue: async () => {
-        const { queue, isProcessing } = get();
-
-        if (isProcessing || queue.length === 0) return;
+        if (get().isProcessing) return;
 
         set({ isProcessing: true });
 
@@ -86,22 +84,30 @@ export const useProductQueueStore = create<ProductQueueStore>((set, get) => ({
             return publicUrl;
         };
 
-        // Process items one by one
-        for (const item of queue) {
-            if (item.status !== 'pending') continue;
+        // Process items one by one - use a while loop with fresh state
+        let hasMoreItems = true;
+        while (hasMoreItems) {
+            // Get fresh state on each iteration
+            const currentQueue = get().queue;
+            const pendingItem = currentQueue.find(item => item.status === 'pending');
+
+            if (!pendingItem) {
+                hasMoreItems = false;
+                break;
+            }
 
             // Update status to processing
             set((state) => ({
                 queue: state.queue.map((q) =>
-                    q.id === item.id ? { ...q, status: 'processing' } : q
+                    q.id === pendingItem.id ? { ...q, status: 'processing' } : q
                 ),
             }));
 
             try {
                 // Upload all images to R2
                 const imageUrls: string[] = [];
-                for (let i = 0; i < item.files.length; i++) {
-                    const url = await uploadFileToR2(item.files[i], "products");
+                for (let i = 0; i < pendingItem.files.length; i++) {
+                    const url = await uploadFileToR2(pendingItem.files[i], "products");
                     imageUrls.push(url);
                 }
 
@@ -110,12 +116,12 @@ export const useProductQueueStore = create<ProductQueueStore>((set, get) => ({
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        title: item.title,
-                        price: item.price,
-                        description: item.description,
+                        title: pendingItem.title,
+                        price: pendingItem.price,
+                        description: pendingItem.description,
                         imageUrls: imageUrls,
-                        colors: item.colors.length > 0 ? item.colors : undefined,
-                        sizes: item.sizes.length > 0 ? item.sizes : undefined,
+                        colors: pendingItem.colors.length > 0 ? pendingItem.colors : undefined,
+                        sizes: pendingItem.sizes.length > 0 ? pendingItem.sizes : undefined,
                     }),
                 });
 
@@ -135,14 +141,14 @@ export const useProductQueueStore = create<ProductQueueStore>((set, get) => ({
                 // Update status to success
                 set((state) => ({
                     queue: state.queue.map((q) =>
-                        q.id === item.id ? { ...q, status: 'success' } : q
+                        q.id === pendingItem.id ? { ...q, status: 'success' } : q
                     ),
                 }));
 
                 // Show success notification
                 if (typeof window !== 'undefined') {
                     const event = new CustomEvent('product-created', {
-                        detail: { product: data.product, title: item.title },
+                        detail: { product: data.product, title: pendingItem.title },
                     });
                     window.dispatchEvent(event);
 
@@ -154,7 +160,7 @@ export const useProductQueueStore = create<ProductQueueStore>((set, get) => ({
                 // Update status to error
                 set((state) => ({
                     queue: state.queue.map((q) =>
-                        q.id === item.id
+                        q.id === pendingItem.id
                             ? { ...q, status: 'error', error: error.message }
                             : q
                     ),
@@ -163,7 +169,7 @@ export const useProductQueueStore = create<ProductQueueStore>((set, get) => ({
                 // Show error notification
                 if (typeof window !== 'undefined') {
                     const event = new CustomEvent('product-creation-error', {
-                        detail: { title: item.title, error: error.message },
+                        detail: { title: pendingItem.title, error: error.message },
                     });
                     window.dispatchEvent(event);
                 }

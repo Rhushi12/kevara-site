@@ -23,9 +23,11 @@ export default function ProductImage({
     const [hasError, setHasError] = useState(false);
     const [retryCount, setRetryCount] = useState(0);
 
-    // Auto-detect CDN images and skip Next.js optimization
+    // Skip Next.js optimization for CDN images:
+    // - Shopify CDN: already optimized
+    // - R2 images: already optimized during bulk upload, and Next.js optimization causes 500 errors
     const srcString = typeof src === 'string' ? src : '';
-    const isCdnImage = srcString.includes('cdn.shopify') || srcString.includes('.r2.dev');
+    const isPreOptimized = srcString.includes('cdn.shopify') || srcString.includes('.r2.dev');
 
     const handleRetry = useCallback(() => {
         setHasError(false);
@@ -127,7 +129,7 @@ export default function ProductImage({
                 alt={alt}
                 priority={priority}
                 loading={priority ? undefined : "lazy"}
-                unoptimized={isCdnImage}
+                unoptimized={isPreOptimized}
                 className={`${className || ""} transition-opacity duration-500 ${isLoading || hasError ? "opacity-0" : "opacity-100"}`}
                 onLoad={handleLoad}
                 onError={handleError}

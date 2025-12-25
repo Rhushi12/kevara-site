@@ -1,6 +1,5 @@
 
 import { Buffer } from 'buffer';
-import sharp from 'sharp';
 
 const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || process.env.SHOPIFY_STORE_DOMAIN;
 const accessToken = process.env.SHOPIFY_ADMIN_TOKEN;
@@ -192,6 +191,8 @@ async function fileToBuffer(file: any): Promise<{ buffer: Buffer; mimeType: stri
   // Only resize images if they exceed Shopify's 20MP limit (very rare for web uploads)
   if (mimeType.startsWith('image/') && !mimeType.includes('gif')) {
     try {
+      // Dynamic import of sharp to prevent serverless function failures when sharp is unavailable
+      const sharp = (await import('sharp')).default;
       const image = sharp(buffer);
       const metadata = await image.metadata();
 
@@ -224,7 +225,7 @@ async function fileToBuffer(file: any): Promise<{ buffer: Buffer; mimeType: stri
       }
       // If under 20MP, upload original without any resizing
     } catch (err) {
-      console.error('[Upload] Image processing failed, uploading original:', err);
+      console.error('[Upload] Image processing failed (sharp may not be available), uploading original:', err);
       // Continue with original if processing fails
     }
   }
