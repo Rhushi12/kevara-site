@@ -76,6 +76,7 @@ import AdminOfferButton from "@/components/admin/AdminOfferButton";
 import ToastContainer from "@/components/ToastContainer";
 import GlobalWholesaleInquiryModal from "@/components/GlobalWholesaleInquiryModal";
 import WholesaleFloatingButton from "@/components/WholesaleFloatingButton";
+import PageViewsTracker from "@/components/PageViewsTracker";
 
 export default function RootLayout({
   children,
@@ -117,6 +118,7 @@ export default function RootLayout({
           </ToastProvider>
         </AuthProvider>
         <Analytics />
+        <PageViewsTracker />
       </body>
     </html>
   );
