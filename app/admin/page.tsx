@@ -42,15 +42,16 @@ export default function AdminPage() {
 
     useEffect(() => {
         if (!loading) {
-            if (!user || user.email !== "rhushimanumehta@gmail.com") {
+            // Use the isAdmin state from AuthContext (which checks NEXT_PUBLIC_ADMIN_EMAILS)
+            if (!user || !isAdmin) {
                 router.push("/");
             }
         }
     }, [user, isAdmin, loading, router]);
 
     if (loading) return <div className="min-h-screen flex items-center justify-center font-figtree text-gray-400">Authenticating...</div>;
-    // Strict Admin Check
-    if (!user || user.email !== "rhushimanumehta@gmail.com") return null;
+    // Use isAdmin from context
+    if (!user || !isAdmin) return null;
 
     const renderContent = () => {
         switch (activeTab) {

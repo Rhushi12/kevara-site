@@ -82,7 +82,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setUser(user);
-            if (user && user.email === "rhushimanumehta@gmail.com") {
+            // Check if user is an admin - uses environment variable or defaults
+            const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "rhushimanumehta@gmail.com").split(",").map(e => e.trim().toLowerCase());
+            if (user && user.email && adminEmails.includes(user.email.toLowerCase())) {
                 setIsAdmin(true);
                 if (typeof window !== 'undefined') localStorage.setItem('isAdmin', 'true');
             } else {
