@@ -450,13 +450,59 @@ export default function Template3Renderer({ content, slug }: Template3RendererPr
 
                             {/* Product Grid */}
                             <div className="mb-4">
-                                {sortedMode && filterKeywords.length > 0 && (
-                                    <div className="bg-[#006D77]/10 border border-[#006D77]/20 rounded-lg p-4 mb-6">
-                                        <p className="text-sm text-[#006D77] font-medium">
-                                            📊 Filtered by: <span className="font-bold">{filterKeywords.filter(k => k.trim()).map(k => `"${k}"`).join(" or ")}</span> - Showing {displayedProducts.length} products
-                                        </p>
-                                    </div>
+                                {/* User Filter/Sort Indicator - only shows when user applies filters */}
+                                {!isAdmin && (
+                                    (activeFilters.categories.length > 0 ||
+                                        activeFilters.sizes.length > 0 ||
+                                        activeFilters.colors.length > 0 ||
+                                        activeFilters.priceRange.min ||
+                                        activeFilters.priceRange.max ||
+                                        sortBy !== "featured") && (
+                                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6">
+                                            <div className="flex items-center justify-between flex-wrap gap-3">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Active:</span>
+                                                    {activeFilters.categories.map(cat => (
+                                                        <span key={cat} className="inline-flex items-center gap-1 px-3 py-1 bg-[#0E4D55]/10 text-[#0E4D55] rounded-full text-xs font-medium">
+                                                            {cat}
+                                                        </span>
+                                                    ))}
+                                                    {activeFilters.sizes.map(size => (
+                                                        <span key={size} className="inline-flex items-center gap-1 px-3 py-1 bg-[#0E4D55]/10 text-[#0E4D55] rounded-full text-xs font-medium">
+                                                            Size: {size}
+                                                        </span>
+                                                    ))}
+                                                    {activeFilters.colors.map(color => (
+                                                        <span key={color} className="inline-flex items-center gap-1 px-3 py-1 bg-[#0E4D55]/10 text-[#0E4D55] rounded-full text-xs font-medium">
+                                                            {color}
+                                                        </span>
+                                                    ))}
+                                                    {(activeFilters.priceRange.min || activeFilters.priceRange.max) && (
+                                                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#0E4D55]/10 text-[#0E4D55] rounded-full text-xs font-medium">
+                                                            ₹{activeFilters.priceRange.min || '0'} - ₹{activeFilters.priceRange.max || '∞'}
+                                                        </span>
+                                                    )}
+                                                    {sortBy !== "featured" && (
+                                                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-medium">
+                                                            Sorted: {sortBy === "price-asc" ? "Low to High" : sortBy === "price-desc" ? "High to Low" : sortBy === "name-asc" ? "A-Z" : sortBy === "name-desc" ? "Z-A" : "Newest"}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        setActiveFilters({ categories: [], priceRange: { min: "", max: "" }, sizes: [], colors: [] });
+                                                        setSortBy("featured");
+                                                    }}
+                                                    className="text-xs text-slate-500 hover:text-red-500 font-medium transition-colors flex items-center gap-1"
+                                                >
+                                                    <X size={14} />
+                                                    Clear All
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )
                                 )}
+
 
                                 <div className="grid grid-cols-2 md:grid-cols-[repeat(3,314px)] justify-center gap-4 md:gap-6">
                                     {displayedProducts
