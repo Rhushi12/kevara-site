@@ -63,8 +63,8 @@ const nextConfig: NextConfig = {
               "img-src 'self' blob: data: https: http:",
               // Fonts
               "font-src 'self' https://fonts.gstatic.com data:",
-              // Frames for auth popups
-              "frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://*.google.com",
+              // Frames for auth popups and embedded videos
+              "frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://*.google.com https://www.youtube.com https://youtube.com https://*.youtube.com",
               // Who can frame this site
               "frame-ancestors 'self' https://admin.shopify.com https://*.myshopify.com",
               // Media (video/audio)
