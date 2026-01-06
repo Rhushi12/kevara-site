@@ -18,11 +18,16 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({ success: true, date: today });
     } catch (error) {
+        // Log the error but return success to not break user experience
         console.error('[PageViews API] Error:', error);
-        return NextResponse.json(
-            { error: 'Failed to track page view', details: error instanceof Error ? error.message : 'Unknown error' },
-            { status: 500 }
-        );
+        // Return success anyway - page view tracking shouldn't break the site
+        return NextResponse.json({
+            success: true,
+            skipped: true,
+            reason: error instanceof Error ? error.message : 'Unknown error'
+        });
     }
 }
+
+
 

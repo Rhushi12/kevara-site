@@ -5,22 +5,38 @@ import admin from 'firebase-admin';
 
 if (!admin.apps.length) {
     // Check if we have service account credentials
-    const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
-        ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
-        : null;
+    const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
 
-    if (serviceAccount) {
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
-            projectId: serviceAccount.project_id,
-        });
+    if (serviceAccountKey) {
+        try {
+            const serviceAccount = JSON.parse(serviceAccountKey);
+            admin.initializeApp({
+                credential: admin.credential.cert(serviceAccount),
+                projectId: serviceAccount.project_id,
+            });
+            console.log('[Firebase Admin] Initialized with service account');
+        } catch (error) {
+            console.error('[Firebase Admin] Failed to parse service account:', error);
+            // Initialize without credentials - will fail on actual Firestore operations
+            admin.initializeApp({
+                projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'kevara-9bc71',
+            });
+        }
     } else {
-        // Fallback: Use default credentials (works in some environments like Cloud Functions)
-        // Or use the client-side config for development
-        admin.initializeApp({
-            credential: admin.credential.applicationDefault(),
-            projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'kevara-9bc71',
-        });
+        // No service account - try applicationDefault or initialize without credentials
+        try {
+            admin.initializeApp({
+                credential: admin.credential.applicationDefault(),
+                projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'kevara-9bc71',
+            });
+            console.log('[Firebase Admin] Initialized with application default credentials');
+        } catch (error) {
+            console.warn('[Firebase Admin] No credentials available, Firestore operations may fail');
+            // Initialize without credentials - will fail on actual Firestore operations
+            admin.initializeApp({
+                projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'kevara-9bc71',
+            });
+        }
     }
 }
 
