@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { db } from "@/lib/firebase";
-import { doc, setDoc, increment, serverTimestamp } from "firebase/firestore";
 
 /**
- * Invisible component that tracks page views in Firebase Firestore.
+ * Invisible component that tracks page views via API endpoint.
  * Add this to your root layout to track all page visits.
  * 
- * Stores data in `page_views` collection with documents like:
+ * The API stores data in Firebase `page_views` collection with documents like:
  * {
  *   date: "2024-12-25",
  *   count: 150,
@@ -25,20 +23,18 @@ export default function PageViewsTracker() {
 
         const trackPageView = async () => {
             try {
-                // Get today's date in YYYY-MM-DD format
-                const today = new Date().toISOString().split('T')[0];
+                // Call the API endpoint which uses Firebase Admin SDK
+                const response = await fetch('/api/page-views', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
 
-                // Reference to today's document
-                const viewRef = doc(db, "page_views", today);
-
-                // Increment the view count atomically
-                await setDoc(viewRef, {
-                    date: today,
-                    count: increment(1),
-                    updatedAt: serverTimestamp()
-                }, { merge: true });
-
-                console.log("[PageViews] Tracked view for", today);
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log("[PageViews] Tracked view for", data.date);
+                } else {
+                    console.error("[PageViews] API returned error:", response.status);
+                }
             } catch (error) {
                 // Silently fail - don't break the user experience
                 console.error("[PageViews] Failed to track:", error);
