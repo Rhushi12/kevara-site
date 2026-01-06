@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
+import admin, { db } from '@/lib/firebase-admin';
 
 export async function POST(request: NextRequest) {
     try {
@@ -13,16 +12,17 @@ export async function POST(request: NextRequest) {
         // Increment the view count atomically using Admin SDK
         await viewRef.set({
             date: today,
-            count: FieldValue.increment(1),
-            updatedAt: FieldValue.serverTimestamp()
+            count: admin.firestore.FieldValue.increment(1),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
 
         return NextResponse.json({ success: true, date: today });
     } catch (error) {
         console.error('[PageViews API] Error:', error);
         return NextResponse.json(
-            { error: 'Failed to track page view' },
+            { error: 'Failed to track page view', details: error instanceof Error ? error.message : 'Unknown error' },
             { status: 500 }
         );
     }
 }
+
