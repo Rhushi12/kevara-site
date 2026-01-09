@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { MenuItem } from "@/lib/menuData";
-import { subscribeToNavigation, saveNavigationMenu } from "@/lib/db";
+import { saveNavigationMenu } from "@/lib/db";
 import LiquidButton from "@/components/ui/LiquidButton";
 
 export default function MenuEditor() {
@@ -18,11 +18,19 @@ export default function MenuEditor() {
     const [isCloning, setIsCloning] = useState(false);
 
     useEffect(() => {
-        const unsubscribe = subscribeToNavigation((data) => {
-            setMenuItems(data);
-            setLoading(false);
-        });
-        return () => unsubscribe();
+        const fetchMenu = async () => {
+            try {
+                const res = await fetch('/api/admin/menu');
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
+                setMenuItems(data.items || []);
+            } catch (error) {
+                console.error("Error fetching menu:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchMenu();
     }, []);
 
     const handleLabelChange = (e: React.ChangeEvent<HTMLInputElement>, categoryLabel: string) => {

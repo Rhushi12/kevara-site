@@ -51,10 +51,10 @@ export default function ProductCard({ product, imageAspectRatio = "aspect-[3/4]"
     if (!productSlug) return null;
 
     return (
-        <div className="group/card relative flex flex-col h-full text-center">
+        <div className="group/card relative flex flex-col text-center h-auto">
             {/* Image/Video Container */}
             <div className={`relative w-full ${imageAspectRatio} mb-3 overflow-hidden bg-gray-100 rounded-sm`}>
-                <Link href={`/products/${productSlug}`} className="block w-full h-full">
+                <Link href={`/products/${productSlug}`} className="absolute inset-0 z-10 block">
 
                     {/* Video Layer */}
                     {video && (

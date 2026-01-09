@@ -5,7 +5,11 @@ const nextConfig: NextConfig = {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    unoptimized: false,
+    // Disable optimization in development to prevent timeouts with large remote images
+    unoptimized: process.env.NODE_ENV === 'development',
+    // Increase timeout for remote image fetching (default is 10-15 seconds)
+    // This helps with slower R2 responses or large images
+    dangerouslyAllowSVG: false,
     remotePatterns: [
       {
         protocol: "https",

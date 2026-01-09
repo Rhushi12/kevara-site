@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { db } from "@/lib/firebase";
-import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+
 
 interface UserData {
     uid: string;
@@ -18,23 +17,22 @@ export default function UsersTable() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Real-time listener for users collection
-        const usersRef = collection(db, "users");
-        const q = query(usersRef, orderBy("lastLogin", "desc"));
+        const fetchUsers = async () => {
+            try {
+                const response = await fetch('/api/admin/users');
+                const data = await response.json();
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const userData = snapshot.docs.map(doc => ({
-                uid: doc.id,
-                ...doc.data()
-            })) as UserData[];
-            setUsers(userData);
-            setLoading(false);
-        }, (error) => {
-            console.error("Error fetching users:", error);
-            setLoading(false);
-        });
+                if (data.error) throw new Error(data.error);
 
-        return () => unsubscribe();
+                setUsers(data.users || []);
+            } catch (error) {
+                console.error("Error fetching users:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchUsers();
     }, []);
 
     if (loading) return <div className="text-center py-8 text-gray-400">Loading Users from Firebase...</div>;
@@ -94,4 +92,5 @@ export default function UsersTable() {
         </div>
     );
 }
+
 

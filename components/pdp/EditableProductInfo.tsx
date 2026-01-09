@@ -365,17 +365,19 @@ export default function EditableProductInfo({
                         )}
                     </div>
                 ) : colors.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-3">
                         {colors.map((color) => (
                             <button
                                 key={color.name}
                                 onClick={() => setSelectedColor(color.name)}
-                                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${selectedColor === color.name
-                                    ? "border-slate-900 bg-slate-900 text-white"
-                                    : "border-slate-200 text-slate-600 hover:border-slate-900 hover:text-slate-900"
+                                title={color.name}
+                                className={`w-8 h-8 rounded-full border-2 transition-all relative flex items-center justify-center ${selectedColor === color.name
+                                    ? "border-slate-900 ring-1 ring-slate-900 ring-offset-1"
+                                    : "border-slate-200 hover:border-slate-400"
                                     }`}
+                                style={{ backgroundColor: color.hex }}
                             >
-                                {color.name}
+                                <span className="sr-only">{color.name}</span>
                             </button>
                         ))}
                     </div>

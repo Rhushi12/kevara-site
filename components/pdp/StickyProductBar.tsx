@@ -53,7 +53,8 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
     }, []);
 
     const colors = product.colors || [];
-    const sizes = product.sizes || [];
+    // Filter out "One Size" - it should never be displayed
+    const sizes = (product.sizes || []).filter((s: string) => s.toLowerCase() !== 'one size');
 
     return (
         <AnimatePresence>

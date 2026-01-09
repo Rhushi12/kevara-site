@@ -61,7 +61,10 @@ export default async function ProductPage({ params }: { params: { slug: string }
     console.log(`[PDP Debug] Raw productSizes:`, productSizes);
 
     let colors = productColors && productColors.length > 0 ? productColors : [];
-    let sizes = productSizes && productSizes.length > 0 ? productSizes : [];
+    // Filter out "One Size" from sizes - it should never be displayed
+    let sizes = productSizes && productSizes.length > 0
+        ? productSizes.filter((s: string) => s.toLowerCase() !== 'one size')
+        : [];
 
     // Only fall back to variant extraction if BOTH colors and sizes are empty
     // (for backwards compatibility with old Shopify products)

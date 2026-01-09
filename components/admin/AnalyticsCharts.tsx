@@ -14,8 +14,7 @@ import {
     Filler,
 } from "chart.js";
 import { Bar, Line } from "react-chartjs-2";
-import { collection, getDocs, query, orderBy, limit, doc, getDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+
 
 ChartJS.register(
     CategoryScale,
@@ -43,27 +42,28 @@ export default function AnalyticsCharts() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Generate last 7 days
+                const response = await fetch('/api/admin/analytics');
+                const data = await response.json();
+
+                if (data.error) throw new Error(data.error);
+
+                const { users, views } = data;
+
+                // Process Users Data
                 const last7Days = [...Array(7)].map((_, i) => {
                     const d = new Date();
-                    d.setDate(d.getDate() - (6 - i)); // Start from 6 days ago to today
+                    d.setDate(d.getDate() - (6 - i));
                     return d.toISOString().split('T')[0];
                 });
-
-                // 1. Fetch User Signups
-                const q = query(collection(db, "users"), orderBy("createdAt", "desc"), limit(50));
-                const querySnapshot = await getDocs(q);
 
                 const userCounts = last7Days.reduce((acc, date) => {
                     acc[date] = 0;
                     return acc;
                 }, {} as Record<string, number>);
 
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    if (data.createdAt) {
-                        const date = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
-                        const dateStr = date.toISOString().split('T')[0];
+                users.forEach((user: any) => {
+                    if (user.createdAt) {
+                        const dateStr = user.createdAt.split('T')[0];
                         if (userCounts[dateStr] !== undefined) {
                             userCounts[dateStr]++;
                         }
@@ -82,20 +82,14 @@ export default function AnalyticsCharts() {
                     ],
                 });
 
-                // 2. Fetch Page Views for last 7 days
-                const viewCounts = await Promise.all(
-                    last7Days.map(async (date) => {
-                        try {
-                            const viewDoc = await getDoc(doc(db, "page_views", date));
-                            if (viewDoc.exists()) {
-                                return viewDoc.data()?.count || 0;
-                            }
-                            return 0;
-                        } catch {
-                            return 0;
-                        }
-                    })
-                );
+                // Process Page Views Data
+                // views is array of { date, count }
+                const viewsMap = views.reduce((acc: any, item: any) => {
+                    acc[item.date] = item.count;
+                    return acc;
+                }, {});
+
+                const viewCounts = last7Days.map(date => viewsMap[date] || 0);
 
                 setViewsChartData({
                     labels: last7Days.map(d => new Date(d).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })),

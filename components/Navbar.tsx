@@ -158,8 +158,7 @@ export default function Navbar() {
                     const newImages = [...(item.images || []), {
                         label,
                         src: imageUrl,
-                        href,
-                        imageId: fileId // Store ID for backend update
+                        href
                     }];
                     return { ...item, images: newImages };
                 }
@@ -293,6 +292,7 @@ export default function Navbar() {
                 isOpen={isUploadModalOpen}
                 onClose={() => setIsUploadModalOpen(false)}
                 onUpload={handleImageUpload}
+                aspectRatio={180 / 225}
             />
 
             {/* Dimming Backdrop */}

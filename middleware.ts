@@ -86,7 +86,8 @@ export function middleware(request: NextRequest) {
     // No strict domain blocking - Vercel handles domain configuration
 
     // ========== MAINTENANCE MODE CHECK ==========
-    const isMaintenanceMode = process.env.MAINTENANCE_MODE === 'true';
+    // const isMaintenanceMode = process.env.MAINTENANCE_MODE === 'true';
+    const isMaintenanceMode = false; // Force disabled
 
     if (isMaintenanceMode && !pathname.startsWith("/api/")) {
         const isPublicPath = MAINTENANCE_PUBLIC_PATHS.some(path => pathname.startsWith(path));
@@ -99,6 +100,11 @@ export function middleware(request: NextRequest) {
             url.pathname = '/under-construction';
             return NextResponse.redirect(url);
         }
+    }
+
+    // Redirect /under-construction to home if maintenance is off
+    if (!isMaintenanceMode && pathname === '/under-construction') {
+        return NextResponse.redirect(new URL('/', request.url));
     }
 
     // ========== CORS & API HANDLING ==========

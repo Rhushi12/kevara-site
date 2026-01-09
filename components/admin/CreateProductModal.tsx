@@ -28,7 +28,7 @@ const PRESET_COLORS = [
     { name: "Beige", hex: "#D4C5B0" },
 ];
 
-const SIZE_OPTIONS = ["XS", "S", "M", "L", "XL", "XXL", "One Size"];
+const SIZE_OPTIONS = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"];
 
 export default function CreateProductModal({ isOpen, onClose, onSuccess }: CreateProductModalProps) {
     const [title, setTitle] = useState("");
