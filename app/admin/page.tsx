@@ -9,7 +9,9 @@ import AnalyticsCharts from "@/components/admin/AnalyticsCharts";
 import UsersTable from "@/components/admin/UsersTable";
 import MenuEditor from "@/components/admin/MenuEditor";
 import AdminManager from "@/components/admin/AdminManager";
+import SeoSettings from "@/components/admin/SeoSettings";
 import WholesaleLeadsTable from "@/components/admin/WholesaleLeadsTable";
+import ProductsTable from "@/components/admin/ProductsTable";
 import { db } from "@/lib/firebase";
 import { collection, writeBatch, doc } from "firebase/firestore";
 import { MOCK_SHOPIFY_PRODUCTS } from "@/lib/mockData";
@@ -90,6 +92,20 @@ export default function AdminPage() {
                         <UsersTable />
                     </div>
                 );
+
+            case "products":
+                return (
+                    <div className="space-y-6 animate-in fade-in duration-500">
+                        <div className="flex justify-between items-end">
+                            <div>
+                                <h1 className="text-2xl font-lora font-bold text-slate-900">Product Catalog</h1>
+                                <p className="text-gray-500 text-sm">Manage inventory, prices, and stock.</p>
+                            </div>
+                        </div>
+                        <ProductsTable />
+                    </div>
+                );
+
             case "cms":
                 return (
                     <div className="space-y-6 animate-in fade-in duration-500">
@@ -100,6 +116,17 @@ export default function AdminPage() {
                         <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100">
                             <MenuEditor />
                         </div>
+                    </div>
+                );
+
+            case "seo":
+                return (
+                    <div className="space-y-6 animate-in fade-in duration-500">
+                        <div>
+                            <h1 className="text-2xl font-lora font-bold text-slate-900">SEO & Social Sharing</h1>
+                            <p className="text-gray-500 text-sm">Configure how your site appears on Google & Social Media.</p>
+                        </div>
+                        <SeoSettings />
                     </div>
                 );
             case "settings":

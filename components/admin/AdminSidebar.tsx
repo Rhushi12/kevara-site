@@ -4,6 +4,7 @@ export default function AdminSidebar({ activeTab, setActiveTab }: { activeTab: s
         { id: "leads", label: "Leads & Users" },
         { id: "wholesale", label: "Wholesale Inquiries" },
         { id: "cms", label: "Content Management" },
+        { id: "seo", label: "SEO & Social" },
         { id: "products", label: "Product Catalog" }, // Placeholder
         { id: "settings", label: "Settings" }, // Placeholder
     ];

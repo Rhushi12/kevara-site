@@ -5,9 +5,10 @@ import { useAuth } from '@/context/AuthContext';
 import { useProductQueueStore } from '@/lib/productQueueStore';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Loader2, CheckCircle, XCircle, Clock, Package, RefreshCw, Plus, Trash2, X, Check, Upload, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import CreateProductModal from '@/components/admin/CreateProductModal';
+import BulkEditModal from '@/components/admin/BulkEditModal';
+import { Loader2, CheckCircle, XCircle, Clock, Package, RefreshCw, Plus, Trash2, X, Check, Upload, AlertCircle, Edit } from 'lucide-react';
 
 interface BulkUploadResult {
     row: number;
@@ -30,6 +31,7 @@ export default function AdminProductManager() {
     const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
     const [isSelectMode, setIsSelectMode] = useState(false);
     const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+    const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
 
     // Bulk upload progress state
     const [bulkUploading, setBulkUploading] = useState(false);
@@ -128,6 +130,37 @@ export default function AdminProductManager() {
         setSelectedProducts(new Set());
         setIsSelectMode(false);
         setIsBulkDeleting(false);
+    };
+
+    const handleBulkUpdate = async (updateData: any) => {
+        if (selectedProducts.size === 0) return;
+
+        setIsBulkDeleting(true);
+        try {
+            const res = await fetch('/api/products', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ids: Array.from(selectedProducts),
+                    ...updateData
+                }),
+            });
+
+            if (res.ok) {
+                // Optimistic update logic could go here, but a re-fetch is safer for complex changes
+                await fetchProducts();
+                alert(`Successfully updated ${selectedProducts.size} products.`);
+                setSelectedProducts(new Set());
+                setIsSelectMode(false);
+            } else {
+                throw new Error("Failed to update products");
+            }
+        } catch (error) {
+            console.error("Bulk update failed:", error);
+            alert("Failed to update products");
+        } finally {
+            setIsBulkDeleting(false);
+        }
     };
 
     // Toggle product selection
@@ -355,22 +388,41 @@ export default function AdminProductManager() {
                                     {selectedProducts.size === 0 ? 'Select all' : `${selectedProducts.size} of ${liveProducts.length} selected`}
                                 </span>
                             </div>
+
+
                             {selectedProducts.size > 0 && (
-                                <button
-                                    onClick={handleBulkDelete}
-                                    disabled={isBulkDeleting}
-                                    className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium disabled:opacity-50"
-                                >
-                                    {isBulkDeleting ? (
-                                        <Loader2 size={16} className="animate-spin" />
-                                    ) : (
-                                        <Trash2 size={16} />
-                                    )}
-                                    Delete Selected ({selectedProducts.size})
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setIsBulkEditModalOpen(true)}
+                                        className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors text-sm font-medium"
+                                    >
+                                        <Edit size={16} /> Bulk Edit
+                                    </button>
+
+                                    <button
+                                        onClick={handleBulkDelete}
+                                        disabled={isBulkDeleting}
+                                        className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium disabled:opacity-50"
+                                    >
+                                        {isBulkDeleting ? (
+                                            <Loader2 size={16} className="animate-spin" />
+                                        ) : (
+                                            <Trash2 size={16} />
+                                        )}
+                                        Delete ({selectedProducts.size})
+                                    </button>
+                                </div>
                             )}
                         </div>
                     )}
+
+                    {/* Bulk Edit Modal */}
+                    <BulkEditModal
+                        isOpen={isBulkEditModalOpen}
+                        onClose={() => setIsBulkEditModalOpen(false)}
+                        count={selectedProducts.size}
+                        onSave={handleBulkUpdate}
+                    />
 
                     {loadingProducts ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

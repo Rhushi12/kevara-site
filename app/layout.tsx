@@ -25,42 +25,73 @@ const prata = Prata({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://kevara.in"),
-  title: {
-    default: "Kevara | Timeless Elegance",
-    template: "%s | Kevara"
-  },
-  description: "Discover Kevara's high-end fashion collection. Timeless elegance designed for the modern era.",
-  keywords: ["fashion", "luxury", "clothing", "kevara", "elegance", "women's fashion", "men's fashion"],
-  authors: [{ name: "Kevara" }],
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: "/",
-    title: "Kevara | Timeless Elegance",
-    description: "Discover Kevara's high-end fashion collection. Timeless elegance designed for the modern era.",
-    siteName: "Kevara",
-    images: [
-      {
-        url: "/og-image.jpg", // We'll need to make sure this exists or user adds it
-        width: 1200,
-        height: 630,
-        alt: "Kevara Fashion",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Kevara | Timeless Elegance",
-    description: "High-end fashion for the modern era.",
-    images: ["/og-image.jpg"],
-    creator: "@kevara",
-  },
-  icons: {
-    icon: "/favicon.ico",
-  },
-};
+import { db } from "@/lib/firebase-admin";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const defaultTitle = "Kevara | Timeless Elegance";
+  const defaultDesc = "Discover Kevara's high-end fashion collection. Timeless elegance designed for the modern era.";
+  const defaultImage = "/og-image.jpg";
+
+  let title = defaultTitle;
+  let description = defaultDesc;
+  let ogImage = defaultImage;
+
+  let keywords = ["fashion", "luxury", "clothing", "kevara", "elegance", "women's fashion", "men's fashion"];
+
+  try {
+    const docRef = db.collection("config").doc("seo");
+    const docSnap = await docRef.get();
+    if (docSnap.exists) {
+      const data = docSnap.data();
+      if (data?.title) title = data.title;
+      if (data?.description) description = data.description;
+      if (data?.ogImage) ogImage = data.ogImage;
+      if (data?.keywords) {
+        // Support both string "a, b, c" and array formats if user entered manually, but UI sends string.
+        keywords = data.keywords.split(',').map((k: string) => k.trim());
+      }
+    }
+  } catch (error) {
+    console.warn("Failed to fetch SEO config:", error);
+  }
+
+  return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://kevara.in"),
+    title: {
+      default: title,
+      template: "%s | Kevara"
+    },
+    description: description,
+    keywords: keywords,
+    authors: [{ name: "Kevara" }],
+    openGraph: {
+      type: "website",
+      locale: "en_US",
+      url: "/",
+      title: title,
+      description: description,
+      siteName: "Kevara",
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: "Kevara Fashion",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: title,
+      description: description,
+      images: [ogImage],
+      creator: "@kevara",
+    },
+    icons: {
+      icon: "/favicon.ico",
+    },
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -79,16 +110,51 @@ import GlobalWholesaleInquiryModal from "@/components/GlobalWholesaleInquiryModa
 import WholesaleFloatingButton from "@/components/WholesaleFloatingButton";
 import PageViewsTracker from "@/components/PageViewsTracker";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Fetch SEO config for JSON-LD
+  let seoConfig: any = {};
+  try {
+    const docRef = db.collection("config").doc("seo");
+    const docSnap = await docRef.get();
+    if (docSnap.exists) {
+      seoConfig = docSnap.data();
+    }
+  } catch (error) {
+    console.warn("Failed to fetch SEO config for schema:", error);
+  }
+
+  // Generate JSON-LD
+  const jsonLd = seoConfig.enableSchema !== false ? {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Kevara",
+    "url": process.env.NEXT_PUBLIC_SITE_URL || "https://kevara.in",
+    "logo": seoConfig.ogImage || "https://kevara.in/logo.png",
+    "description": seoConfig.description || "Timeless Elegance",
+    "sameAs": [
+      seoConfig.social?.instagram,
+      seoConfig.social?.facebook,
+      seoConfig.social?.twitter
+    ].filter(Boolean)
+  } : null;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${figtree.variable} ${lora.variable} ${prata.variable} font-figtree antialiased bg-[#FDFBF7] text-slate-900`}
       >
+        {/* JSON-LD Schema */}
+        {jsonLd && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          />
+        )}
+
         <AuthProvider>
           <ToastProvider>
             <OfferProvider>
