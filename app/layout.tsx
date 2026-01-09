@@ -88,7 +88,9 @@ export async function generateMetadata(): Promise<Metadata> {
       creator: "@kevara",
     },
     icons: {
-      icon: "/favicon.ico",
+      icon: "/logo.png",
+      shortcut: "/logo.png",
+      apple: "/logo.png",
     },
   };
 }
