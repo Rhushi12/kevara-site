@@ -108,7 +108,6 @@ export default function Template3Page() {
                         const validSections = data.sections.filter((s: any) => s && s.type);
                         if (validSections.length === 0) {
                             // No valid sections, use default template
-                            console.log("No valid sections found, using default template");
                             setLoading(false);
                             return;
                         }

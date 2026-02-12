@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { MenuItem } from "@/lib/menuData";
@@ -48,7 +48,6 @@ export default function MenuEditor() {
             // Source handle is 'women' (the template we just refactored)
             const sourceHandle = "women";
 
-            console.log(`Cloning page from ${sourceHandle} to ${targetHandle}...`);
 
             // 1. Fetch source page content (Page Builder API)
             const res = await fetch(`/api/builder/content?handle=${sourceHandle}`);

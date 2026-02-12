@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef } from "react";
 
@@ -31,7 +31,6 @@ export default function PageViewsTracker() {
 
                 if (response.ok) {
                     const data = await response.json();
-                    console.log("[PageViews] Tracked view for", data.date);
                 } else {
                     console.error("[PageViews] API returned error:", response.status);
                 }

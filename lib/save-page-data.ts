@@ -1,4 +1,4 @@
-import 'dotenv/config'; // Ensure dotenv is installed if running as script
+﻿import 'dotenv/config'; // Ensure dotenv is installed if running as script
 
 const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || process.env.SHOPIFY_STORE_DOMAIN;
 const token = process.env.SHOPIFY_ADMIN_TOKEN;
@@ -100,14 +100,12 @@ export async function savePageData(slug: string, jsonData: any, type: string = "
         try {
             const existingPage = await getPageContent(slug);
             if (existingPage && existingPage.metaobject_handle) {
-                console.log(`[Save] Found existing page for slug '${slug}' with handle '${existingPage.metaobject_handle}'`);
                 uniqueHandle = existingPage.metaobject_handle;
             } else {
                 // Generate new unique handle if not found
                 const timestamp = Date.now();
                 const random = Math.random().toString(36).substring(2, 8);
                 uniqueHandle = `page_${timestamp}_${random}`;
-                console.log(`[Save] Creating new page for slug '${slug}' with unique handle '${uniqueHandle}'`);
             }
         } catch (error) {
             console.error(`[Save] Error looking up existing page:`, error);
@@ -118,7 +116,6 @@ export async function savePageData(slug: string, jsonData: any, type: string = "
 
     // B. Extract Assets to prevent Garbage Collection
     const assetIds = extractMediaGids(jsonData);
-    console.log(`[Save] Found ${assetIds.length} assets to link for ${slug} (handle: ${uniqueHandle})`);
 
     // C. The Mutation (Using 'metaobjectUpsert' to avoid duplicates)
     const mutation = `
@@ -203,7 +200,6 @@ export async function savePageData(slug: string, jsonData: any, type: string = "
             throw new Error("Upsert completed but returned null metaobject. Check permissions.");
         }
 
-        console.log("✅ Success! Saved & Published:", metaobjectUpsert.metaobject.handle);
         return metaobjectUpsert.metaobject;
 
     } catch (error) {

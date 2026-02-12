@@ -1,4 +1,4 @@
-import { db, storage } from "@/lib/firebase";
+﻿import { db, storage } from "@/lib/firebase";
 import { collection, getDocs, query, where, doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
@@ -54,7 +54,6 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
         if (docSnap.exists()) {
             return { id: docSnap.id, ...docSnap.data() } as Product;
         } else {
-            console.log("No such product!");
             return null;
         }
     } catch (error) {
@@ -69,7 +68,6 @@ export async function saveNavigationMenu(menuData: MenuItem[]) {
     try {
         const docRef = doc(db, "config", "navigation");
         await setDoc(docRef, { items: menuData });
-        console.log("Navigation menu saved!");
     } catch (error) {
         console.error("Error saving navigation menu:", error);
         throw error;

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { removeOrphanedProductsFromPages } from '@/lib/remove-product-from-pages';
 import { requireAdmin } from '@/lib/auth';
 
@@ -12,7 +12,6 @@ export async function POST(request: NextRequest) {
         const authError = await requireAdmin(request);
         if (authError) return authError;
 
-        console.log('[API] Starting orphaned product cleanup...');
 
         const result = await removeOrphanedProductsFromPages();
 

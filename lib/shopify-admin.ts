@@ -1,4 +1,4 @@
-
+﻿
 import { Buffer } from 'buffer';
 
 const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || process.env.SHOPIFY_STORE_DOMAIN;
@@ -7,7 +7,6 @@ const accessToken = process.env.SHOPIFY_ADMIN_TOKEN;
 import { extractMediaGids } from './shopify-utils';
 
 function logDebug(message: string, data?: any) {
-  console.log(`[DEBUG] ${message}`, data ? JSON.stringify(data, null, 2) : '');
 }
 
 // Fetch with timeout helper
@@ -186,7 +185,6 @@ async function fileToBuffer(file: any): Promise<{ buffer: Buffer; mimeType: stri
   }
 
   // Log original file info
-  console.log(`[Upload] File "${file.name}" size: ${buffer.length} bytes, type: ${mimeType}`);
 
   // Only resize images if they exceed Shopify's 20MP limit (very rare for web uploads)
   if (mimeType.startsWith('image/') && !mimeType.includes('gif')) {
@@ -196,7 +194,6 @@ async function fileToBuffer(file: any): Promise<{ buffer: Buffer; mimeType: stri
       const image = sharp(buffer);
       const metadata = await image.metadata();
 
-      console.log(`[Upload] Image dimensions: ${metadata.width}x${metadata.height}`);
 
       // Shopify limit is 20MP = 20,000,000 pixels
       const SHOPIFY_MAX_PIXELS = 20000000;
@@ -208,7 +205,6 @@ async function fileToBuffer(file: any): Promise<{ buffer: Buffer; mimeType: stri
         const newWidth = Math.floor((metadata.width || 4000) * scaleFactor);
         const newHeight = Math.floor((metadata.height || 4000) * scaleFactor);
 
-        console.log(`[Upload] Image exceeds 20MP limit (${Math.round(currentPixels / 1000000)}MP), resizing to ${newWidth}x${newHeight}...`);
 
         const resizedBuffer = await image
           .resize(newWidth, newHeight, {
@@ -221,7 +217,6 @@ async function fileToBuffer(file: any): Promise<{ buffer: Buffer; mimeType: stri
         buffer = resizedBuffer;
         mimeType = 'image/jpeg';
 
-        console.log(`[Upload] Resized to ${newWidth}x${newHeight}, new size: ${buffer.length} bytes`);
       }
       // If under 20MP, upload original without any resizing
     } catch (err) {
@@ -269,7 +264,6 @@ async function stageFileForUpload(fileSize: number, mimeType: string, filename: 
     }]
   };
 
-  console.log('[Upload] Staging file:', { filename, fileSize, mimeType, resourceType });
 
   const data = await shopifyFetch(mutation, variables);
 
@@ -290,7 +284,6 @@ async function stageFileForUpload(fileSize: number, mimeType: string, filename: 
  * Upload file buffer to GCS using the staged URL
  */
 async function uploadToGCS(url: string, buffer: Buffer, mimeType: string): Promise<void> {
-  console.log('[Upload] Uploading to GCS:', { size: buffer.length, mimeType });
 
   const response = await fetch(url, {
     method: 'PUT',
@@ -307,7 +300,6 @@ async function uploadToGCS(url: string, buffer: Buffer, mimeType: string): Promi
     throw new Error(`GCS upload failed: ${response.status} - ${text}`);
   }
 
-  console.log('[Upload] GCS upload successful');
 }
 
 /**
@@ -350,7 +342,6 @@ async function createFileRecord(resourceUrl: string, mimeType: string): Promise<
     }]
   };
 
-  console.log('[Upload] Creating file record:', { resourceUrl, contentType });
 
   const data = await shopifyFetch(mutation, variables);
 
@@ -364,7 +355,6 @@ async function createFileRecord(resourceUrl: string, mimeType: string): Promise<
     throw new Error('No file returned from fileCreate mutation');
   }
 
-  console.log('[Upload] File created:', { id: createdFile.id, status: createdFile.fileStatus });
 
   return createdFile.id;
 }
@@ -374,22 +364,18 @@ async function createFileRecord(resourceUrl: string, mimeType: string): Promise<
  * This is the primary export used by the product creation flow
  */
 export async function uploadFileToShopify(file: any): Promise<string> {
-  console.log('[Upload] Starting upload for:', file.name);
 
   // 1. Convert file to buffer (may resize if image is too large)
   const { buffer, mimeType } = await fileToBuffer(file);
-  console.log('[Upload] Converted to buffer, size:', buffer.length, 'mimeType:', mimeType);
 
   // 2. Stage the upload
   const { url, resourceUrl } = await stageFileForUpload(buffer.length, mimeType, file.name);
-  console.log('[Upload] Staged, uploading to:', url.substring(0, 50) + '...');
 
   // 3. Upload to GCS
   await uploadToGCS(url, buffer, mimeType);
 
   // 4. Create file record in Shopify
   const fileId = await createFileRecord(resourceUrl, mimeType);
-  console.log('[Upload] Complete! File ID:', fileId);
 
   return fileId;
 }
@@ -810,7 +796,6 @@ export async function getCollectionPage(handle: string) {
   const metaobject = data.metaobjectByHandle;
 
   if (!metaobject) {
-    console.log("getCollectionPage: No metaobject found for handle:", handle);
     return null;
   }
 
@@ -1186,7 +1171,6 @@ async function createMetaobjectDefinition(type: string, name: string, fieldDefin
 }
 
 async function ensureWholesaleDefinition() {
-  console.log("Checking wholesale_inquiry definition...");
 
   const allRequiredFields = [
     { key: "name", name: "Name", type: "single_line_text_field" },
@@ -1219,9 +1203,7 @@ async function ensureWholesaleDefinition() {
 
   if (!checkResult.metaobjectDefinitionByType) {
     // Definition doesn't exist, create it
-    console.log("Creating wholesale_inquiry definition...");
     await createMetaobjectDefinition("wholesale_inquiry", "Wholesale Inquiry", allRequiredFields);
-    console.log("Successfully created wholesale_inquiry definition.");
     return;
   }
 
@@ -1233,11 +1215,9 @@ async function ensureWholesaleDefinition() {
   const missingFields = allRequiredFields.filter(f => !existingFieldKeys.has(f.key));
 
   if (missingFields.length === 0) {
-    console.log("wholesale_inquiry definition is up to date.");
     return;
   }
 
-  console.log("Adding missing fields to wholesale_inquiry:", missingFields.map(f => f.key));
 
   // Update the definition with missing fields
   const updateMutation = `
@@ -1272,7 +1252,6 @@ async function ensureWholesaleDefinition() {
     throw new Error("Failed to update wholesale_inquiry definition: " + JSON.stringify(updateResult.metaobjectDefinitionUpdate.userErrors));
   }
 
-  console.log("Successfully updated wholesale_inquiry definition with missing fields.");
 }
 
 export async function createWholesaleInquiry(data: any) {
@@ -1304,7 +1283,6 @@ export async function createWholesaleInquiry(data: any) {
       error.message.includes("No metaobject definition exists") ||
       error.message.includes("Field definition") && error.message.includes("does not exist")
     )) {
-      console.log("Metaobject definition missing or incomplete. Updating it now...");
       await ensureWholesaleDefinition();
       // Retry
       const result = await upsertMetaobject("wholesale_inquiry", handle, fields, false);
@@ -1385,7 +1363,6 @@ export async function getOfferSlides() {
   const metaobject = data.metaobjectByHandle;
 
   if (!metaobject) {
-    console.log("[getOfferSlides] No offer config found, returning null");
     return null;
   }
 
@@ -1468,7 +1445,6 @@ async function ensureOfferDefinition() {
     console.error("[ensureOfferDefinition] Failed:", result.metaobjectDefinitionCreate.userErrors);
     throw new Error("Failed to create offer_config definition");
   }
-  console.log("[ensureOfferDefinition] Created offer_config definition");
 }
 
 /**
@@ -1499,7 +1475,6 @@ export async function saveOfferSlides(slides: any[]) {
     return result;
   } catch (error: any) {
     if (error.message && error.message.includes("No metaobject definition exists")) {
-      console.log("[saveOfferSlides] Definition missing, creating...");
       await ensureOfferDefinition();
       const result = await upsertMetaobject("offer_config", "main-offer", fields, false);
       return result;

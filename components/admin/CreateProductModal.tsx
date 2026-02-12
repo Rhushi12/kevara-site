@@ -28,7 +28,7 @@ const PRESET_COLORS = [
     { name: "Beige", hex: "#D4C5B0" },
 ];
 
-const SIZE_OPTIONS = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
+const SIZE_OPTIONS = ["24", "26", "28", "30", "32", "34", "36", "XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
 
 export default function CreateProductModal({ isOpen, onClose, onSuccess }: CreateProductModalProps) {
     const [title, setTitle] = useState("");
@@ -344,11 +344,10 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
                                     Price (₹) <span className="text-red-500">*</span>
                                 </label>
                                 <input
-                                    type="number"
+                                    type="text"
                                     value={price}
                                     onChange={(e) => setPrice(e.target.value)}
-                                    placeholder="0.00"
-                                    step="0.01"
+                                    placeholder="0.00 or 100-200"
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all duration-200 placeholder:text-gray-400"
                                     required
                                 />

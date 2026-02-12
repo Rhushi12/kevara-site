@@ -54,3 +54,7 @@ backend-debug.log
 server-error.log
 setup_output.log
 build_log.txt
+
+# backup files
+/backups/
+/cordset/

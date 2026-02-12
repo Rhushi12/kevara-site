@@ -94,7 +94,7 @@ export default function FilterSidebar({
     };
 
     const categories = ["Shirts", "Pants", "Shorts", "Jackets", "Accessories"];
-    const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
+    const sizes = ["24", "26", "28", "30", "32", "34", "36", "XS", "S", "M", "L", "XL", "XXL"];
     const colors = [
         { name: "Black", hex: "#000000" },
         { name: "White", hex: "#FFFFFF" },

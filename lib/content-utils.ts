@@ -1,4 +1,4 @@
-
+﻿
 import { pollForFileUrl } from "@/lib/shopify-admin";
 
 /**
@@ -45,7 +45,6 @@ export async function resolveImageGidsInSections(pageData: any): Promise<any> {
 
     if (gidsToResolve.length === 0) return pageData;
 
-    console.log(`[resolveImageGidsInSections] Resolving ${gidsToResolve.length} image GIDs...`);
 
     // Resolve GIDs in parallel (with reduced polling for speed)
     const results = await Promise.all(
@@ -83,7 +82,6 @@ export async function resolveImageGidsInSections(pageData: any): Promise<any> {
         }
     }
 
-    console.log(`[resolveImageGidsInSections] Resolved ${results.filter(r => r.url).length} URLs`);
 
     return resolvedData;
 }

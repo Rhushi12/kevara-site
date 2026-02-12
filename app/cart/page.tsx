@@ -8,7 +8,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import CreateProductModal from '@/components/admin/CreateProductModal';
 import BulkEditModal from '@/components/admin/BulkEditModal';
-import { Loader2, CheckCircle, XCircle, Clock, Package, RefreshCw, Plus, Trash2, X, Check, Upload, AlertCircle, Edit } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, Clock, Package, RefreshCw, Plus, Trash2, X, Check, Upload, AlertCircle, Edit, RotateCcw, RotateCw } from 'lucide-react';
 
 interface BulkUploadResult {
     row: number;
@@ -16,6 +16,17 @@ interface BulkUploadResult {
     handle?: string;
     status: 'success' | 'error';
     error?: string;
+}
+
+interface HistoryAction {
+    id: string;
+    timestamp: number;
+    description: string;
+    items: Array<{
+        handle: string;
+        previousData: any;
+        newData: any;
+    }>;
 }
 
 export default function AdminProductManager() {
@@ -31,7 +42,13 @@ export default function AdminProductManager() {
     const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
     const [isSelectMode, setIsSelectMode] = useState(false);
     const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
     const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
+    const [isShiftPressed, setIsShiftPressed] = useState(false);
+
+    // Undo/Redo State
+    const [history, setHistory] = useState<HistoryAction[]>([]);
+    const [redoStack, setRedoStack] = useState<HistoryAction[]>([]);
 
     // Bulk upload progress state
     const [bulkUploading, setBulkUploading] = useState(false);
@@ -67,6 +84,23 @@ export default function AdminProductManager() {
             fetchProducts();
         }
     }, [isAdmin]);
+
+    // Track Shift Key
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Shift') setIsShiftPressed(true);
+        };
+        const handleKeyUp = (e: KeyboardEvent) => {
+            if (e.key === 'Shift') setIsShiftPressed(false);
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+        };
+    }, []);
 
     // Listen for product updates to refresh list
     useEffect(() => {
@@ -132,29 +166,87 @@ export default function AdminProductManager() {
         setIsBulkDeleting(false);
     };
 
+    const performUpdate = async (items: any[]) => {
+        const res = await fetch('/api/products', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items }),
+        });
+
+        if (!res.ok) throw new Error("Failed to update products");
+        await fetchProducts();
+    };
+
     const handleBulkUpdate = async (updateData: any) => {
         if (selectedProducts.size === 0) return;
 
         setIsBulkDeleting(true);
         try {
-            const res = await fetch('/api/products', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ids: Array.from(selectedProducts),
-                    ...updateData
-                }),
-            });
+            // 1. Capture State & Prepare Updates
+            const timestamp = Date.now();
+            const actionItems: HistoryAction['items'] = [];
+            const updatePayloadItems: any[] = [];
 
-            if (res.ok) {
-                // Optimistic update logic could go here, but a re-fetch is safer for complex changes
-                await fetchProducts();
-                alert(`Successfully updated ${selectedProducts.size} products.`);
-                setSelectedProducts(new Set());
-                setIsSelectMode(false);
-            } else {
-                throw new Error("Failed to update products");
+            for (const handle of Array.from(selectedProducts)) {
+                const product = liveProducts.find(p => p.node.handle === handle);
+                if (!product) continue;
+
+                // Calculate New Title
+                let newTitle = updateData.title || product.node.title;
+                if (updateData.titleSuffix) {
+                    newTitle = `${newTitle}${updateData.titleSuffix}`;
+                }
+
+                // Prepare New Data Object (for history and API)
+                const newData = {
+                    handle,
+                    ...(updateData.title || updateData.titleSuffix ? { title: newTitle } : {}),
+                    ...(updateData.status && { status: updateData.status }),
+                    ...(updateData.price && { price: updateData.price }),
+                    ...(updateData.sizes && { sizes: updateData.sizes }),
+                    ...(updateData.colors && { colors: updateData.colors }),
+                };
+
+                // Prepare Previous Data Object (for undo)
+                const previousData = {
+                    handle,
+                    ...(newData.title && { title: product.node.title }),
+                    ...(newData.status && { status: product.node.status }),
+                    ...(newData.price && { price: product.node.priceRange?.minVariantPrice?.amount }), // Note: check logic if price structure varies
+                    ...(newData.sizes && { sizes: product.node.sizes }),
+                    ...(newData.colors && { colors: product.node.colors }),
+                };
+
+                // Fix price access if needed - ensuring flat structure matching API expectation
+                // The API expects 'price' as string, but product node has nested object.
+                // We should store what the API expects for restoration.
+                if (newData.price && !previousData.price) {
+                    previousData.price = product.node.priceRange?.minVariantPrice?.amount;
+                }
+
+                actionItems.push({ handle, previousData, newData });
+                updatePayloadItems.push(newData);
             }
+
+            if (updatePayloadItems.length === 0) return;
+
+            // 2. Perform Update
+            await performUpdate(updatePayloadItems);
+
+            // 3. Update History
+            const action: HistoryAction = {
+                id: `action_${timestamp}`,
+                timestamp,
+                description: `Bulk update (${updatePayloadItems.length} products)`,
+                items: actionItems,
+            };
+            setHistory(prev => [...prev, action]);
+            setRedoStack([]); // Clear redo stack on new action
+
+            alert(`Successfully updated ${selectedProducts.size} products.`);
+            setSelectedProducts(new Set());
+            setIsSelectMode(false);
+
         } catch (error) {
             console.error("Bulk update failed:", error);
             alert("Failed to update products");
@@ -163,17 +255,67 @@ export default function AdminProductManager() {
         }
     };
 
+    const handleUndo = async () => {
+        if (history.length === 0) return;
+        const action = history[history.length - 1];
+
+        setIsBulkDeleting(true); // Reuse loading state
+        try {
+            const revertItems = action.items.map(item => item.previousData);
+            await performUpdate(revertItems);
+
+            setHistory(prev => prev.slice(0, -1));
+            setRedoStack(prev => [...prev, action]);
+            alert("Undo successful");
+        } catch (error) {
+            console.error("Undo failed:", error);
+            alert("Failed to undo changes");
+        } finally {
+            setIsBulkDeleting(false);
+        }
+    };
+
+    const handleRedo = async () => {
+        if (redoStack.length === 0) return;
+        const action = redoStack[redoStack.length - 1];
+
+        setIsBulkDeleting(true);
+        try {
+            const applyItems = action.items.map(item => item.newData);
+            await performUpdate(applyItems);
+
+            setRedoStack(prev => prev.slice(0, -1));
+            setHistory(prev => [...prev, action]);
+            alert("Redo successful");
+        } catch (error) {
+            console.error("Redo failed:", error);
+            alert("Failed to redo changes");
+        } finally {
+            setIsBulkDeleting(false);
+        }
+    };
+
     // Toggle product selection
-    const toggleProductSelection = (id: string) => {
+    const toggleProductSelection = (handle: string) => {
         setSelectedProducts(prev => {
             const newSet = new Set(prev);
-            if (newSet.has(id)) {
-                newSet.delete(id);
+            if (newSet.has(handle)) {
+                newSet.delete(handle);
             } else {
-                newSet.add(id);
+                newSet.add(handle);
             }
             return newSet;
         });
+    };
+
+    const handleHoverSelect = (handle: string) => {
+        if (isSelectMode && isShiftPressed) {
+            setSelectedProducts(prev => {
+                const newSet = new Set(prev);
+                newSet.add(handle); // Only add, don't toggle
+                return newSet;
+            });
+        }
     };
 
     // Select/Deselect all
@@ -181,7 +323,7 @@ export default function AdminProductManager() {
         if (selectedProducts.size === liveProducts.length) {
             setSelectedProducts(new Set());
         } else {
-            setSelectedProducts(new Set(liveProducts.map(p => p.node.id)));
+            setSelectedProducts(new Set(liveProducts.map(p => p.node.handle)));
         }
     };
 
@@ -355,6 +497,23 @@ export default function AdminProductManager() {
                         </div>
                         <div className="flex items-center gap-3">
                             <button
+                                onClick={handleUndo}
+                                disabled={history.length === 0 || isBulkDeleting}
+                                className="p-2 bg-white border border-gray-200 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                title="Undo Last Action"
+                            >
+                                <RotateCcw size={20} />
+                            </button>
+                            <button
+                                onClick={handleRedo}
+                                disabled={redoStack.length === 0 || isBulkDeleting}
+                                className="p-2 bg-white border border-gray-200 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                title="Redo Action"
+                            >
+                                <RotateCw size={20} />
+                            </button>
+                            <div className="h-6 w-px bg-gray-200 mx-1" />
+                            <button
                                 onClick={() => {
                                     setIsSelectMode(!isSelectMode);
                                     if (isSelectMode) setSelectedProducts(new Set());
@@ -435,14 +594,15 @@ export default function AdminProductManager() {
                             {liveProducts.map((product: any) => (
                                 <div
                                     key={product.node.id}
-                                    className={`group bg-white rounded-xl overflow-hidden border transition-all duration-300 relative ${selectedProducts.has(product.node.id) ? 'border-slate-900 ring-2 ring-slate-900' : 'border-gray-100 hover:shadow-md'}`}
-                                    onClick={() => isSelectMode && toggleProductSelection(product.node.id)}
+                                    className={`group bg-white rounded-xl overflow-hidden border transition-all duration-300 relative ${selectedProducts.has(product.node.handle) ? 'border-slate-900 ring-2 ring-slate-900' : 'border-gray-100 hover:shadow-md'}`}
+                                    onClick={() => isSelectMode && toggleProductSelection(product.node.handle)}
+                                    onMouseEnter={() => handleHoverSelect(product.node.handle)}
                                 >
                                     {/* Selection Checkbox */}
                                     {isSelectMode && (
                                         <div className="absolute top-3 left-3 z-40">
-                                            <div className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${selectedProducts.has(product.node.id) ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white/90 border-gray-300'}`}>
-                                                {selectedProducts.has(product.node.id) && <Check size={14} />}
+                                            <div className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${selectedProducts.has(product.node.handle) ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white/90 border-gray-300'}`}>
+                                                {selectedProducts.has(product.node.handle) && <Check size={14} />}
                                             </div>
                                         </div>
                                     )}
@@ -501,9 +661,19 @@ export default function AdminProductManager() {
                                         <h3 className="font-medium text-slate-900 truncate mb-1">{product.node.title}</h3>
                                         <div className="flex items-center justify-between">
                                             <p className="text-sm text-slate-500">
-                                                {product.node.priceRange?.minVariantPrice?.amount
-                                                    ? `₹${product.node.priceRange.minVariantPrice.amount}`
-                                                    : 'Price not set'}
+                                                {(() => {
+                                                    const p = product.node.priceRange?.minVariantPrice?.amount;
+                                                    if (!p) return 'Price not set';
+                                                    if (p.toString().includes('-')) {
+                                                        // Format range: "100-200" -> "₹100 - ₹200"
+                                                        const parts = p.toString().split('-').map((s: string) => s.trim());
+                                                        if (parts.length === 2 && !isNaN(parseFloat(parts[0])) && !isNaN(parseFloat(parts[1]))) {
+                                                            return `₹${parts[0]} - ₹${parts[1]}`;
+                                                        }
+                                                        return p.toString().startsWith('₹') ? p : `₹${p}`;
+                                                    }
+                                                    return `₹${p}`;
+                                                })()}
                                             </p>
                                             <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${product.node.status === 'ACTIVE'
                                                 ? 'bg-green-50 text-green-700'
@@ -636,4 +806,3 @@ export default function AdminProductManager() {
         </div>
     );
 }
-

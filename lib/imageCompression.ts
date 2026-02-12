@@ -1,4 +1,4 @@
-export async function compressImage(file: File, options?: { maxWidth?: number, quality?: number, type?: string }): Promise<File> {
+﻿export async function compressImage(file: File, options?: { maxWidth?: number, quality?: number, type?: string }): Promise<File> {
     const maxWidth = options?.maxWidth || 1600;
     const quality = options?.quality || 0.8;
     const type = options?.type || "image/jpeg"; // Default to JPEG for compatibility
@@ -7,7 +7,6 @@ export async function compressImage(file: File, options?: { maxWidth?: number, q
     let processFile = file;
     if (file.type === "image/heic" || file.type === "image/heif" || file.name.toLowerCase().endsWith('.heic')) {
         try {
-            console.log("Converting HEIC to JPEG...");
             // Dynamic import to avoid SSR "window is not defined" error
             const heic2any = (await import("heic2any")).default;
 

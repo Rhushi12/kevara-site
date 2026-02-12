@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { createCustomProduct } from '@/lib/custom-products';
 import { requireAdmin } from '@/lib/auth';
 
@@ -33,7 +33,6 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "At least one image is required" }, { status: 400 });
         }
 
-        console.log(`[API] Creating product "${title}" with ${imageUrls.length} images from R2`);
 
         // Create custom product with R2 URLs directly
         // The createCustomProduct function needs to handle URLs instead of GIDs
@@ -49,7 +48,6 @@ export async function POST(request: NextRequest) {
             status: "ACTIVE"
         });
 
-        console.log(`[API] Custom product created successfully:`, product?.handle);
 
         if (!product) {
             throw new Error("Product creation failed - no product returned");

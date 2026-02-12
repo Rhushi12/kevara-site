@@ -1,4 +1,4 @@
-import { pollForFileUrl, shopifyFetch } from './shopify-admin';
+﻿import { pollForFileUrl, shopifyFetch } from './shopify-admin';
 
 const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || process.env.SHOPIFY_STORE_DOMAIN;
 const accessToken = process.env.SHOPIFY_ADMIN_TOKEN;
@@ -117,16 +117,8 @@ async function resolveImageGids(gids: string[]) {
 
 // Create a custom product in metaobjects
 export async function createCustomProduct(data: CustomProductInput) {
-  console.log('🔥🔥🔥 [createCustomProduct] UPDATED CODE IS RUNNING! 🔥🔥🔥');
-  console.log(`[createCustomProduct] Input data:`, {
-    title: data.title,
-    imageGidsCount: data.imageGids?.length || 0
-  });
-
   const handle = generateProductHandle();
   const slug = slugify(data.title);
-
-  console.log(`[createCustomProduct] Creating product with handle: ${handle}`);
 
   const fields = [
     { key: "product_id", value: handle },
@@ -190,7 +182,6 @@ export async function createCustomProduct(data: CustomProductInput) {
 
   const metaobjectId = await upsertMetaobject("custom_product", handle, fields);
 
-  console.log(`[createCustomProduct] Product created with ID: ${metaobjectId}`);
 
   // Determine final image URLs
   let imageUrls: string[] = [];
@@ -198,18 +189,15 @@ export async function createCustomProduct(data: CustomProductInput) {
   // If R2 URLs are provided, use them directly (no polling needed!)
   if (data.imageUrls && data.imageUrls.length > 0) {
     imageUrls = data.imageUrls;
-    console.log(`[createCustomProduct] Using ${imageUrls.length} R2 image URLs directly`);
   }
   // Legacy flow: poll for image URLs from Shopify File GIDs
   else if (data.imageGids && data.imageGids.length > 0) {
-    console.log(`[createCustomProduct] Polling for ${data.imageGids.length} image URLs in parallel...`);
 
     // Concurrently poll for all URLs
     const pollResults = await Promise.all(data.imageGids.map(async (gid) => {
       try {
         const url = await pollForFileUrl(gid, 30, 1000);
         if (url) {
-          console.log(`[createCustomProduct] Got URL for ${gid}: ${url}`);
           return url;
         }
       } catch (error) {
@@ -222,7 +210,6 @@ export async function createCustomProduct(data: CustomProductInput) {
 
     // Save the polled URLs back to the metaobject so they persist
     if (imageUrls.length > 0) {
-      console.log(`[createCustomProduct] Saving ${imageUrls.length} image URLs to metaobject...`);
       try {
         await upsertMetaobject("custom_product", handle, [
           ...fields,
@@ -329,7 +316,6 @@ export async function getCustomProducts() {
   // 3. Resolve Missing GIDs if any
   let resolvedMap: Record<string, string> = {};
   if (gidsToResolve.length > 0) {
-    console.log(`[getCustomProducts] Resolving ${gidsToResolve.length} missing image GIDs...`);
     resolvedMap = await resolveImageGids(gidsToResolve);
   }
 
@@ -492,10 +478,10 @@ export interface UpdateCustomProductInput {
   colors?: Array<{ name: string; hex: string }>;
   sizes?: string[];
   status?: string;
+  imageUrls?: string[]; // Direct R2 URLs for product images
 }
 
 export async function updateCustomProduct(data: UpdateCustomProductInput) {
-  console.log(`[updateCustomProduct] Updating product: ${data.handle}`);
 
   const fields: { key: string; value: string }[] = [];
 
@@ -521,20 +507,21 @@ export async function updateCustomProduct(data: UpdateCustomProductInput) {
   if (data.status !== undefined) {
     fields.push({ key: "status", value: data.status });
   }
+  if (data.imageUrls !== undefined) {
+    fields.push({ key: "image_urls", value: JSON.stringify(data.imageUrls) });
+  }
 
   if (fields.length === 0) {
     throw new Error("No fields provided for update");
   }
 
   const metaobjectId = await upsertMetaobject("custom_product", data.handle, fields);
-  console.log(`[updateCustomProduct] Product updated with ID: ${metaobjectId}`);
 
   return { success: true, id: metaobjectId };
 }
 
 // Update related products for a custom product
 export async function updateProductRelatedItems(handle: string, relatedIds: string[]) {
-  console.log(`[updateProductRelatedItems] Updating related products for ${handle}:`, relatedIds);
 
   const fields = [
     {
@@ -544,7 +531,6 @@ export async function updateProductRelatedItems(handle: string, relatedIds: stri
   ];
 
   const metaobjectId = await upsertMetaobject("custom_product", handle, fields);
-  console.log(`[updateProductRelatedItems] Updated metaobject ID: ${metaobjectId}`);
   return metaobjectId;
 }
 

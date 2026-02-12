@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 export interface AuthResult {
     authenticated: boolean;
@@ -64,7 +64,6 @@ export async function verifyAuth(request: NextRequest): Promise<AuthResult> {
 
         // Skip auth in development mode
         if (!shouldEnforceAuth()) {
-            console.log("[Auth] Development mode - auth bypassed");
             return {
                 authenticated: true,
                 userId: "dev-user",

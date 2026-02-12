@@ -83,9 +83,6 @@ export default function CollectionPage() {
                 if (res.ok) {
                     const data = await res.json();
 
-                    // DEBUG: Log template type
-                    console.log(`[CollectionPage] Loaded content for '${slug}', template_type:`, data?.template_type);
-
                     if (data && data.sections && data.sections.length > 0) {
                         setContent(data);
                     } else {

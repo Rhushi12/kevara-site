@@ -40,10 +40,13 @@ export default function ProductImage({
         setIsLoading(false);
     }, []);
 
-    const handleLoad = useCallback(() => {
+    const handleLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
         setIsLoading(false);
         setHasError(false);
-    }, []);
+        if (props.onLoad) {
+            props.onLoad(e);
+        }
+    }, [props.onLoad]);
 
     return (
         <div className={`relative w-full h-full ${containerClassName || ""}`}>

@@ -14,7 +14,7 @@ interface ProductInfoProps {
     description: string;
 }
 
-const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+const ALL_SIZES = ["24", "26", "28", "30", "32", "34", "36", "XS", "S", "M", "L", "XL", "XXL"];
 
 export default function ProductInfo({
     title,

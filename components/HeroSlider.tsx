@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence, Variants } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence, Variants, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import PremiumImageLoader from "@/components/ui/PremiumImageLoader";
@@ -141,8 +141,10 @@ export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, o
 
     return (
         <div className={`relative ${mobileHeight} md:h-screen w-full overflow-hidden bg-[#FDFBF7]`}>
+            {/* ... controls ... */}
             {isEditMode && (
                 <div className="absolute top-4 right-4 z-50 flex gap-2">
+                    {/* ... buttons ... */}
                     <button
                         onClick={() => setIsUploadModalOpen(true)}
                         className="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-4 py-2 rounded-full text-sm transition-colors"
@@ -220,7 +222,6 @@ export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, o
                                     No Image
                                 </div>
                             )}
-                            {/* Dimension Badge for Admin */}
                             <DimensionBadge isAdmin={isEditMode} />
                         </div>
 
@@ -354,38 +355,40 @@ export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, o
             </AnimatePresence>
 
             {/* Progress Indicators - Sharp & Thin (Clickable) */}
-            {isLoaded && slides.length > 1 && (
-                <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-40 flex gap-4">
-                    {slides.map((slide, index) => (
-                        <button
-                            key={slide.id}
-                            onClick={() => setCurrentSlide(index)}
-                            className="h-[2px] w-16 bg-white/30 rounded-none overflow-hidden cursor-pointer hover:bg-white/50 transition-colors"
-                            aria-label={`Go to slide ${index + 1}`}
-                        >
-                            {index === currentSlide && (
-                                <motion.div
-                                    key={`progress-${currentSlide}-${slides.length}`}
-                                    className="h-full bg-white"
-                                    initial={{ width: "0%" }}
-                                    animate={{
-                                        width: "100%",
-                                        transition: {
-                                            duration: 5,
-                                            ease: "linear",
-                                        },
-                                    }}
-                                    onAnimationComplete={() => {
-                                        if (index === currentSlide && !isEditMode) {
-                                            nextSlide();
-                                        }
-                                    }}
-                                />
-                            )}
-                        </button>
-                    ))}
-                </div>
-            )}
+            {
+                isLoaded && slides.length > 1 && (
+                    <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-40 flex gap-4">
+                        {slides.map((slide, index) => (
+                            <button
+                                key={slide.id}
+                                onClick={() => setCurrentSlide(index)}
+                                className="h-[2px] w-16 bg-white/30 rounded-none overflow-hidden cursor-pointer hover:bg-white/50 transition-colors"
+                                aria-label={`Go to slide ${index + 1}`}
+                            >
+                                {index === currentSlide && (
+                                    <motion.div
+                                        key={`progress-${currentSlide}-${slides.length}`}
+                                        className="h-full bg-white"
+                                        initial={{ width: "0%" }}
+                                        animate={{
+                                            width: "100%",
+                                            transition: {
+                                                duration: 5,
+                                                ease: "linear",
+                                            },
+                                        }}
+                                        onAnimationComplete={() => {
+                                            if (index === currentSlide && !isEditMode) {
+                                                nextSlide();
+                                            }
+                                        }}
+                                    />
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                )
+            }
 
             <SimpleImageUploadModal
                 isOpen={isUploadModalOpen}
@@ -393,6 +396,6 @@ export default function HeroSlider({ slides = HERO_SLIDES, isEditMode = false, o
                 onUpload={handleImageUpload}
                 aspectRatio={16 / 9}
             />
-        </div>
+        </div >
     );
 }

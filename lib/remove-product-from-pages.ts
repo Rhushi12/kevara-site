@@ -1,4 +1,4 @@
-import { shopifyFetch } from '@/lib/shopify-admin';
+﻿import { shopifyFetch } from '@/lib/shopify-admin';
 import { savePageData } from './save-page-data';
 
 /**
@@ -6,7 +6,6 @@ import { savePageData } from './save-page-data';
  * Called when a product is permanently deleted from the admin
  */
 export async function removeProductFromAllPages(productId: string) {
-    console.log(`[removeProductFromAllPages] Starting cascade deletion for product: ${productId}`);
 
     // Query all page_content metaobjects
     const query = `
@@ -30,7 +29,6 @@ export async function removeProductFromAllPages(productId: string) {
         const result = await shopifyFetch(query);
         const metaobjects = result.metaobjects.edges;
 
-        console.log(`[removeProductFromAllPages] Found ${metaobjects.length} page_content metaobjects`);
 
         let updatedCount = 0;
 
@@ -41,7 +39,6 @@ export async function removeProductFromAllPages(productId: string) {
             // Find content_json field
             const contentField = fields.find((f: any) => f.key === 'content_json');
             if (!contentField || !contentField.value) {
-                console.log(`[removeProductFromAllPages] Skipping ${handle} - no content_json`);
                 continue;
             }
 
@@ -62,17 +59,14 @@ export async function removeProductFromAllPages(productId: string) {
             const updatedString = JSON.stringify(updatedContent);
 
             if (originalString !== updatedString) {
-                console.log(`[removeProductFromAllPages] Updating ${handle} - product found and removed`);
 
                 // Save updated content
                 await savePageData(handle, updatedContent, 'page_content');
                 updatedCount++;
             } else {
-                console.log(`[removeProductFromAllPages] Skipping ${handle} - product not found`);
             }
         }
 
-        console.log(`[removeProductFromAllPages] Cascade deletion complete. Updated ${updatedCount} pages.`);
         return { success: true, updatedCount };
 
     } catch (error) {
@@ -95,7 +89,6 @@ function removeProductFromContent(obj: any, productId: string): any {
             .filter(item => {
                 // If this is a product object with an id, filter it out if it matches
                 if (item && typeof item === 'object' && item.id === productId) {
-                    console.log(`[removeProductFromContent] Removing product ${productId}`);
                     return false;
                 }
                 return true;
@@ -119,7 +112,6 @@ function removeProductFromContent(obj: any, productId: string): any {
  * This is useful for cleaning up after manual deletions or data inconsistencies
  */
 export async function removeOrphanedProductsFromPages() {
-    console.log('[removeOrphanedProductsFromPages] Starting orphaned product cleanup...');
 
     try {
         // Get all valid product IDs
@@ -127,7 +119,6 @@ export async function removeOrphanedProductsFromPages() {
         const allProducts = await getCustomProducts();
         const validProductIds = new Set<string>(allProducts.map((p: any) => p.node.id as string));
 
-        console.log(`[removeOrphanedProductsFromPages] Found ${validProductIds.size} valid products`);
 
         // Query all page_content metaobjects
         const query = `
@@ -150,7 +141,6 @@ export async function removeOrphanedProductsFromPages() {
         const result = await shopifyFetch(query);
         const metaobjects = result.metaobjects.edges;
 
-        console.log(`[removeOrphanedProductsFromPages] Found ${metaobjects.length} pages to check`);
 
         let updatedCount = 0;
         let removedCount = 0;
@@ -179,7 +169,6 @@ export async function removeOrphanedProductsFromPages() {
 
             // Check if anything changed
             if (removedProducts > 0) {
-                console.log(`[removeOrphanedProductsFromPages] Updating ${handle} - ${removedProducts} orphaned products removed`);
 
                 // Save updated content
                 await savePageData(handle, updatedContent, 'page_content');
@@ -188,7 +177,6 @@ export async function removeOrphanedProductsFromPages() {
             }
         }
 
-        console.log(`[removeOrphanedProductsFromPages] Cleanup complete. Updated ${updatedCount} pages, removed ${removedCount} orphaned products.`);
         return { success: true, updatedCount, removedCount };
 
     } catch (error) {
@@ -216,7 +204,6 @@ function removeOrphanedProductsFromContent(obj: any, validProductIds: Set<string
                     // If this is a product object with an id, check if it's valid
                     if (item && typeof item === 'object' && item.id) {
                         if (!validProductIds.has(item.id)) {
-                            console.log(`[removeOrphanedProductsFromContent] Removing orphaned product ${item.id}`);
                             removedProducts++;
                             return false;
                         }

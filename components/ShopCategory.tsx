@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import CarouselArrowButton from "@/components/ui/CarouselArrowButton";
@@ -68,6 +68,15 @@ const DEFAULT_CATEGORIES: Category[] = [
 
 export default function ShopCategory({ data, isEditMode = false, onUpdate }: ShopCategoryProps) {
     const carousel = useRef<HTMLDivElement>(null);
+    const sectionRef = useRef<HTMLDivElement>(null); // Ref for scroll tracking
+    const { scrollYProgress } = useScroll({
+        target: sectionRef,
+        offset: ["start end", "end start"]
+    });
+
+    // Zoom out effect: Starts at 1.05x when entering viewport, scales down to 1x
+    const scale = useTransform(scrollYProgress, [0, 1], [1.05, 1]);
+
     const [isDragging, setIsDragging] = useState(false);
     const [startX, setStartX] = useState(0);
     const [scrollLeft, setScrollLeft] = useState(0);
@@ -77,6 +86,7 @@ export default function ShopCategory({ data, isEditMode = false, onUpdate }: Sho
     const sectionTitle = data?.sectionTitle || "Discover";
     const categories = data?.categories && data.categories.length > 0 ? data.categories : DEFAULT_CATEGORIES;
 
+    // ... existing handlers ...
     const handleMouseDown = (e: React.MouseEvent) => {
         if (!carousel.current) return;
         setIsDragging(true);
@@ -157,8 +167,11 @@ export default function ShopCategory({ data, isEditMode = false, onUpdate }: Sho
     };
 
     return (
-        <section className="py-12 md:py-20">
-            <div className="w-full bg-[#003B40] min-h-[631px] group/section relative py-[80px]">
+        <section ref={sectionRef} className="py-12 md:py-20 overflow-hidden">
+            <motion.div
+                style={{ scale }}
+                className="w-full bg-[#003B40] min-h-[631px] group/section relative py-[80px]"
+            >
                 <div className="container mx-auto h-full flex flex-col justify-center">
                     <div className="flex flex-col items-center justify-center mb-12 relative">
                         <motion.div
@@ -344,7 +357,7 @@ export default function ShopCategory({ data, isEditMode = false, onUpdate }: Sho
                         </div>
                     </div>
                 </div>
-            </div>
+            </motion.div>
 
             <SimpleImageUploadModal
                 isOpen={isUploadModalOpen}

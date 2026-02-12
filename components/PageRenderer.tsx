@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -79,11 +79,9 @@ export default function PageRenderer({ slug, initialContent }: PageRendererProps
                     if (data && data.sections && data.sections.length > 0) {
                         setContent(data);
                     } else {
-                        console.log(`[PageRenderer] No sections found for ${slug}, setting notFound`);
                         setNotFound(true);
                     }
                 } else {
-                    console.log(`[PageRenderer] Fetch failed with status:`, res.status);
                     setNotFound(true);
                 }
             } catch (error) {

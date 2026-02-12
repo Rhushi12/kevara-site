@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -34,10 +34,6 @@ export default function AdminPageBuilder({ slug }: AdminPageBuilderProps) {
             }
 
             // DEBUG: Log what we're about to send
-            console.log(`[AdminPageBuilder] Creating page '${slug}' with template '${templateType}'`);
-            console.log(`[AdminPageBuilder] Content to save:`, newContent);
-            console.log(`[AdminPageBuilder] Sections count:`, newContent?.sections?.length);
-            console.log(`[AdminPageBuilder] Section types:`, newContent?.sections?.map((s: any) => s?.type));
 
             // 2. Save to API
             const res = await fetch("/api/builder/content", {

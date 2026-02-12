@@ -9,7 +9,7 @@ import { MessageCircle, Mail, ChevronDown } from "lucide-react";
 interface StickyProductBarProps {
     product: {
         title: string;
-        price: number;
+        price: string | number;
         image: string;
         colors?: { name: string; value: string; hex?: string }[];
         sizes?: string[];
@@ -20,7 +20,7 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
     const [isVisible, setIsVisible] = useState(false);
     const [selectedColor, setSelectedColor] = useState(product.colors?.[0]);
     const [selectedSize, setSelectedSize] = useState(
-        product.sizes?.find(s => ["XS", "S", "M", "L", "XL", "XXL"].includes(s)) || product.sizes?.[0]
+        product.sizes?.find(s => ["24", "26", "28", "30", "32", "34", "36", "XS", "S", "M", "L", "XL", "XXL"].includes(s)) || product.sizes?.[0]
     );
 
     const [isColorOpen, setIsColorOpen] = useState(false);
@@ -85,7 +85,17 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
                                 </h3>
                                 {/* Hidden Price */}
                                 <span className="text-sm text-slate-900 font-bold hidden">
-                                    ${product.price.toFixed(2)}
+                                    {(() => {
+                                        if (typeof product.price === 'number') return `₹${product.price.toFixed(2)}`;
+                                        const p = product.price.toString();
+                                        if (p.includes('-')) {
+                                            const parts = p.split('-').map((s: string) => s.trim());
+                                            if (parts.length === 2 && !isNaN(parseFloat(parts[0])) && !isNaN(parseFloat(parts[1]))) {
+                                                return `₹${parts[0]} - ₹${parts[1]}`;
+                                            }
+                                        }
+                                        return p.startsWith('₹') ? p : `₹${p}`;
+                                    })()}
                                 </span>
                             </div>
                         </div>

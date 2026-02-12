@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { createCustomProduct } from "@/lib/custom-products";
 import { requireAdmin } from "@/lib/auth";
 import { generateFileKey, uploadToR2 } from "@/lib/r2";
@@ -113,7 +113,6 @@ async function optimizeImage(buffer: Buffer): Promise<Buffer> {
 
         const newSize = optimized.length;
         const savings = Math.round((1 - newSize / originalSize) * 100);
-        console.log(`[Bulk Import] Optimized: ${(originalSize / 1024).toFixed(0)}KB → ${(newSize / 1024).toFixed(0)}KB (${savings}% smaller)`);
 
         return optimized;
     } catch (error) {
@@ -127,11 +126,9 @@ async function processImageUrl(url: string, folder: string = "products"): Promis
     try {
         // If already an R2 URL, use it directly!
         if (isR2Url(url)) {
-            console.log(`[Bulk Import] R2 URL detected, using directly: ${url}`);
             return url;
         }
 
-        console.log(`[Bulk Import] Downloading from external URL: ${url}`);
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000);
@@ -173,7 +170,6 @@ async function processImageUrl(url: string, folder: string = "products"): Promis
         const key = generateFileKey(filename, folder);
         const publicUrl = await uploadToR2(optimizedBuffer, key, 'image/jpeg');
 
-        console.log(`[Bulk Import] Uploaded to R2: ${publicUrl}`);
         return publicUrl;
     } catch (error) {
         console.error(`[Bulk Import] Error processing ${url}:`, error);
@@ -217,8 +213,6 @@ export async function POST(req: NextRequest) {
         const lines = text.split('\n').filter(l => l.trim() && !l.trim().startsWith('.'));
         const headers = parseCSVLine(lines[0].toLowerCase());
 
-        console.log(`[Bulk Import] Processing ${lines.length - 1} rows...`);
-        console.log(`[Bulk Import] Headers: ${headers.join(', ')}`);
 
         const results = [];
         const errors = [];
@@ -252,7 +246,6 @@ export async function POST(req: NextRequest) {
                 let title = data.title;
                 if (!title && imageUrls.length > 0) {
                     title = extractTitleFromImageUrl(data.images.split(',')[0].trim(), i + 1);
-                    console.log(`[Bulk Import] Row ${i + 1}: Auto-generated title: "${title}"`);
                 }
 
                 // Validation - now with auto-generated title
@@ -261,7 +254,6 @@ export async function POST(req: NextRequest) {
                     continue;
                 }
 
-                console.log(`[Bulk Import] Processing row ${i + 1}: ${title}`);
 
                 // Handle Video URL
                 let videoUrl: string | undefined;
@@ -281,10 +273,6 @@ export async function POST(req: NextRequest) {
                     sizes = data.sizes.split(',').map((s: string) => s.trim().toUpperCase());
                 }
 
-                console.log(`[Bulk Import] Row ${i + 1} - Creating product with:`);
-                console.log(`  Title: ${title}`);
-                console.log(`  Images: ${imageUrls.length} URLs`);
-                imageUrls.forEach((url, idx) => console.log(`    [${idx}]: ${url.substring(0, 80)}...`));
 
                 // Create Product
                 const product = await createCustomProduct({
@@ -300,7 +288,6 @@ export async function POST(req: NextRequest) {
                 });
 
                 results.push({ row: i + 1, title, handle: product?.handle, slug: product?.slug, images: imageUrls.length, status: 'success' });
-                console.log(`[Bulk Import] ✓ Created: ${title} with slug: ${product?.slug} (${i}/${lines.length - 1})`);
 
             } catch (err: any) {
                 console.error(`Error processing row ${i + 1}:`, err);
@@ -308,7 +295,6 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        console.log(`[Bulk Import] Complete! ${results.length} success, ${errors.length} errors`);
         return NextResponse.json({ success: true, results, errors });
 
     } catch (error: any) {

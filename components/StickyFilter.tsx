@@ -71,7 +71,7 @@ export default function StickyFilter() {
             />
             <FilterSection
                 title="Size"
-                options={["XS", "S", "M", "L", "XL", "XXL"]}
+                options={["24", "26", "28", "30", "32", "34", "36", "XS", "S", "M", "L", "XL", "XXL"]}
             />
             <FilterSection
                 title="Color"

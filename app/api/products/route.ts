@@ -7,7 +7,7 @@ export async function GET() {
 
         // Add cache headers for 60 seconds, stale-while-revalidate for 5 minutes
         const response = NextResponse.json({ products });
-        response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+        response.headers.set('Cache-Control', 'no-store, max-age=0');
         return response;
     } catch (error) {
         console.error("Failed to fetch products:", error);
@@ -46,37 +46,51 @@ export async function DELETE(request: Request) {
 
 export async function PUT(request: Request) {
     try {
-        const { ids, status, sizes, price, colors } = await request.json();
+        const { ids, items, status, sizes, price, colors } = await request.json();
 
-        if (!ids || !Array.isArray(ids)) {
-            return NextResponse.json({ error: "IDs array required" }, { status: 400 });
+        // Check for either uniform bulk update (ids) or specific item updates (items)
+        if ((!ids || !Array.isArray(ids)) && (!items || !Array.isArray(items))) {
+            return NextResponse.json({ error: "IDs array or Items array required" }, { status: 400 });
         }
 
         const { updateCustomProduct } = await import('@/lib/custom-products');
 
-        // Construct update data
-        const updateData: any = {};
-        if (status) updateData.status = status;
-        if (sizes) updateData.sizes = sizes;
-        if (price) updateData.price = price;
-        if (colors) updateData.colors = colors;
+        let results: PromiseSettledResult<any>[] = [];
 
-        if (Object.keys(updateData).length === 0) {
-            return NextResponse.json({ error: "No fields to update" }, { status: 400 });
+        // 1. Handle "Items" (Specific updates per product, e.g., suffixes)
+        if (items && Array.isArray(items)) {
+            const itemResults = await Promise.allSettled(items.map(async (item: any) => {
+                if (!item.handle) throw new Error("Item handle missing");
+                return updateCustomProduct(item);
+            }));
+            results = [...results, ...itemResults];
         }
 
-        // Bulk Update
-        const results = await Promise.allSettled(ids.map(id =>
-            updateCustomProduct({ handle: id, ...updateData })
-        ));
+        // 2. Handle "IDs" (Uniform updates to many products)
+        if (ids && Array.isArray(ids)) {
+            // Construct common update data
+            const commonUpdateData: any = {};
+            if (status) commonUpdateData.status = status;
+            if (sizes) commonUpdateData.sizes = sizes;
+            if (price) commonUpdateData.price = price;
+            if (colors) commonUpdateData.colors = colors;
+
+            if (Object.keys(commonUpdateData).length > 0) {
+                const idResults = await Promise.allSettled(ids.map(id =>
+                    updateCustomProduct({ handle: id, ...commonUpdateData })
+                ));
+                results = [...results, ...idResults];
+            }
+        }
 
         const failed = results.filter(r => r.status === 'rejected');
+        const successCount = results.length - failed.length;
 
         if (failed.length > 0) {
             console.error(`Failed to update ${failed.length} products`);
         }
 
-        return NextResponse.json({ success: true, updatedCount: ids.length - failed.length });
+        return NextResponse.json({ success: true, updatedCount: successCount });
 
     } catch (error: any) {
         console.error("Failed to update products:", error);

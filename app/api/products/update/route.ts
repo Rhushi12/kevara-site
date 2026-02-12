@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { updateCustomProduct } from "@/lib/custom-products";
 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { handle, title, description, price, currency, colors, sizes, status } = body;
+        const { handle, title, description, price, currency, colors, sizes, status, imageUrls } = body;
 
         if (!handle) {
             return NextResponse.json(
@@ -12,14 +12,6 @@ export async function POST(request: Request) {
                 { status: 400 }
             );
         }
-
-        console.log("[/api/products/update] Received update request:", {
-            handle,
-            title,
-            sizes,
-            sizesType: typeof sizes,
-            sizesIsArray: Array.isArray(sizes)
-        });
 
         const result = await updateCustomProduct({
             handle,
@@ -29,7 +21,8 @@ export async function POST(request: Request) {
             currency,
             colors,
             sizes,
-            status
+            status,
+            imageUrls
         });
 
         return NextResponse.json(result);

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { updateHeroSlide } from "@/lib/shopify-admin";
 import { uploadToR2, generateFileKey } from "@/lib/r2";
 import { requireAdmin } from "@/lib/auth";
@@ -26,13 +26,11 @@ export async function POST(req: NextRequest) {
         let fileUrl = null;
 
         if (file && file.size > 0) {
-            console.log(`[Hero Update] Uploading file to R2: ${file.name} (${file.size} bytes)`);
 
             // Upload to R2 instead of Shopify
             const key = generateFileKey(file.name, "hero");
             fileUrl = await uploadToR2(file, key, file.type);
 
-            console.log(`[Hero Update] R2 upload complete: ${fileUrl}`);
         }
 
         // Update Metaobject with the R2 URL

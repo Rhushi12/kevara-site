@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { generatePresignedUploadUrl, generateFileKey, uploadToR2 } from "@/lib/r2";
 import { verifyToken } from "@/lib/auth";
@@ -23,13 +23,11 @@ export async function uploadMediaAction(formData: FormData) {
             return { success: false, error: authResult.error || "Unauthorized" };
         }
 
-        console.log(`[UploadAction] Starting R2 upload for ${file.name} (${file.size} bytes)`);
 
         // Generate unique key and upload to R2
         const key = generateFileKey(file.name, folder);
         const url = await uploadToR2(file, key, file.type);
 
-        console.log(`[UploadAction] Upload complete. URL: ${url}`);
 
         // Return URL directly (no fileId for R2, just the URL)
         return { success: true, url, fileId: key };

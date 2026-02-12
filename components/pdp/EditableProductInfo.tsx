@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
-import { useState } from "react";
-import { Heart, Save, X, Plus, Trash2, Palette } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Heart, Save, X, Plus, Trash2, Palette, Search } from "lucide-react";
 import LiquidButton from "@/components/ui/LiquidButton";
 import { useSizeGuideStore } from "@/lib/store";
 import { useAuth } from "@/context/AuthContext";
@@ -10,16 +10,19 @@ import { useToast } from "@/context/ToastContext";
 
 interface EditableProductInfoProps {
     title: string;
-    price: number;
+    price: string | number;
     originalPrice?: number;
     colors: { name: string; hex: string }[];
     sizes: string[];
     description: string;
     handle: string;
     onProductUpdate?: (updatedProduct: any) => void;
+    imageUrls?: string[];
+    onImagesChange?: (imageUrls: string[]) => void;
+    onEditModeChange?: (isEditMode: boolean) => void;
 }
 
-const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"];
+const ALL_SIZES = ["24", "26", "28", "30", "32", "34", "36", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"];
 
 const PRESET_COLORS = [
     { name: "Black", hex: "#000000" },
@@ -44,7 +47,10 @@ export default function EditableProductInfo({
     sizes,
     description,
     handle,
-    onProductUpdate
+    onProductUpdate,
+    imageUrls = [],
+    onImagesChange,
+    onEditModeChange
 }: EditableProductInfoProps) {
     const { isAdmin } = useAuth();
     const [selectedColor, setSelectedColor] = useState(colors[0]?.name || "");
@@ -58,38 +64,76 @@ export default function EditableProductInfo({
     // Editable values
     const [editedTitle, setEditedTitle] = useState(title);
     const [editedPrice, setEditedPrice] = useState(price.toString());
-    const [editedDescription, setEditedDescription] = useState(description);
+    const [editedDescription, setEditedDescription] = useState(description || "");
     const [editedSizes, setEditedSizes] = useState<string[]>(sizes);
     const [editedColors, setEditedColors] = useState<{ name: string; hex: string }[]>(colors);
+    const [editedImageUrls, setEditedImageUrls] = useState<string[]>(imageUrls);
     const [customColorName, setCustomColorName] = useState("");
     const [customColorHex, setCustomColorHex] = useState("#000000");
 
     const [showInquiryModal, setShowInquiryModal] = useState(false);
     const { showToast } = useToast();
 
-    const discountPercentage = originalPrice
-        ? Math.round(((originalPrice - price) / originalPrice) * 100)
+    // Saved colors from other products
+    const [savedColors, setSavedColors] = useState<{ name: string; hex: string }[]>([]);
+    const [colorSearch, setColorSearch] = useState("");
+    const [colorTab, setColorTab] = useState<'preset' | 'saved'>('preset');
+
+    // Fetch saved colors on mount
+    useEffect(() => {
+        async function fetchSavedColors() {
+            try {
+                const res = await fetch('/api/admin/colors');
+                if (res.ok) {
+                    const data = await res.json();
+                    setSavedColors(data.colors || []);
+                }
+            } catch (error) {
+                console.error('Failed to fetch saved colors:', error);
+            }
+        }
+        if (isAdmin) {
+            fetchSavedColors();
+        }
+    }, [isAdmin]);
+
+    // Sync editedImageUrls when imageUrls prop changes during edit mode
+    // This happens when the gallery adds/removes images
+    useEffect(() => {
+        if (isEditMode) {
+            setEditedImageUrls(imageUrls);
+        }
+    }, [imageUrls, isEditMode]);
+
+    // Fix discount calculation for ranges
+    const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
+    const discountPercentage = (originalPrice && !isNaN(numericPrice))
+        ? Math.round(((originalPrice - numericPrice) / originalPrice) * 100)
         : 0;
 
     const handleEnterEditMode = () => {
         setEditedTitle(title);
         setEditedPrice(price.toString());
-        setEditedDescription(description);
+        setEditedDescription(description || "");
         setEditedSizes([...sizes]);
         setEditedColors([...colors]);
+        setEditedImageUrls([...imageUrls]);
         setCustomColorName("");
         setCustomColorHex("#000000");
         setIsEditMode(true);
+        onEditModeChange?.(true);
     };
 
     const handleCancelEdit = () => {
+        setEditedImageUrls([...imageUrls]); // Reset images on cancel
+        onImagesChange?.(imageUrls); // Reset gallery
         setIsEditMode(false);
+        onEditModeChange?.(false);
     };
 
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            console.log("[EditableProductInfo] Saving sizes:", editedSizes);
 
             const res = await fetch("/api/products/update", {
                 method: "POST",
@@ -98,9 +142,10 @@ export default function EditableProductInfo({
                     handle,
                     title: editedTitle,
                     price: editedPrice,
-                    description: editedDescription,
+                    description: editedDescription || "",
                     sizes: editedSizes,
-                    colors: editedColors
+                    colors: editedColors,
+                    imageUrls: editedImageUrls
                 })
             });
 
@@ -112,7 +157,7 @@ export default function EditableProductInfo({
             if (onProductUpdate) {
                 onProductUpdate({
                     title: editedTitle,
-                    price: parseFloat(editedPrice),
+                    price: editedPrice, // Keep as string to support ranges
                     descriptionHtml: editedDescription,
                     sizes: editedSizes,
                     colors: editedColors
@@ -120,6 +165,7 @@ export default function EditableProductInfo({
             }
 
             setIsEditMode(false);
+            onEditModeChange?.(false);
             showToast("Product updated successfully!", "success");
             window.location.reload();
         } catch (error: any) {
@@ -146,9 +192,26 @@ export default function EditableProductInfo({
         }
     };
 
-    const addCustomColor = () => {
-        if (customColorName && !editedColors.find(c => c.hex === customColorHex)) {
-            setEditedColors([...editedColors, { name: customColorName, hex: customColorHex }]);
+    const addCustomColor = async () => {
+        if (customColorName && !editedColors.find(c => c.hex.toUpperCase() === customColorHex.toUpperCase())) {
+            const newColor = { name: customColorName, hex: customColorHex };
+            setEditedColors([...editedColors, newColor]);
+
+            // Save to API for future use
+            try {
+                const res = await fetch('/api/admin/colors', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newColor)
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setSavedColors(data.colors || []);
+                }
+            } catch (error) {
+                console.error('Failed to save color:', error);
+            }
+
             setCustomColorName("");
             setCustomColorHex("#000000");
         }
@@ -160,7 +223,8 @@ export default function EditableProductInfo({
 
     // Current display values
     const displayTitle = isEditMode ? editedTitle : title;
-    const displayPrice = isEditMode ? parseFloat(editedPrice) || 0 : price;
+    // Show raw string in edit mode, otherwise use price prop
+    const displayPrice = isEditMode ? editedPrice : price;
     const displaySizes = isEditMode ? editedSizes : sizes;
 
     return (
@@ -220,23 +284,36 @@ export default function EditableProductInfo({
                     <div className="flex items-baseline gap-4">
                         {isEditMode ? (
                             <div className="flex items-center gap-2">
-                                <span className="text-lg text-slate-500">₹</span>
+                                <span className="text-lg text-slate-500">â‚¹</span>
                                 <input
-                                    type="number"
+                                    type="text"
                                     value={editedPrice}
                                     onChange={(e) => setEditedPrice(e.target.value)}
-                                    className="text-2xl font-figtree font-semibold text-slate-900 w-32 border border-[#006D77] rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#006D77]"
+                                    className="text-2xl font-figtree font-semibold text-slate-900 w-48 border border-[#006D77] rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#006D77]"
                                 />
                             </div>
                         ) : (
                             <span className="text-2xl font-figtree font-semibold text-slate-900">
-                                {new Intl.NumberFormat("en-IN", {
-                                    style: "currency",
-                                    currency: "INR",
-                                }).format(displayPrice)}
+                                {/* Handle ranges vs numbers */}
+                                {typeof displayPrice === 'number' || (typeof displayPrice === 'string' && !isNaN(parseFloat(displayPrice)) && !displayPrice.includes('-'))
+                                    ? new Intl.NumberFormat("en-IN", {
+                                        style: "currency",
+                                        currency: "INR",
+                                    }).format(Number(displayPrice))
+                                    : (() => {
+                                        const p = displayPrice.toString();
+                                        if (p.includes('-')) {
+                                            const parts = p.split('-').map((s: string) => s.trim());
+                                            if (parts.length === 2 && !isNaN(parseFloat(parts[0])) && !isNaN(parseFloat(parts[1]))) {
+                                                return `â‚¹${parts[0]} - â‚¹${parts[1]}`;
+                                            }
+                                        }
+                                        return p.includes('â‚¹') ? p : `â‚¹${p}`;
+                                    })()
+                                }
                             </span>
                         )}
-                        {!isEditMode && originalPrice && originalPrice > price && (
+                        {!isEditMode && originalPrice && !isNaN(numericPrice) && originalPrice > numericPrice && (
                             <>
                                 <span className="text-lg text-slate-400 line-through font-figtree">
                                     {new Intl.NumberFormat("en-IN", {
@@ -282,26 +359,94 @@ export default function EditableProductInfo({
 
                 {isEditMode ? (
                     <div className="space-y-4">
-                        {/* Preset Colors */}
-                        <div className="flex flex-wrap gap-2">
-                            {PRESET_COLORS.map((color) => (
-                                <button
-                                    key={color.hex}
-                                    type="button"
-                                    onClick={() => addPresetColor(color)}
-                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${editedColors.find(c => c.hex === color.hex)
-                                        ? 'border-[#006D77] bg-[#006D77]/10'
-                                        : 'border-slate-200 hover:border-slate-400'
-                                        }`}
-                                    title={color.name}
-                                >
-                                    <div
-                                        className="w-4 h-4 rounded-full border border-gray-300"
-                                        style={{ backgroundColor: color.hex }}
-                                    />
-                                    {color.name}
-                                </button>
-                            ))}
+                        {/* Search Bar */}
+                        <div className="relative">
+                            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input
+                                type="text"
+                                value={colorSearch}
+                                onChange={(e) => setColorSearch(e.target.value)}
+                                placeholder="Search colors..."
+                                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#006D77]"
+                            />
+                        </div>
+
+                        {/* Tabs */}
+                        <div className="flex gap-2 border-b border-slate-200">
+                            <button
+                                type="button"
+                                onClick={() => setColorTab('preset')}
+                                className={`px-4 py-2 text-sm font-medium transition-colors ${colorTab === 'preset'
+                                    ? 'text-[#006D77] border-b-2 border-[#006D77]'
+                                    : 'text-slate-500 hover:text-slate-700'
+                                    }`}
+                            >
+                                Preset ({PRESET_COLORS.length})
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setColorTab('saved')}
+                                className={`px-4 py-2 text-sm font-medium transition-colors ${colorTab === 'saved'
+                                    ? 'text-[#006D77] border-b-2 border-[#006D77]'
+                                    : 'text-slate-500 hover:text-slate-700'
+                                    }`}
+                            >
+                                Saved ({savedColors.length})
+                            </button>
+                        </div>
+
+                        {/* Color Grid */}
+                        <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+                            {colorTab === 'preset'
+                                ? PRESET_COLORS
+                                    .filter(c => c.name.toLowerCase().includes(colorSearch.toLowerCase()))
+                                    .map((color) => (
+                                        <button
+                                            key={color.hex}
+                                            type="button"
+                                            onClick={() => addPresetColor(color)}
+                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${editedColors.find(c => c.hex === color.hex)
+                                                ? 'border-[#006D77] bg-[#006D77]/10'
+                                                : 'border-slate-200 hover:border-slate-400'
+                                                }`}
+                                            title={color.name}
+                                        >
+                                            <div
+                                                className="w-4 h-4 rounded-full border border-gray-300"
+                                                style={{ backgroundColor: color.hex }}
+                                            />
+                                            {color.name}
+                                        </button>
+                                    ))
+                                : savedColors
+                                    .filter(c => c.name.toLowerCase().includes(colorSearch.toLowerCase()))
+                                    .map((color) => (
+                                        <button
+                                            key={color.hex}
+                                            type="button"
+                                            onClick={() => addPresetColor(color)}
+                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${editedColors.find(c => c.hex.toUpperCase() === color.hex.toUpperCase())
+                                                ? 'border-[#006D77] bg-[#006D77]/10'
+                                                : 'border-slate-200 hover:border-slate-400'
+                                                }`}
+                                            title={color.name}
+                                        >
+                                            <div
+                                                className="w-4 h-4 rounded-full border border-gray-300"
+                                                style={{ backgroundColor: color.hex }}
+                                            />
+                                            {color.name}
+                                        </button>
+                                    ))
+                            }
+                            {((colorTab === 'preset' && PRESET_COLORS.filter(c => c.name.toLowerCase().includes(colorSearch.toLowerCase())).length === 0) ||
+                                (colorTab === 'saved' && savedColors.filter(c => c.name.toLowerCase().includes(colorSearch.toLowerCase())).length === 0)) && (
+                                    <p className="text-sm text-slate-400 py-4 w-full text-center">
+                                        {colorTab === 'saved' && savedColors.length === 0
+                                            ? 'No saved colors yet. Add custom colors below!'
+                                            : 'No colors match your search'}
+                                    </p>
+                                )}
                         </div>
 
                         {/* Custom Color Input */}
@@ -366,9 +511,9 @@ export default function EditableProductInfo({
                     </div>
                 ) : colors.length > 0 ? (
                     <div className="flex flex-wrap gap-3">
-                        {colors.map((color) => (
+                        {colors.map((color, index) => (
                             <button
-                                key={color.name}
+                                key={`${color.hex}-${color.name || index}`}
                                 onClick={() => setSelectedColor(color.name)}
                                 title={color.name}
                                 className={`w-8 h-8 rounded-full border-2 transition-all relative flex items-center justify-center ${selectedColor === color.name

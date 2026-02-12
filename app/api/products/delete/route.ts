@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { deleteCustomProduct } from '@/lib/custom-products';
 import { removeProductFromAllPages } from '@/lib/remove-product-from-pages';
 import { requireAdmin } from '@/lib/auth';
@@ -15,13 +15,11 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
         }
 
-        console.log(`[API] Deleting product with ID: ${id}`);
 
         // Delete product from metaobjects
         const deletedId = await deleteCustomProduct(id);
 
         // Remove product from all page sections
-        console.log(`[API] Removing product from all page sections...`);
         await removeProductFromAllPages(id);
 
         return NextResponse.json({ success: true, deletedId });

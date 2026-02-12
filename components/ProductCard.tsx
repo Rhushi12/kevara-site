@@ -28,10 +28,13 @@ export default function ProductCard({ product, imageAspectRatio = "aspect-[3/4]"
     const altText = images?.edges?.[0]?.node?.altText || title;
 
     // Extract colors from variants (Mock logic: assume variant title contains color)
-    const colors = variants?.edges?.map((v) => {
-        const parts = v.node.title.split("/");
-        return parts.length > 1 ? parts[1].trim() : "Default";
-    }) || [];
+    // Extract colors: use explicit colors field if available, otherwise dedupe from variants
+    const colors = product.node.colors && product.node.colors.length > 0
+        ? product.node.colors.map(c => c.name)
+        : Array.from(new Set(variants?.edges?.map((v) => {
+            const parts = v.node.title.split("/");
+            return parts.length > 1 ? parts[1].trim() : "Default";
+        }).filter(c => c !== "Default") || []));
 
     const getColorHex = (name: string) => {
         const map: Record<string, string> = {
@@ -95,8 +98,8 @@ export default function ProductCard({ product, imageAspectRatio = "aspect-[3/4]"
                 </Link>
 
                 {/* Sale Badge */}
-                {/* Mock Compare Price Logic: If price < 100, assume it was higher */}
-                {parseFloat(price) < 100 && (
+                {/* Mock Compare Price Logic: If price < 100 and NOT a range, assume it was higher */}
+                {!price.includes('-') && parseFloat(price) < 100 && (
                     <span className="absolute top-2 left-2 z-20 bg-red-800 text-white text-[10px] px-2 py-1 font-bold uppercase tracking-wide md:text-xs">
                         Save 50%
                     </span>
@@ -125,7 +128,7 @@ export default function ProductCard({ product, imageAspectRatio = "aspect-[3/4]"
 
             {/* Price */}
             <div className="flex gap-2 items-center justify-center mt-1">
-                {parseFloat(price) < 100 && (
+                {!price.includes('-') && parseFloat(price) < 100 && (
                     <span className="text-xs text-red-700 line-through md:text-sm font-figtree">
                         {new Intl.NumberFormat("en-IN", {
                             style: "currency",
@@ -134,10 +137,16 @@ export default function ProductCard({ product, imageAspectRatio = "aspect-[3/4]"
                     </span>
                 )}
                 <span className="text-sm font-semibold text-gray-900 md:text-base font-figtree">
-                    {new Intl.NumberFormat("en-IN", {
-                        style: "currency",
-                        currency: currency,
-                    }).format(parseFloat(price))}
+                    {price.includes('-') ? (
+                        <>
+                            {price.includes(currency === 'USD' ? '$' : '₹') ? price : `${currency === 'INR' ? '₹' : '$'}${price}`}
+                        </>
+                    ) : (
+                        new Intl.NumberFormat("en-IN", {
+                            style: "currency",
+                            currency: currency,
+                        }).format(parseFloat(price))
+                    )}
                 </span>
             </div>
 

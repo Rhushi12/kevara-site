@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { createWholesaleInquiry, getWholesaleLeads } from "@/lib/shopify-admin";
 
 export async function POST(request: Request) {
@@ -7,7 +7,6 @@ export async function POST(request: Request) {
         const hasToken = !!process.env.SHOPIFY_ADMIN_TOKEN;
         const hasDomain = !!(process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || process.env.SHOPIFY_STORE_DOMAIN);
 
-        console.log("[Wholesale API] Environment check - Token present:", hasToken, "Domain present:", hasDomain);
 
         if (!hasToken || !hasDomain) {
             console.error("[Wholesale API] Missing environment variables:", { hasToken, hasDomain });
@@ -18,7 +17,6 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
-        console.log("[Wholesale API] Request body:", JSON.stringify(body, null, 2));
 
         // Validate required fields
         const requiredFields = [
@@ -36,7 +34,6 @@ export async function POST(request: Request) {
             .map(field => field.label);
 
         if (missingFields.length > 0) {
-            console.log("[Wholesale API] Missing required fields:", missingFields);
             return NextResponse.json({
                 error: `Please fill in the following required fields: ${missingFields.join(', ')}`,
                 missingFields
@@ -60,7 +57,6 @@ export async function POST(request: Request) {
         }
 
         const id = await createWholesaleInquiry(body);
-        console.log("[Wholesale API] Successfully created inquiry:", id);
         return NextResponse.json({ success: true, id });
     } catch (error: any) {
         console.error("[Wholesale API] Error details:", {

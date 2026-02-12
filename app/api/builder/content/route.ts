@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { getPageContent, deletePageContent, getPageContentBySlug, pollForFileUrl } from "@/lib/shopify-admin";
 import { savePageData } from "@/lib/save-page-data";
 
@@ -57,7 +57,6 @@ export async function DELETE(req: NextRequest) {
         // Delete the metaobject
         await deletePageContent(metaobjectId as string);
 
-        console.log(`[DELETE] Successfully deleted page: handle=${handle}, id=${metaobjectId}`);
         return NextResponse.json({ success: true });
     } catch (error: any) {
         console.error("Failed to delete page:", error);
@@ -75,10 +74,6 @@ export async function POST(req: NextRequest) {
         const { handle, data } = body;
 
         // DEBUG: Log received data
-        console.log(`[API /builder/content POST] Received for handle '${handle}'`);
-        console.log(`[API /builder/content POST] Has sections:`, !!data?.sections);
-        console.log(`[API /builder/content POST] Sections count:`, data?.sections?.length);
-        console.log(`[API /builder/content POST] Section types:`, data?.sections?.map((s: any) => s?.type));
 
         if (!handle || !data) {
             return NextResponse.json({ error: "Missing handle or data" }, { status: 400 });

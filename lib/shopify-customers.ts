@@ -1,4 +1,4 @@
-import { shopifyFetch } from './shopify-admin';
+﻿import { shopifyFetch } from './shopify-admin';
 
 export interface CustomerInput {
   firstName?: string;
@@ -47,7 +47,6 @@ export async function createShopifyCustomer(input: CustomerInput) {
     // If email already exists, we should try to return that customer instead of failing
     const emailError = result.customerCreate.userErrors.find((e: any) => e.message.includes("taken"));
     if (emailError) {
-      console.log(`[createShopifyCustomer] Email ${input.email} already exists. Fetching existing customer.`);
       return await getCustomerByEmail(input.email);
     }
 

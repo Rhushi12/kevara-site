@@ -126,7 +126,7 @@ export default function QuickViewPanel() {
     // Use real colors and sizes from metaobject, fallback to empty arrays
     const productColors = colors || [];
     // Filter out "One Size" - it should never be displayed
-    const rawSizes = sizes || ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"];
+    const rawSizes = sizes || ["24", "26", "28", "30", "32", "34", "36", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"];
     const productSizes = rawSizes.filter((s: string) => s.toLowerCase() !== 'one size');
 
     return (

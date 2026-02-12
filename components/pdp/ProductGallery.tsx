@@ -22,6 +22,8 @@ export default function ProductGallery({ images, video }: ProductGalleryProps) {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
+    const [imageAspectRatios, setImageAspectRatios] = useState<Record<string, number>>({});
+
     // Combine images and video into a single media list
     const mediaList = [
         ...(images?.edges?.map((edge) => ({
@@ -43,6 +45,14 @@ export default function ProductGallery({ images, video }: ProductGalleryProps) {
         }
     }, [images, video]);
 
+    const handleImageLoad = (url: string, e: React.SyntheticEvent<HTMLImageElement>) => {
+        const { naturalWidth, naturalHeight } = e.currentTarget;
+        if (naturalWidth && naturalHeight) {
+            const ratio = naturalWidth / naturalHeight;
+            setImageAspectRatios(prev => ({ ...prev, [url]: ratio }));
+        }
+    };
+
     if (!mediaList.length) return null;
 
     const nextMedia = () => {
@@ -54,6 +64,13 @@ export default function ProductGallery({ images, video }: ProductGalleryProps) {
     };
 
     const selectedMedia = mediaList[selectedIndex];
+
+    // Determine current aspect ratio class
+    // Default to portrait (3/4)
+    // If we have data and ratio > 1.1, switch to landscape (4/3)
+    const currentAspectRatioClass = selectedMedia.type === 'image' && imageAspectRatios[selectedMedia.url] && imageAspectRatios[selectedMedia.url] > 1.1
+        ? "aspect-[4/3]"
+        : "aspect-[3/4]";
 
     return (
         <>
@@ -91,7 +108,7 @@ export default function ProductGallery({ images, video }: ProductGalleryProps) {
 
                 {/* Main Media Display */}
                 <motion.div
-                    className="flex-1 relative aspect-[3/4] bg-gray-100 overflow-hidden group"
+                    className={`flex-1 relative ${currentAspectRatioClass} bg-gray-100 overflow-hidden group transition-all duration-500 ease-in-out`}
                     initial={{ opacity: 0, scale: 1.1 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
@@ -120,10 +137,11 @@ export default function ProductGallery({ images, video }: ProductGalleryProps) {
                                     src={selectedMedia.url}
                                     alt={selectedMedia.alt}
                                     fill
-                                    className="object-cover"
+                                    className="object-contain"
                                     priority
                                     sizes="(max-width: 768px) 100vw, 50vw"
                                     containerClassName="absolute inset-0"
+                                    onLoad={(e) => handleImageLoad(selectedMedia.url, e)}
                                 />
                             )}
                         </motion.div>

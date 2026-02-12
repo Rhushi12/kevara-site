@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
-import ProductGallery from "@/components/pdp/ProductGallery";
-import EditableProductInfo from "@/components/pdp/EditableProductInfo";
+import PDPClientWrapper from "@/components/pdp/PDPClientWrapper";
 import ProductTabs from "@/components/pdp/ProductTabs";
 import CompleteLook from "@/components/pdp/CompleteLook";
 import ProductStory from "@/components/pdp/ProductStory";
@@ -25,11 +24,9 @@ export default async function ProductPage({ params }: { params: { slug: string }
     const { slug } = await params || params;
 
     // Fetch custom product data by slug
-    console.log('[PDP] Looking for product with slug:', slug);
     let product = null;
     try {
         product = await getCustomProductBySlug(slug);
-        console.log('[PDP] Product found in Shopify:', product ? product.title : 'NULL');
     } catch (error) {
         console.error("Error fetching product:", error);
     }
@@ -38,7 +35,6 @@ export default async function ProductPage({ params }: { params: { slug: string }
     if (!product) {
         const mockProduct = MOCK_SHOPIFY_PRODUCTS.find(p => p.node.handle === slug || p.node.slug === slug);
         if (mockProduct) {
-            console.log('[PDP] Product found in Mock Data:', mockProduct.node.title);
             product = mockProduct.node;
         }
     }
@@ -49,16 +45,13 @@ export default async function ProductPage({ params }: { params: { slug: string }
     }
 
     const { title, priceRange, images, variants, descriptionHtml, colors: productColors, sizes: productSizes, video } = product;
-    console.log(`[PDP Debug] Product: ${title}, Video: ${video ? 'Present' : 'Missing'}, Video URL: ${video}`);
-    const price = parseFloat(priceRange.minVariantPrice.amount);
+    const price = priceRange.minVariantPrice.amount;
     const currency = priceRange.minVariantPrice.currencyCode;
 
     // Transform images
     const productImages = images.edges.map((edge: any) => edge.node.url);
 
     // Use colors and sizes from custom product data
-    console.log(`[PDP Debug] Raw productColors:`, productColors);
-    console.log(`[PDP Debug] Raw productSizes:`, productSizes);
 
     let colors = productColors && productColors.length > 0 ? productColors : [];
     // Filter out "One Size" from sizes - it should never be displayed
@@ -127,25 +120,18 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
             {/* Main Product Section */}
             <div className="container mx-auto px-4 mb-24">
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
-                    {/* Left: Gallery (7 cols) */}
-                    <div className="md:col-span-7">
-                        <ProductGallery images={images} video={video} />
-                    </div>
-
-                    {/* Right: Info (5 cols) */}
-                    <div className="md:col-span-5">
-                        <EditableProductInfo
-                            title={title}
-                            price={price}
-                            // originalPrice={price * 1.2} // Removed fake original price
-                            colors={colors}
-                            sizes={sizes}
-                            description={descriptionHtml}
-                            handle={product.handle}
-                        />
-                    </div>
-                </div>
+                <PDPClientWrapper
+                    product={{
+                        title,
+                        handle: product.handle,
+                        descriptionHtml,
+                        price,
+                        images,
+                        video,
+                        colors,
+                        sizes
+                    }}
+                />
             </div>
 
             {/* Split Section: Tabs + Complete Look */}
