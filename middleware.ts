@@ -86,8 +86,7 @@ export function middleware(request: NextRequest) {
     // No strict domain blocking - Vercel handles domain configuration
 
     // ========== MAINTENANCE MODE CHECK ==========
-    // const isMaintenanceMode = process.env.MAINTENANCE_MODE === 'true';
-    const isMaintenanceMode = false; // Force disabled
+    const isMaintenanceMode = process.env.MAINTENANCE_MODE === 'true';
 
     if (isMaintenanceMode && !pathname.startsWith("/api/")) {
         const isPublicPath = MAINTENANCE_PUBLIC_PATHS.some(path => pathname.startsWith(path));
