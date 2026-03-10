@@ -184,7 +184,7 @@ export default function UnderConstructionPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6, duration: 0.8 }}
                 >
-                    We&apos;re performing a quick update to bring you an even better experience. This won&apos;t take long.
+                    We&apos;re currently upgrading our core checkout and backend ordering systems to provide a faster, more reliable shopping experience.
                 </motion.p>
 
                 {/* Estimated time note */}
@@ -194,7 +194,7 @@ export default function UnderConstructionPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.8, duration: 0.8 }}
                 >
-                    Estimated downtime: ~1 hour
+                    Estimated downtime: A few hours
                 </motion.p>
 
                 {/* Wrench / Gear Icon */}
