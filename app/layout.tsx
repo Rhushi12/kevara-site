@@ -8,6 +8,7 @@ import SearchPanel from "@/components/SearchPanel";
 import ToastNotification from "@/components/admin/ToastNotification";
 import FirstVisitHandler from "@/components/FirstVisitHandler";
 import NextTopLoader from "nextjs-toploader";
+import CartDrawer from "@/components/CartDrawer";
 
 const figtree = Figtree({
   variable: "--font-figtree",
@@ -176,6 +177,7 @@ export default async function RootLayout({
               <div className="relative w-full overflow-x-hidden min-h-screen flex flex-col">
                 {children}
               </div>
+              <CartDrawer />
               <QuickViewPanel />
               <SearchPanel />
               <ToastNotification />

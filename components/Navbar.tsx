@@ -13,6 +13,7 @@ import ImageUploadModal from "@/components/admin/ImageUploadModal";
 import MobileMenu from "@/components/MobileMenu";
 import MenuCarousel from "./MenuCarousel";
 import { useSearchStore } from "@/components/SearchPanel";
+import { useCartStore } from "@/lib/cartStore";
 import { authUpload } from "@/lib/auth-client";
 import { useToast } from "@/context/ToastContext";
 import { compressImage } from "@/lib/imageCompression";
@@ -23,6 +24,8 @@ export default function Navbar() {
     const { user, logout, isAdmin } = useAuth();
     const [menuData, setMenuData] = useState(MENU_DATA);
     const { openSearch } = useSearchStore();
+    const { openCart, cartCount } = useCartStore();
+    const [isMounted, setIsMounted] = useState(false);
 
     // New State for Edit Mode and Image Upload
     const [isEditMode, setIsEditMode] = useState(false);
@@ -45,6 +48,7 @@ export default function Navbar() {
             }
         }
         fetchMenu();
+        setIsMounted(true);
     }, []);
 
     const saveMenuToShopify = async (updatedMenu: any[]) => {
@@ -424,14 +428,18 @@ export default function Navbar() {
                         >
                             <Search size={20} />
                         </button>
-                        {isAdmin && (
-                            <Link href="/cart" className="hover:opacity-70 transition-opacity relative">
-                                <ShoppingBag size={20} />
+
+                        <button
+                            onClick={openCart}
+                            className="hover:opacity-70 transition-opacity relative"
+                        >
+                            <ShoppingBag size={20} />
+                            {isMounted && cartCount > 0 && (
                                 <span className="absolute -top-1 -right-1 bg-white text-[#006D77] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
-                                    0
+                                    {cartCount}
                                 </span>
-                            </Link>
-                        )}
+                            )}
+                        </button>
                     </div>
                 </div>
 

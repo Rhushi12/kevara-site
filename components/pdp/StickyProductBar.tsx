@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import LiquidButton from "@/components/ui/LiquidButton";
+import { useCartStore } from "@/lib/cartStore";
 import { MessageCircle, Mail, ChevronDown } from "lucide-react";
 
 interface StickyProductBarProps {
@@ -11,8 +12,10 @@ interface StickyProductBarProps {
         title: string;
         price: string | number;
         image: string;
-        colors?: { name: string; value: string; hex?: string }[];
+        colors?: { name: string; hex?: string; url?: string; image?: string; isCurrent?: boolean }[];
         sizes?: string[];
+        handle: string;
+        siblingColors?: { name: string; hex: string; url: string; isCurrent?: boolean; image?: string }[];
     };
 }
 
@@ -22,6 +25,8 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
     const [selectedSize, setSelectedSize] = useState(
         product.sizes?.find(s => ["24", "26", "28", "30", "32", "34", "36", "XS", "S", "M", "L", "XL", "XXL"].includes(s)) || product.sizes?.[0]
     );
+
+    const { items, setCart, openCart } = useCartStore();
 
     const [isColorOpen, setIsColorOpen] = useState(false);
     const [isSizeOpen, setIsSizeOpen] = useState(false);
@@ -116,7 +121,7 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
                                             <div className="flex items-center gap-2">
                                                 <div
                                                     className="w-4 h-4 rounded-full border border-gray-200"
-                                                    style={{ backgroundColor: selectedColor?.hex || selectedColor?.value || '#000' }}
+                                                    style={{ backgroundColor: selectedColor?.hex || '#000' }}
                                                 />
                                                 <span className="text-sm text-slate-700 truncate max-w-[80px]">
                                                     {selectedColor?.name || "Select Color"}
@@ -145,7 +150,7 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
                                                         >
                                                             <div
                                                                 className="w-4 h-4 rounded-full border border-gray-200"
-                                                                style={{ backgroundColor: color.hex || color.value || '#000' }}
+                                                                style={{ backgroundColor: color.hex || '#000' }}
                                                             />
                                                             <span className={`text-sm ${selectedColor?.name === color.name ? 'font-medium text-slate-900' : 'text-slate-600'}`}>
                                                                 {color.name}
@@ -210,13 +215,51 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
                                 </div>
                             </LiquidButton> */}
 
-                            <button
-                                onClick={() => window.location.href = `mailto:contact@kevara.com?subject=Inquiry about ${product.title}&body=I'm interested in ${product.title} (Color: ${selectedColor?.name}, Size: ${selectedSize})`}
-                                className="px-4 py-2 h-9 md:h-10 border border-[#4A3B32] text-[#4A3B32] hover:bg-[#4A3B32] hover:text-white transition-colors uppercase text-xs tracking-wider flex items-center gap-2"
+                            <LiquidButton
+                                onClick={() => {
+                                    if (!selectedSize) {
+                                        setIsSizeOpen(true);
+                                        return;
+                                    }
+
+                                    const selectedColorName = selectedColor?.name || 'default';
+                                    const mockVariantId = `${product.handle}-${selectedSize}-${selectedColorName}`;
+                                    const existingIndex = items.findIndex((i: any) => i.merchandiseId === mockVariantId);
+
+                                    const numericPrice = typeof product.price === 'string' ? parseFloat(product.price.replace(/[^0-9.]/g, '')) : product.price;
+
+                                    let newItems = [...items];
+                                    if (existingIndex >= 0) {
+                                        newItems[existingIndex].quantity += 1;
+                                    } else {
+                                        // Try joining sibling data for Cart Variant UI matching logic
+                                        const siblingData = product.siblingColors && product.siblingColors.length > 0
+                                            ? product.siblingColors.map(c => ({ name: c.name, hex: c.hex, handle: c.url.replace('/products/', ''), image: c.image }))
+                                            : colors.map((c: any) => ({ name: c.name, hex: c.hex, handle: product.handle, image: product.image }));
+
+                                        newItems.push({
+                                            id: Date.now().toString(),
+                                            merchandiseId: mockVariantId,
+                                            title: product.title,
+                                            variantTitle: `${selectedSize} / ${selectedColorName}`,
+                                            quantity: 1,
+                                            price: isNaN(numericPrice) ? '0' : numericPrice.toString(),
+                                            image: product.image,
+                                            colorHex: selectedColor?.hex,
+                                            handle: product.handle,
+                                            availableSizes: sizes,
+                                            availableColors: siblingData,
+                                        });
+                                    }
+
+                                    const newSubtotal = newItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0).toFixed(2);
+                                    setCart(newItems, newSubtotal.toString(), null);
+                                    openCart();
+                                }}
+                                className="px-4 md:px-6 py-2 md:py-2.5 text-xs h-9 md:h-10 min-w-[140px] uppercase tracking-wider bg-slate-900 border-none text-white hover:bg-slate-800"
                             >
-                                <Mail size={16} />
-                                <span className="hidden md:inline">Email</span>
-                            </button>
+                                <span className="font-medium">{!selectedSize ? 'Select Size' : 'Add to Cart'}</span>
+                            </LiquidButton>
                         </div>
                     </div>
                 </motion.div>

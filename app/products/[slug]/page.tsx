@@ -13,6 +13,7 @@ import { getPageContent } from "@/lib/shopify-admin";
 import RelatedProductsCarousel from "@/components/pdp/RelatedProductsCarousel";
 import SustainabilityBanner from "@/components/pdp/SustainabilityBanner";
 import { MOCK_SHOPIFY_PRODUCTS } from "@/lib/mockData";
+import { parseProductTitle } from "@/lib/productUtils";
 
 // Force dynamic rendering to always fetch fresh product data
 export const dynamic = "force-dynamic";
@@ -94,6 +95,48 @@ export default async function ProductPage({ params }: { params: { slug: string }
         .filter((edge: any) => edge.node.handle !== product.handle) // Exclude current product
         .map((edge: any) => edge.node);
 
+    // --- SIBLING COLOR LOGIC ---
+    // Find products that share the same base title
+    const currentCleanTitle = parseProductTitle(product.title).cleanTitle;
+
+    // We determine the current product's primary color (if any) to display
+    const currentPrimaryColor = productColors && productColors.length > 0 ? productColors[0] : null;
+
+    const siblingColors: { name: string; hex: string; url: string; isCurrent?: boolean; image?: string }[] = [];
+
+    // Add the current product to the swatches first as the "active" one
+    if (currentPrimaryColor) {
+        siblingColors.push({
+            name: currentPrimaryColor.name,
+            hex: currentPrimaryColor.hex,
+            url: `/products/${product.handle}`,
+            isCurrent: true,
+            image: product.images?.edges?.[0]?.node?.url || ""
+        });
+    }
+
+    // Find siblings
+    allProducts.forEach((edge: any) => {
+        const p = edge.node;
+        if (p.handle === product.handle) return; // Skip self
+
+        const pCleanTitle = parseProductTitle(p.title).cleanTitle;
+        if (pCleanTitle === currentCleanTitle) {
+            // It's a sibling! Get its primary color
+            const pPrimaryColor = p.colors && p.colors.length > 0 ? p.colors[0] : null;
+            if (pPrimaryColor) {
+                siblingColors.push({
+                    name: pPrimaryColor.name,
+                    hex: pPrimaryColor.hex,
+                    url: `/products/${p.handle}`,
+                    isCurrent: false,
+                    image: p.images?.edges?.[0]?.node?.url || ""
+                });
+            }
+        }
+    });
+    // ---------------------------
+
     // Fetch global PDP settings
     const globalSettings = await getPageContent("pdp-global-settings");
 
@@ -102,7 +145,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
             <Navbar />
             <StickyProductBar
                 product={{
-                    title: title,
+                    title: parseProductTitle(title).cleanTitle,
                     price: price,
                     image: productImages[0],
                     colors: colors,
@@ -114,7 +157,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
             {/* Breadcrumbs */}
             <div className="container mx-auto px-4 py-6">
                 <nav className="text-xs text-slate-500 flex gap-2">
-                    <span>Home</span> / <span>Shop</span> / <span className="text-slate-900">{title}</span>
+                    <span>Home</span> / <span>Shop</span> / <span className="text-slate-900">{parseProductTitle(title).cleanTitle}</span>
                 </nav>
             </div>
 
@@ -128,8 +171,9 @@ export default async function ProductPage({ params }: { params: { slug: string }
                         price,
                         images,
                         video,
-                        colors,
-                        sizes
+                        colors, // Local colors (legacy)
+                        sizes,
+                        siblingColors // Cross-product colors
                     }}
                 />
             </div>

@@ -18,6 +18,7 @@ interface AuthContextType {
     user: User | null;
     loading: boolean;
     isAdmin: boolean;
+    isFirstPurchase: boolean;
     signInWithGoogle: () => Promise<void>;
     signUpWithEmail: (email: string, pass: string, name: string) => Promise<void>;
     signInWithEmail: (email: string, pass: string) => Promise<void>;
@@ -28,6 +29,7 @@ const AuthContext = createContext<AuthContextType>({
     user: null,
     loading: true,
     isAdmin: false,
+    isFirstPurchase: false,
     signInWithGoogle: async () => { },
     signUpWithEmail: async () => { },
     signInWithEmail: async () => { },
@@ -78,6 +80,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [isFirstPurchase, setIsFirstPurchase] = useState(false);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -183,7 +186,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, isAdmin, signInWithGoogle, signUpWithEmail, signInWithEmail, logout }}>
+        <AuthContext.Provider value={{ user, loading, isAdmin, isFirstPurchase, signInWithGoogle, signUpWithEmail, signInWithEmail, logout }}>
             {children}
         </AuthContext.Provider>
     );

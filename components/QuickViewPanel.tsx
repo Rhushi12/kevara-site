@@ -8,9 +8,12 @@ import ProductImage from "@/components/ui/ProductImage";
 import { useQuickViewStore } from "@/lib/store";
 import LiquidButton from "@/components/ui/LiquidButton";
 import WholesaleInquiryModal from "@/components/pdp/WholesaleInquiryModal";
+import { useCartStore } from "@/lib/cartStore";
+import { parseProductTitle } from "@/lib/productUtils";
 
 export default function QuickViewPanel() {
     const { isOpen, selectedProduct, closeQuickView } = useQuickViewStore();
+    const { openCart, setCart, items } = useCartStore();
     const panelRef = useRef<HTMLDivElement>(null);
     const overlayRef = useRef<HTMLDivElement>(null);
     const preLayersRef = useRef<HTMLDivElement>(null);
@@ -166,7 +169,7 @@ export default function QuickViewPanel() {
                             {imageUrl && (
                                 <ProductImage
                                     src={imageUrl}
-                                    alt={title}
+                                    alt={parseProductTitle(title).cleanTitle}
                                     fill
                                     className="object-cover"
                                     containerClassName="absolute inset-0"
@@ -174,7 +177,7 @@ export default function QuickViewPanel() {
                             )}
                         </div>
                         <div>
-                            <h3 className="text-xl font-lora text-slate-900 mb-2">{title}</h3>
+                            <h3 className="text-xl font-lora text-slate-900 mb-2">{parseProductTitle(title).cleanTitle}</h3>
                             {/* Price */}
                             <div className="flex items-center gap-3">
                                 <span className="text-lg font-figtree font-bold text-slate-900">
@@ -265,11 +268,75 @@ export default function QuickViewPanel() {
                     {/* Actions */}
                     <div className="mt-auto space-y-3 qv-content-item">
                         <LiquidButton
-                            className="w-full h-12 bg-[#0E4D55] text-white hover:bg-[#0a383f] rounded-lg font-medium text-sm"
-                            onClick={() => setShowInquiryModal(true)}
+                            className="w-full h-12 bg-[#0E4D55] text-white hover:bg-[#0a383f] rounded-lg font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={!selectedSize}
+                            onClick={() => {
+                                if (!selectedSize) return;
+
+                                const mockVariantId = `${handle}-${selectedSize}-${selectedColor || 'default'}`;
+                                const existingIndex = items.findIndex((i: any) => i.merchandiseId === mockVariantId);
+
+                                let newItems = [...items];
+                                if (existingIndex >= 0) {
+                                    newItems[existingIndex].quantity += quantity;
+                                } else {
+                                    const selectedColorObj = productColors.find((c: any) => c.name === selectedColor);
+                                    newItems.push({
+                                        id: Date.now().toString(),
+                                        merchandiseId: mockVariantId,
+                                        title: title,
+                                        variantTitle: `${selectedSize} / ${selectedColor || 'Default'}`,
+                                        quantity: quantity,
+                                        price: price.toString(),
+                                        image: imageUrl || "",
+                                        colorHex: selectedColorObj?.hex, // Pass hex for cart UI
+                                        handle: handle,
+                                        availableSizes: productSizes,
+                                        availableColors: productColors.map((c: any) => ({
+                                            name: c.name,
+                                            hex: c.hex,
+                                            handle: handle,
+                                            image: imageUrl || ""
+                                        })),
+                                    });
+                                }
+
+                                const newSubtotal = newItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0).toFixed(2);
+                                setCart(newItems, newSubtotal.toString(), null);
+
+                                // On mobile, close QuickView before opening Cart
+                                if (window.innerWidth < 768) {
+                                    closeQuickView();
+                                    setTimeout(() => openCart(), 300);
+                                } else {
+                                    openCart();
+                                }
+                            }}
                         >
-                            <span className="font-medium">Send us a message (Wholesale)</span>
+                            <span className="font-medium">{!selectedSize ? 'Select a Size' : 'Add to Cart'}</span>
                         </LiquidButton>
+
+                        <button
+                            disabled={!selectedSize}
+                            className="w-full h-12 bg-white text-[#0E4D55] border border-[#0E4D55] hover:bg-gray-50 rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={() => {
+                                if (window.innerWidth < 768) {
+                                    closeQuickView();
+                                    setTimeout(() => openCart(), 300);
+                                } else {
+                                    openCart();
+                                }
+                            }}
+                        >
+                            Buy it Now
+                        </button>
+
+                        <button
+                            onClick={() => setShowInquiryModal(true)}
+                            className="text-xs w-full text-slate-500 underline underline-offset-2 hover:text-slate-800 transition-colors mt-2 text-center"
+                        >
+                            Inquire about wholesale
+                        </button>
                     </div>
                 </div>
             </div>

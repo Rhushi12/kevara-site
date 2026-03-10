@@ -1,12 +1,15 @@
+import { useRouter } from "next/navigation";
+
 export default function AdminSidebar({ activeTab, setActiveTab }: { activeTab: string, setActiveTab: (tab: string) => void }) {
+    const router = useRouter();
     const menuItems = [
         { id: "dashboard", label: "Dashboard" },
         { id: "leads", label: "Leads & Users" },
         { id: "wholesale", label: "Wholesale Inquiries" },
         { id: "cms", label: "Content Management" },
         { id: "seo", label: "SEO & Social" },
-        { id: "products", label: "Product Catalog" }, // Placeholder
-        { id: "settings", label: "Settings" }, // Placeholder
+        { id: "products", label: "Product Manager", href: "/admin/products" },
+        { id: "settings", label: "Settings" },
     ];
 
     return (
@@ -18,8 +21,14 @@ export default function AdminSidebar({ activeTab, setActiveTab }: { activeTab: s
                 {menuItems.map((item) => (
                     <button
                         key={item.id}
-                        onClick={() => setActiveTab(item.id)}
-                        className={`w-full text-left px-4 py-3 rounded-md text-sm font-medium transition-colors ${activeTab === item.id
+                        onClick={() => {
+                            if (item.href) {
+                                router.push(item.href);
+                            } else {
+                                setActiveTab(item.id);
+                            }
+                        }}
+                        className={`w-full text-left px-4 py-3 rounded-md text-sm font-medium transition-colors ${activeTab === item.id || (item.href && typeof window !== 'undefined' && window.location.pathname === item.href)
                             ? "bg-[#0E4D55] text-white shadow-md shadow-[#0E4D55]/20"
                             : "text-gray-500 hover:bg-gray-50 hover:text-slate-900"
                             }`}

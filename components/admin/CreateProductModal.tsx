@@ -32,6 +32,7 @@ const SIZE_OPTIONS = ["24", "26", "28", "30", "32", "34", "36", "XS", "S", "M", 
 
 export default function CreateProductModal({ isOpen, onClose, onSuccess }: CreateProductModalProps) {
     const [title, setTitle] = useState("");
+    const [batchNumber, setBatchNumber] = useState("");
     const [price, setPrice] = useState("");
     const [description, setDescription] = useState("");
     const [files, setFiles] = useState<File[]>([]);
@@ -152,6 +153,7 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
 
     const resetForm = () => {
         setTitle("");
+        setBatchNumber("");
         setPrice("");
         setDescription("");
         setFiles([]);
@@ -229,11 +231,12 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
             setUploadProgress("Creating product...");
 
             // Now send just the URLs to the API (no file data)
+            const finalTitle = batchNumber.trim() ? `${title.trim()} (${batchNumber.trim()})` : title.trim();
             const res = await fetch("/api/products/create", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    title,
+                    title: finalTitle,
                     price,
                     description,
                     imageUrls,
@@ -279,7 +282,7 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
         }
 
         addToQueue({
-            title,
+            title: batchNumber.trim() ? `${title.trim()} (${batchNumber.trim()})` : title.trim(),
             price,
             description,
             files,
@@ -323,19 +326,33 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
                         <div className="space-y-4">
                             <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Basic Information</h3>
 
-                            {/* Title */}
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">
-                                    Product Title <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    placeholder="Enter product name..."
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all duration-200 placeholder:text-gray-400"
-                                    required
-                                />
+                            {/* Title & Batch */}
+                            <div className="flex gap-4">
+                                <div className="flex-[3]">
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        Product Title <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={title}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                        placeholder="Classic T-Shirt"
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all duration-200 placeholder:text-gray-400"
+                                        required
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        Batch # <span className="text-gray-400 font-normal text-xs ml-1">(Optional)</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={batchNumber}
+                                        onChange={(e) => setBatchNumber(e.target.value)}
+                                        placeholder="e.g. 1"
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all duration-200 placeholder:text-gray-400"
+                                    />
+                                </div>
                             </div>
 
                             {/* Price */}

@@ -28,6 +28,7 @@ interface PDPClientWrapperProps {
         video?: string | null;
         colors: ProductColor[];
         sizes: string[];
+        siblingColors?: { name: string; hex: string; url: string; isCurrent?: boolean }[];
     };
 }
 
@@ -79,6 +80,7 @@ export default function PDPClientWrapper({ product }: PDPClientWrapperProps) {
                     description={product.descriptionHtml}
                     handle={product.handle}
                     imageUrls={imageUrls}
+                    siblingColors={product.siblingColors}
                     onImagesChange={handleImagesChange}
                     onEditModeChange={handleEditModeChange}
                 />

@@ -7,8 +7,10 @@ import { useSizeGuideStore } from "@/lib/store";
 import { useAuth } from "@/context/AuthContext";
 import WholesaleInquiryModal from "./WholesaleInquiryModal";
 import { useToast } from "@/context/ToastContext";
+import { useCartStore } from "@/lib/cartStore";
+import { parseProductTitle } from '@/lib/productUtils';
 
-interface EditableProductInfoProps {
+export interface EditableProductInfoProps {
     title: string;
     price: string | number;
     originalPrice?: number;
@@ -20,6 +22,7 @@ interface EditableProductInfoProps {
     imageUrls?: string[];
     onImagesChange?: (imageUrls: string[]) => void;
     onEditModeChange?: (isEditMode: boolean) => void;
+    siblingColors?: { name: string; hex: string; url: string; isCurrent?: boolean; image?: string }[];
 }
 
 const ALL_SIZES = ["24", "26", "28", "30", "32", "34", "36", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"];
@@ -50,12 +53,14 @@ export default function EditableProductInfo({
     onProductUpdate,
     imageUrls = [],
     onImagesChange,
-    onEditModeChange
+    onEditModeChange,
+    siblingColors,
 }: EditableProductInfoProps) {
     const { isAdmin } = useAuth();
     const [selectedColor, setSelectedColor] = useState(colors[0]?.name || "");
     const [selectedSize, setSelectedSize] = useState(sizes[0] || "");
     const { openSizeGuide } = useSizeGuideStore();
+    const { openCart, setCart, items } = useCartStore();
 
     // Edit mode state
     const [isEditMode, setIsEditMode] = useState(false);
@@ -222,7 +227,7 @@ export default function EditableProductInfo({
     };
 
     // Current display values
-    const displayTitle = isEditMode ? editedTitle : title;
+    const displayTitle = isEditMode ? editedTitle : parseProductTitle(title).cleanTitle;
     // Show raw string in edit mode, otherwise use price prop
     const displayPrice = isEditMode ? editedPrice : price;
     const displaySizes = isEditMode ? editedSizes : sizes;
@@ -509,6 +514,23 @@ export default function EditableProductInfo({
                             </div>
                         )}
                     </div>
+                ) : siblingColors && siblingColors.length > 0 ? (
+                    <div className="flex flex-wrap gap-3">
+                        {siblingColors.map((color, index) => (
+                            <a
+                                key={`${color.hex}-${color.name || index}`}
+                                href={color.url}
+                                title={color.name}
+                                className={`w-8 h-8 rounded-full border-2 transition-all relative flex items-center justify-center ${color.isCurrent
+                                    ? "border-slate-900 ring-1 ring-slate-900 ring-offset-1"
+                                    : "border-slate-200 hover:border-slate-400"
+                                    }`}
+                                style={{ backgroundColor: color.hex }}
+                            >
+                                <span className="sr-only">{color.name}</span>
+                            </a>
+                        ))}
+                    </div>
                 ) : colors.length > 0 ? (
                     <div className="flex flex-wrap gap-3">
                         {colors.map((color, index) => (
@@ -590,14 +612,68 @@ export default function EditableProductInfo({
             </div>
 
             {/* Wholesale Inquiry Button */}
+            {/* E-commerce Actions */}
             {!isEditMode && (
-                <div className="pt-4">
+                <div className="pt-4 flex flex-col gap-3">
                     <LiquidButton
-                        className="w-full h-12 bg-[#0E4D55] text-white hover:bg-[#0a383f] rounded-lg font-medium text-sm"
-                        onClick={() => setShowInquiryModal(true)}
+                        className="w-full h-12 bg-[#0E4D55] text-white hover:bg-[#0a383f] rounded-lg font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!selectedSize}
+                        onClick={() => {
+                            if (!selectedSize) return;
+                            // For now, placeholder add to cart until shadow variants exist
+                            // In Part 1, we will map this to the real Shopify Variant ID
+                            const mockVariantId = `${handle}-${selectedSize}-${selectedColor || 'default'}`;
+
+                            const existingIndex = items.findIndex((i: any) => i.merchandiseId === mockVariantId);
+
+                            let newItems = [...items];
+                            if (existingIndex >= 0) {
+                                newItems[existingIndex].quantity += 1;
+                            } else {
+                                const selectedColorObj = colors.find((c) => c.name === selectedColor);
+                                newItems.push({
+                                    id: Date.now().toString(),
+                                    merchandiseId: mockVariantId,
+                                    title: title,
+                                    variantTitle: `${selectedSize} / ${selectedColor || 'Default'}`,
+                                    quantity: 1,
+                                    price: price.toString(),
+                                    image: (imageUrls && imageUrls.length > 0) ? imageUrls[0] : "",
+                                    colorHex: selectedColorObj?.hex || (siblingColors?.find(c => c.isCurrent)?.hex), // Pass hex for cart UI
+                                    handle: handle,
+                                    availableSizes: displaySizes.length > 0 ? displaySizes : sizes,
+                                    availableColors: siblingColors && siblingColors.length > 0
+                                        ? siblingColors.map(c => ({ name: c.name, hex: c.hex, handle: c.url.replace('/products/', ''), image: c.image }))
+                                        : colors.map(c => ({ name: c.name, hex: c.hex, handle: handle, image: imageUrls?.[0] || "" })),
+                                });
+                            }
+
+                            const newSubtotal = newItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0).toFixed(2);
+                            setCart(newItems, newSubtotal.toString(), null);
+
+                            openCart();
+                        }}
                     >
-                        <span className="font-medium">Send us a message (Wholesale)</span>
+                        <span className="font-medium">{!selectedSize ? 'Select a Size' : 'Add to Cart'}</span>
                     </LiquidButton>
+
+                    <button
+                        disabled={!selectedSize}
+                        className="w-full h-12 bg-white text-[#0E4D55] border border-[#0E4D55] hover:bg-gray-50 rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={() => {
+                            // Similar placeholder logic for Buy Now (would usually go straight to checkout URL)
+                            openCart();
+                        }}
+                    >
+                        Buy it Now
+                    </button>
+
+                    <button
+                        onClick={() => setShowInquiryModal(true)}
+                        className="text-xs text-slate-500 underline underline-offset-2 hover:text-slate-800 transition-colors mt-2 text-center"
+                    >
+                        Inquire about wholesale
+                    </button>
                 </div>
             )}
 
