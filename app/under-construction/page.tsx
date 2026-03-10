@@ -194,7 +194,7 @@ export default function UnderConstructionPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.8, duration: 0.8 }}
                 >
-                    Estimated downtime: A few hours
+                    Estimated downtime: ~7 days
                 </motion.p>
 
                 {/* Wrench / Gear Icon */}
