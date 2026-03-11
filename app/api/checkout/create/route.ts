@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { storefrontFetch } from '@/lib/shopify-storefront';
 
+export const maxDuration = 60;
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
+
 /**
  * Checkout Creation API Route
  * 
