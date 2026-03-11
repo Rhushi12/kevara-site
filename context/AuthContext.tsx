@@ -120,6 +120,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 if (typeof window !== 'undefined') localStorage.removeItem('isAdmin');
             }
 
+            // Silently sync to Shopify Customer (fire-and-forget)
+            if (user && user.email) {
+                fetch('/api/customers/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: user.email,
+                        displayName: user.displayName || '',
+                        uid: user.uid
+                    })
+                }).catch(err => console.warn('[Auth] Shopify customer sync failed:', err.message));
+            }
+
             setLoading(false);
         });
 

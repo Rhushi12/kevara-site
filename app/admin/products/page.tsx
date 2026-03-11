@@ -378,26 +378,35 @@ export default function AdminProductManager() {
     }
 
     return (
-        <div className="min-h-screen bg-[#FDFBF7] pt-24 pb-12 px-4 md:px-8">
-            <div className="max-w-7xl mx-auto space-y-12">
+        <div className="min-h-screen bg-[#FDFBF7] p-8 md:p-12 animate-in fade-in duration-500">
+            <div className="max-w-7xl mx-auto space-y-8">
 
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-lora font-medium text-slate-900">Product Manager</h1>
-                        <p className="text-slate-500 mt-1">Manage your inventory and track uploads</p>
+                {/* Header & Navigation */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-gray-200/60">
+                    <div className="space-y-4">
+                        <Link
+                            href="/admin"
+                            className="inline-flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-slate-400 hover:text-[#0E4D55] transition-colors"
+                        >
+                            ← Back to Workspace
+                        </Link>
+                        <div>
+                            <h1 className="text-3xl font-lora font-medium text-slate-900 tracking-tight">Product Manager</h1>
+                            <p className="text-slate-500 text-sm mt-1">Manage inventory, monitor uploads, and edit listings.</p>
+                        </div>
                     </div>
+
                     <div className="flex flex-wrap items-center gap-3">
-                        <label className={`flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-slate-900 rounded-lg transition-colors ${bulkUploading ? 'opacity-50 cursor-wait' : 'hover:bg-gray-50 cursor-pointer'}`}>
+                        <label className={`flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-slate-700 text-sm font-medium rounded-lg shadow-sm transition-all ${bulkUploading ? 'opacity-50 cursor-wait' : 'hover:bg-gray-50 hover:border-gray-300 cursor-pointer'}`}>
                             <input type="file" accept=".csv" className="hidden" onChange={handleBulkUpload} disabled={bulkUploading} />
                             {bulkUploading ? (
                                 <>
-                                    <Loader2 size={18} className="animate-spin" />
+                                    <Loader2 size={16} className="animate-spin text-[#0E4D55]" />
                                     Processing...
                                 </>
                             ) : (
                                 <>
-                                    <Upload size={18} />
+                                    <Upload size={16} className="text-slate-400" />
                                     Bulk Upload
                                 </>
                             )}

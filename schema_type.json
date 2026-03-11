@@ -1,0 +1,209 @@
+{
+  "name": "ProductSetInput",
+  "inputFields": [
+    {
+      "name": "descriptionHtml",
+      "type": {
+        "name": "String",
+        "kind": "SCALAR",
+        "ofType": null
+      }
+    },
+    {
+      "name": "handle",
+      "type": {
+        "name": "String",
+        "kind": "SCALAR",
+        "ofType": null
+      }
+    },
+    {
+      "name": "seo",
+      "type": {
+        "name": "SEOInput",
+        "kind": "INPUT_OBJECT",
+        "ofType": null
+      }
+    },
+    {
+      "name": "productType",
+      "type": {
+        "name": "String",
+        "kind": "SCALAR",
+        "ofType": null
+      }
+    },
+    {
+      "name": "category",
+      "type": {
+        "name": "ID",
+        "kind": "SCALAR",
+        "ofType": null
+      }
+    },
+    {
+      "name": "tags",
+      "type": {
+        "name": null,
+        "kind": "LIST",
+        "ofType": {
+          "name": null,
+          "kind": "NON_NULL",
+          "ofType": {
+            "name": "String"
+          }
+        }
+      }
+    },
+    {
+      "name": "templateSuffix",
+      "type": {
+        "name": "String",
+        "kind": "SCALAR",
+        "ofType": null
+      }
+    },
+    {
+      "name": "giftCardTemplateSuffix",
+      "type": {
+        "name": "String",
+        "kind": "SCALAR",
+        "ofType": null
+      }
+    },
+    {
+      "name": "title",
+      "type": {
+        "name": "String",
+        "kind": "SCALAR",
+        "ofType": null
+      }
+    },
+    {
+      "name": "vendor",
+      "type": {
+        "name": "String",
+        "kind": "SCALAR",
+        "ofType": null
+      }
+    },
+    {
+      "name": "giftCard",
+      "type": {
+        "name": "Boolean",
+        "kind": "SCALAR",
+        "ofType": null
+      }
+    },
+    {
+      "name": "redirectNewHandle",
+      "type": {
+        "name": "Boolean",
+        "kind": "SCALAR",
+        "ofType": null
+      }
+    },
+    {
+      "name": "collections",
+      "type": {
+        "name": null,
+        "kind": "LIST",
+        "ofType": {
+          "name": null,
+          "kind": "NON_NULL",
+          "ofType": {
+            "name": "ID"
+          }
+        }
+      }
+    },
+    {
+      "name": "metafields",
+      "type": {
+        "name": null,
+        "kind": "LIST",
+        "ofType": {
+          "name": null,
+          "kind": "NON_NULL",
+          "ofType": {
+            "name": "MetafieldInput"
+          }
+        }
+      }
+    },
+    {
+      "name": "variants",
+      "type": {
+        "name": null,
+        "kind": "LIST",
+        "ofType": {
+          "name": null,
+          "kind": "NON_NULL",
+          "ofType": {
+            "name": "ProductVariantSetInput"
+          }
+        }
+      }
+    },
+    {
+      "name": "files",
+      "type": {
+        "name": null,
+        "kind": "LIST",
+        "ofType": {
+          "name": null,
+          "kind": "NON_NULL",
+          "ofType": {
+            "name": "FileSetInput"
+          }
+        }
+      }
+    },
+    {
+      "name": "status",
+      "type": {
+        "name": "ProductStatus",
+        "kind": "ENUM",
+        "ofType": null
+      }
+    },
+    {
+      "name": "requiresSellingPlan",
+      "type": {
+        "name": "Boolean",
+        "kind": "SCALAR",
+        "ofType": null
+      }
+    },
+    {
+      "name": "productOptions",
+      "type": {
+        "name": null,
+        "kind": "LIST",
+        "ofType": {
+          "name": null,
+          "kind": "NON_NULL",
+          "ofType": {
+            "name": "OptionSetInput"
+          }
+        }
+      }
+    },
+    {
+      "name": "claimOwnership",
+      "type": {
+        "name": "ProductClaimOwnershipInput",
+        "kind": "INPUT_OBJECT",
+        "ofType": null
+      }
+    },
+    {
+      "name": "combinedListingRole",
+      "type": {
+        "name": "CombinedListingsRole",
+        "kind": "ENUM",
+        "ofType": null
+      }
+    }
+  ]
+}

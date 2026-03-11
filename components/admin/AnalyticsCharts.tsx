@@ -15,7 +15,6 @@ import {
 } from "chart.js";
 import { Bar, Line } from "react-chartjs-2";
 
-
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -29,14 +28,16 @@ ChartJS.register(
 );
 
 export default function AnalyticsCharts() {
-    const [userChartData, setUserChartData] = useState<any>({
-        labels: [],
-        datasets: [],
-    });
     const [viewsChartData, setViewsChartData] = useState<any>({
         labels: [],
         datasets: [],
     });
+
+    const [userChartData, setUserChartData] = useState<any>({
+        labels: [],
+        datasets: [],
+    });
+
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -47,7 +48,7 @@ export default function AnalyticsCharts() {
 
                 if (data.error) throw new Error(data.error);
 
-                const { users, views } = data;
+                const { users, pageViews } = data;
 
                 // Process Users Data
                 const last7Days = [...Array(7)].map((_, i) => {
@@ -70,42 +71,42 @@ export default function AnalyticsCharts() {
                     }
                 });
 
+                const labels = last7Days.map(d => new Date(d).toLocaleDateString('en-US', { weekday: 'short' }));
+
                 setUserChartData({
-                    labels: last7Days.map(d => new Date(d).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })),
+                    labels: labels,
                     datasets: [
                         {
-                            label: 'New Users',
+                            label: 'New Customers',
                             data: Object.values(userCounts),
-                            backgroundColor: '#0E4D55',
-                            borderRadius: 6,
+                            backgroundColor: '#e2e8f0',
+                            hoverBackgroundColor: '#0A3A40',
+                            borderRadius: 4,
+                            barPercentage: 0.6,
                         },
                     ],
                 });
 
                 // Process Page Views Data
-                // views is array of { date, count }
-                const viewsMap = views.reduce((acc: any, item: any) => {
-                    acc[item.date] = item.count;
-                    return acc;
-                }, {});
-
-                const viewCounts = last7Days.map(date => viewsMap[date] || 0);
+                const viewsValues = last7Days.map(date => {
+                    return pageViews ? (pageViews[date] || 0) : 0;
+                });
 
                 setViewsChartData({
-                    labels: last7Days.map(d => new Date(d).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })),
+                    labels: labels,
                     datasets: [
                         {
                             label: 'Page Views',
-                            data: viewCounts,
+                            data: viewsValues,
                             borderColor: '#0E4D55',
-                            backgroundColor: 'rgba(14, 77, 85, 0.1)',
+                            backgroundColor: 'rgba(14, 77, 85, 0.08)',
                             fill: true,
                             tension: 0.4,
-                            pointBackgroundColor: '#0E4D55',
-                            pointBorderColor: '#fff',
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#0E4D55',
                             pointBorderWidth: 2,
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
                         },
                     ],
                 });
@@ -120,36 +121,60 @@ export default function AnalyticsCharts() {
         fetchData();
     }, []);
 
-    if (loading) return <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg animate-pulse">Loading Analytics...</div>;
+    if (loading) return (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="h-[400px] flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100 animate-pulse">
+                <span className="text-sm font-medium text-slate-400 tracking-widest uppercase">Loading Traffic Trends...</span>
+            </div>
+            <div className="h-[400px] flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100 animate-pulse">
+                <span className="text-sm font-medium text-slate-400 tracking-widest uppercase">Loading Acquisitions...</span>
+            </div>
+        </div>
+    );
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Page Views Line Chart */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 className="text-lg font-bold mb-4 text-slate-800">Site Traffic</h3>
-                <p className="text-sm text-gray-500 mb-4">Page views over the last 7 days</p>
-                <div className="h-64">
+            <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-200/60 transition-shadow hover:shadow-md relative">
+                <h3 className="text-lg font-lora font-medium mb-1 text-slate-900 tracking-tight">Traffic Trend</h3>
+                <p className="text-xs text-slate-500 mb-8 font-medium">Daily page views (last 7 days)</p>
+                <div className="h-[300px]">
                     <Line
                         data={viewsChartData}
                         options={{
                             responsive: true,
                             maintainAspectRatio: false,
                             plugins: {
-                                legend: {
-                                    display: false,
-                                },
+                                legend: { display: false },
+                                tooltip: {
+                                    backgroundColor: '#0E4D55',
+                                    titleFont: { family: 'Geist', size: 11 },
+                                    bodyFont: { family: 'Geist', size: 13, weight: 'bold' },
+                                    padding: 12,
+                                    cornerRadius: 8,
+                                    displayColors: false,
+                                    callbacks: {
+                                        label: (context) => `${context.raw?.toLocaleString()} views`
+                                    }
+                                }
                             },
                             scales: {
                                 y: {
                                     beginAtZero: true,
-                                    grid: {
-                                        color: 'rgba(0,0,0,0.05)',
-                                    },
+                                    grid: { color: 'rgba(0,0,0,0.03)' },
+                                    border: { display: false },
+                                    ticks: {
+                                        font: { family: 'Geist', size: 11 },
+                                        color: '#94a3b8',
+                                    }
                                 },
                                 x: {
-                                    grid: {
-                                        display: false,
-                                    },
+                                    grid: { display: false },
+                                    border: { display: false },
+                                    ticks: {
+                                        font: { family: 'Geist', size: 11 },
+                                        color: '#64748b'
+                                    }
                                 }
                             }
                         }}
@@ -157,35 +182,45 @@ export default function AnalyticsCharts() {
                 </div>
             </div>
 
-            {/* User Signups Bar Chart */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 className="text-lg font-bold mb-4 text-slate-800">New Signups</h3>
-                <p className="text-sm text-gray-500 mb-4">User registrations over the last 7 days</p>
-                <div className="h-64">
+            {/* Customer Acquisitions Bar Chart */}
+            <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-200/60 transition-shadow hover:shadow-md">
+                <h3 className="text-lg font-lora font-medium mb-1 text-slate-900 tracking-tight">Customer Acquisitions</h3>
+                <p className="text-xs text-slate-500 mb-8 font-medium">New registered accounts (last 7 days)</p>
+                <div className="h-[300px]">
                     <Bar
                         data={userChartData}
                         options={{
                             responsive: true,
                             maintainAspectRatio: false,
                             plugins: {
-                                legend: {
-                                    display: false,
-                                },
+                                legend: { display: false },
+                                tooltip: {
+                                    backgroundColor: '#0F172A',
+                                    titleFont: { family: 'Geist', size: 11 },
+                                    bodyFont: { family: 'Geist', size: 13, weight: 'bold' },
+                                    padding: 12,
+                                    cornerRadius: 8,
+                                    displayColors: false,
+                                }
                             },
                             scales: {
                                 y: {
                                     beginAtZero: true,
+                                    grid: { color: 'rgba(0,0,0,0.03)' },
+                                    border: { display: false },
                                     ticks: {
-                                        stepSize: 1
-                                    },
-                                    grid: {
-                                        color: 'rgba(0,0,0,0.05)',
-                                    },
+                                        stepSize: 1,
+                                        font: { family: 'Geist', size: 11 },
+                                        color: '#94a3b8'
+                                    }
                                 },
                                 x: {
-                                    grid: {
-                                        display: false,
-                                    },
+                                    grid: { display: false },
+                                    border: { display: false },
+                                    ticks: {
+                                        font: { family: 'Geist', size: 11 },
+                                        color: '#64748b'
+                                    }
                                 }
                             }
                         }}
@@ -195,4 +230,3 @@ export default function AnalyticsCharts() {
         </div>
     );
 }
-

@@ -149,7 +149,8 @@ export default async function ProductPage({ params }: { params: { slug: string }
                     price: price,
                     image: productImages[0],
                     colors: colors,
-                    sizes: sizes
+                    sizes: sizes,
+                    handle: product.handle
                 }}
             />
             <SizeGuidePanel />
@@ -173,7 +174,8 @@ export default async function ProductPage({ params }: { params: { slug: string }
                         video,
                         colors, // Local colors (legacy)
                         sizes,
-                        siblingColors // Cross-product colors
+                        siblingColors, // Cross-product colors
+                        stock: product.stock // For Out of Stock checks
                     }}
                 />
             </div>

@@ -20,6 +20,7 @@ function CreateProductContent() {
 
     const [title, setTitle] = useState("");
     const [price, setPrice] = useState("");
+    const [stock, setStock] = useState("");
     const [description, setDescription] = useState("");
     const [images, setImages] = useState<File[]>([]);
     const [previews, setPreviews] = useState<string[]>([]);
@@ -45,15 +46,47 @@ function CreateProductContent() {
         setIsSubmitting(true);
 
         try {
-            const formData = new FormData();
-            formData.append("title", title);
-            formData.append("price", price);
-            formData.append("description", description);
-            images.forEach((file) => formData.append("images", file));
+            // 1. Upload images to R2
+            const imageUrls: string[] = [];
+            for (const file of images) {
+                // Get presigned URL
+                const presignRes = await fetch("/api/r2/presign", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        filename: file.name,
+                        contentType: file.type,
+                        folder: "products"
+                    })
+                });
+                
+                if (!presignRes.ok) throw new Error("Failed to get presigned URL for " + file.name);
+                const { uploadUrl, publicUrl } = await presignRes.json();
+                
+                // Upload directly to R2
+                const uploadRes = await fetch(uploadUrl, {
+                    method: "PUT",
+                    headers: { "Content-Type": file.type },
+                    body: file
+                });
+                
+                if (!uploadRes.ok) throw new Error("Failed to upload " + file.name + " to R2");
+                imageUrls.push(publicUrl);
+            }
+
+            // 2. Create product via API
+            const productData = {
+                title,
+                price,
+                stock: stock ? parseInt(stock) : 0,
+                description,
+                imageUrls,
+            };
 
             const res = await fetch("/api/products/create", {
                 method: "POST",
-                body: formData,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(productData),
             });
 
             if (!res.ok) {
@@ -171,6 +204,20 @@ function CreateProductContent() {
 
                             <div>
                                 <label className="block text-xs font-bold tracking-widest uppercase mb-2 text-gray-500">
+                                    Initial Stock
+                                </label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={stock}
+                                    onChange={(e) => setStock(e.target.value)}
+                                    placeholder="e.g. 100"
+                                    className="w-full text-xl font-medium border-b border-gray-200 focus:border-black outline-none py-2"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold tracking-widest uppercase mb-2 text-gray-500">
                                     Description
                                 </label>
                                 <textarea
@@ -184,7 +231,7 @@ function CreateProductContent() {
 
                             <div className="pt-6 border-t border-gray-100">
                                 <p className="text-xs text-gray-400">
-                                    * Images will be uploaded to Shopify Files and attached to the new product.
+                                    * Images will be uploaded to Kevara's storage (Cloudflare R2) and optimized.
                                 </p>
                             </div>
                         </div>

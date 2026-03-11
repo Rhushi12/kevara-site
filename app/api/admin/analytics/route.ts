@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/firebase-admin";
 
@@ -7,11 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
     try {
-        // Authenticate user - in a real app, verify session here
-        // For now, we assume middleware/layout handles protection access or we add a check
-
-        // 1. Fetch User Signups (last 50 for trend or all for count depending on need)
-        // We'll fetch last 100 to get a good distribution for the last 7 days chart
+        // 1. Fetch User Signups (last 100 for trend)
         const usersSnapshot = await db.collection("users")
             .orderBy("createdAt", "desc")
             .limit(100)
@@ -19,7 +14,6 @@ export async function GET(req: NextRequest) {
 
         const usersData = usersSnapshot.docs.map(doc => {
             const data = doc.data();
-            // Convert timestamps to ISO strings for serialization
             if (data.createdAt && typeof data.createdAt.toDate === 'function') {
                 data.createdAt = data.createdAt.toDate().toISOString();
             } else if (data.createdAt instanceof Date) {
@@ -28,27 +22,32 @@ export async function GET(req: NextRequest) {
             return data;
         });
 
-        // 2. Fetch Page Views for last 7 days
+        // 2. Fetch Page Views for the last 7 days
+        const pageViews: Record<string, number> = {};
         const last7Days = [...Array(7)].map((_, i) => {
             const d = new Date();
             d.setDate(d.getDate() - (6 - i));
-            return d.toISOString().split('T')[0];
+            const dateStr = d.toISOString().split('T')[0];
+            pageViews[dateStr] = 0;
+            return dateStr;
         });
 
-        const viewsPromises = last7Days.map(async (date) => {
-            const docRef = db.collection("page_views").doc(date);
-            const docSnap = await docRef.get();
-            if (docSnap.exists) {
-                return { date, count: docSnap.data()?.count || 0 };
-            }
-            return { date, count: 0 };
-        });
-
-        const viewsData = await Promise.all(viewsPromises);
+        try {
+            const viewsSnapshot = await db.collection('page_views').get();
+            viewsSnapshot.docs.forEach(doc => {
+                const dateStr = doc.id; // doc IDs are like "2026-03-11"
+                const count = doc.data()?.count || 0;
+                if (pageViews[dateStr] !== undefined) {
+                    pageViews[dateStr] = count;
+                }
+            });
+        } catch (e) {
+            console.error("[Analytics] Failed to fetch page views:", e);
+        }
 
         return NextResponse.json({
             users: usersData,
-            views: viewsData
+            pageViews,
         });
 
     } catch (error: any) {

@@ -394,16 +394,20 @@ export default function Navbar() {
                             <>
                                 {/* Desktop: Detailed Menu */}
                                 <div className="hidden lg:flex items-center gap-4">
-                                    <span className="text-sm text-white/90">Hi, {user.displayName?.split(' ')[0] || 'User'}</span>
+                                    <Link href="/account" className="text-sm font-medium hover:text-white/80 transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-white/20 rounded px-1">
+                                        <User size={16} />
+                                        <span>Hi, {user.displayName?.split(' ')[0] || 'User'}</span>
+                                    </Link>
+
                                     {isAdmin && (
-                                        <div className="flex items-center gap-3">
-                                            <Link href="/admin" className="text-sm font-medium text-white hover:underline">
-                                                Admin
+                                        <div className="flex items-center gap-3 border-l border-white/20 pl-4 ml-1">
+                                            <Link href="/admin" className="text-[11px] font-bold tracking-widest uppercase bg-white/10 px-2 py-1 rounded text-white hover:bg-white hover:text-[#0E4D55] transition-colors">
+                                                Admin Dashboard
                                             </Link>
                                             <button
                                                 onClick={() => setIsEditMode(!isEditMode)}
-                                                className={`text-xs px-2 py-1 rounded border transition-colors ${isEditMode
-                                                    ? "bg-white text-[#006D77] border-white"
+                                                className={`text-[11px] font-bold tracking-widest uppercase px-2 py-1 rounded border transition-colors ${isEditMode
+                                                    ? "bg-white text-[#0E4D55] border-white"
                                                     : "bg-transparent text-white/80 border-white/50 hover:border-white hover:text-white"
                                                     }`}
                                             >
@@ -411,9 +415,6 @@ export default function Navbar() {
                                             </button>
                                         </div>
                                     )}
-                                    <button onClick={() => logout()} className="text-sm font-medium hover:text-white/80 transition-colors">
-                                        Logout
-                                    </button>
                                 </div>
                                 {/* Mobile: User Icon (Access Account) */}
                                 <Link href="/account" className="block lg:hidden text-white hover:text-white/80 transition-colors">

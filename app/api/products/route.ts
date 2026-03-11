@@ -54,6 +54,7 @@ export async function PUT(request: Request) {
         }
 
         const { updateCustomProduct } = await import('@/lib/custom-products');
+        const { syncMetaobjectToShopifyProduct } = await import('@/lib/shopify-product-sync');
 
         let results: PromiseSettledResult<any>[] = [];
 
@@ -61,7 +62,9 @@ export async function PUT(request: Request) {
         if (items && Array.isArray(items)) {
             const itemResults = await Promise.allSettled(items.map(async (item: any) => {
                 if (!item.handle) throw new Error("Item handle missing");
-                return updateCustomProduct(item);
+                const res = await updateCustomProduct(item);
+                await syncMetaobjectToShopifyProduct(item.handle);
+                return res;
             }));
             results = [...results, ...itemResults];
         }
@@ -76,9 +79,11 @@ export async function PUT(request: Request) {
             if (colors) commonUpdateData.colors = colors;
 
             if (Object.keys(commonUpdateData).length > 0) {
-                const idResults = await Promise.allSettled(ids.map(id =>
-                    updateCustomProduct({ handle: id, ...commonUpdateData })
-                ));
+                const idResults = await Promise.allSettled(ids.map(async (id) => {
+                    const res = await updateCustomProduct({ handle: id, ...commonUpdateData });
+                    await syncMetaobjectToShopifyProduct(id);
+                    return res;
+                }));
                 results = [...results, ...idResults];
             }
         }

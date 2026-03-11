@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createCustomProduct } from '@/lib/custom-products';
 import { requireAdmin } from '@/lib/auth';
 
@@ -14,6 +14,7 @@ interface CreateProductRequest {
     videoUrl?: string;       // R2 public URL for video
     colors?: { name: string; hex: string }[];
     sizes?: string[];
+    stock?: number;
 }
 
 export async function POST(request: NextRequest) {
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
         if (authError) return authError;
 
         const body: CreateProductRequest = await request.json();
-        const { title, price, description, imageUrls, videoUrl, colors, sizes } = body;
+        const { title, price, description, imageUrls, videoUrl, colors, sizes, stock } = body;
 
         if (!title || !price) {
             return NextResponse.json({ error: "Title and Price are required" }, { status: 400 });
@@ -45,6 +46,7 @@ export async function POST(request: NextRequest) {
             videoUrl,           // Pass R2 video URL
             colors,
             sizes,
+            stock,
             status: "ACTIVE"
         });
 

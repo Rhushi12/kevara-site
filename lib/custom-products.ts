@@ -1,4 +1,4 @@
-﻿import { pollForFileUrl, shopifyFetch } from './shopify-admin';
+import { pollForFileUrl, shopifyFetch } from './shopify-admin';
 
 const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || process.env.SHOPIFY_STORE_DOMAIN;
 const accessToken = process.env.SHOPIFY_ADMIN_TOKEN;
@@ -68,6 +68,7 @@ export interface CustomProductInput {
   colors?: Array<{ name: string; hex: string }>;
   sizes?: string[];
   status?: string;
+  stock?: number;
 }
 
 // Helper to bulk resolve GIDs to URLs
@@ -177,6 +178,14 @@ export async function createCustomProduct(data: CustomProductInput) {
     fields.push({
       key: "sizes",
       value: JSON.stringify(data.sizes)
+    });
+  }
+
+  // Add stock if provided
+  if (data.stock !== undefined) {
+    fields.push({
+      key: "stock",
+      value: String(data.stock)
     });
   }
 
@@ -440,10 +449,9 @@ function transformMetaobjectToProduct(metaobject: any) {
       colors,
       sizes,
       relatedProducts,
-      // R2 video URLs are stored as plain text in fields.video
-      // Shopify references are resolved to fields.videoUrl  
       video: (fields.video && fields.video.startsWith('http')) ? fields.video : (fields.videoUrl || null),
-      status: fields.status
+      status: fields.status,
+      stock: fields.stock ? parseInt(fields.stock) : 0
     },
     // Attach internal params for getCustomProducts to use if needed
     _params: {
@@ -479,6 +487,7 @@ export interface UpdateCustomProductInput {
   sizes?: string[];
   status?: string;
   imageUrls?: string[]; // Direct R2 URLs for product images
+  stock?: number; // Inventory stock count
 }
 
 export async function updateCustomProduct(data: UpdateCustomProductInput) {
@@ -509,6 +518,9 @@ export async function updateCustomProduct(data: UpdateCustomProductInput) {
   }
   if (data.imageUrls !== undefined) {
     fields.push({ key: "image_urls", value: JSON.stringify(data.imageUrls) });
+  }
+  if (data.stock !== undefined) {
+    fields.push({ key: "stock", value: String(data.stock) });
   }
 
   if (fields.length === 0) {

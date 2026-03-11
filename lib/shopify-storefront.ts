@@ -44,8 +44,8 @@ export async function storefrontFetch({ query, variables }: ShopifyFetchParams) 
         const json = await response.json();
 
         if (json.errors) {
-            console.error('Storefront GraphQL Errors:', json.errors);
-            throw new Error('Storefront API GraphQL execution failed.');
+            console.error('Storefront GraphQL Errors:', JSON.stringify(json.errors, null, 2));
+            throw new Error('Storefront API error: ' + json.errors.map((e: any) => e.message).join(', '));
         }
 
         return { status: response.status, body: json };

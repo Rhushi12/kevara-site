@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { Heart, Save, X, Plus, Trash2, Palette, Search } from "lucide-react";
@@ -23,6 +23,7 @@ export interface EditableProductInfoProps {
     onImagesChange?: (imageUrls: string[]) => void;
     onEditModeChange?: (isEditMode: boolean) => void;
     siblingColors?: { name: string; hex: string; url: string; isCurrent?: boolean; image?: string }[];
+    stock?: number;
 }
 
 const ALL_SIZES = ["24", "26", "28", "30", "32", "34", "36", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"];
@@ -55,8 +56,9 @@ export default function EditableProductInfo({
     onImagesChange,
     onEditModeChange,
     siblingColors,
+    stock = undefined,
 }: EditableProductInfoProps) {
-    const { isAdmin } = useAuth();
+    const { isAdmin, user } = useAuth();
     const [selectedColor, setSelectedColor] = useState(colors[0]?.name || "");
     const [selectedSize, setSelectedSize] = useState(sizes[0] || "");
     const { openSizeGuide } = useSizeGuideStore();
@@ -518,7 +520,7 @@ export default function EditableProductInfo({
                     <div className="flex flex-wrap gap-3">
                         {siblingColors.map((color, index) => (
                             <a
-                                key={`${color.hex}-${color.name || index}`}
+                                key={`${color.hex}-${color.name}-${index}`}
                                 href={color.url}
                                 title={color.name}
                                 className={`w-8 h-8 rounded-full border-2 transition-all relative flex items-center justify-center ${color.isCurrent
@@ -615,10 +617,16 @@ export default function EditableProductInfo({
             {/* E-commerce Actions */}
             {!isEditMode && (
                 <div className="pt-4 flex flex-col gap-3">
-                    <LiquidButton
-                        className="w-full h-12 bg-[#0E4D55] text-white hover:bg-[#0a383f] rounded-lg font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={!selectedSize}
-                        onClick={() => {
+                    {stock === 0 ? (
+                        <div className="w-full h-12 bg-gray-200 text-gray-500 rounded-lg flex items-center justify-center font-medium text-sm cursor-not-allowed">
+                            Out of Stock
+                        </div>
+                    ) : (
+                        <>
+                            <LiquidButton
+                                className="w-full h-12 bg-[#0E4D55] text-white hover:bg-[#0a383f] rounded-lg font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={!selectedSize}
+                                onClick={() => {
                             if (!selectedSize) return;
                             // For now, placeholder add to cart until shadow variants exist
                             // In Part 1, we will map this to the real Shopify Variant ID
@@ -651,22 +659,27 @@ export default function EditableProductInfo({
                             const newSubtotal = newItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0).toFixed(2);
                             setCart(newItems, newSubtotal.toString(), null);
 
-                            openCart();
-                        }}
-                    >
-                        <span className="font-medium">{!selectedSize ? 'Select a Size' : 'Add to Cart'}</span>
-                    </LiquidButton>
+                                    openCart();
+                                }}
+                            >
+                                <span className="font-medium">{!selectedSize ? 'Select a Size' : 'Add to Cart'}</span>
+                            </LiquidButton>
 
-                    <button
-                        disabled={!selectedSize}
-                        className="w-full h-12 bg-white text-[#0E4D55] border border-[#0E4D55] hover:bg-gray-50 rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        onClick={() => {
-                            // Similar placeholder logic for Buy Now (would usually go straight to checkout URL)
-                            openCart();
-                        }}
-                    >
-                        Buy it Now
-                    </button>
+                            <button
+                                disabled={!selectedSize}
+                                className="w-full h-12 bg-white text-[#0E4D55] border border-[#0E4D55] hover:bg-gray-50 rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={() => {
+                                    if (!user) {
+                                        window.location.href = "/login?redirect=checkout";
+                                        return;
+                                    }
+                                    openCart();
+                                }}
+                            >
+                                Buy it Now
+                            </button>
+                        </>
+                    )}
 
                     <button
                         onClick={() => setShowInquiryModal(true)}

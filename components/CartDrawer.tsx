@@ -7,6 +7,7 @@ import Image from "next/image";
 import LiquidButton from "./ui/LiquidButton";
 import { motion, AnimatePresence } from "framer-motion";
 import { parseProductTitle } from '@/lib/productUtils';
+import { useAuth } from '@/context/AuthContext';
 
 export default function CartDrawer() {
     const { isCartOpen, closeCart, items, subtotal, checkoutUrl, cartCount, updateItemQuantity, updateItemVariant, removeItem } = useCartStore();
@@ -19,6 +20,63 @@ export default function CartDrawer() {
     const [isCouponOpen, setIsCouponOpen] = useState(false);
     const [couponCode, setCouponCode] = useState("");
     const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+
+    // Auth — for auto-applying welcome discount and checking auth status
+    const { isFirstPurchase, user } = useAuth();
+
+    // Auto-apply WELCOME10 for first-time buyers
+    useEffect(() => {
+        if (isFirstPurchase && !appliedCoupon && isCartOpen) {
+            setCouponCode("WELCOME10");
+            setAppliedCoupon("WELCOME10");
+            setIsCouponOpen(true);
+        }
+    }, [isFirstPurchase, isCartOpen]);
+
+    // Checkout State
+    const [isCheckingOut, setIsCheckingOut] = useState(false);
+
+    const handleCheckout = async () => {
+        if (items.length === 0) return;
+
+        // AUTHENTICATION CHECK: Prevent guest checkout
+        if (!user) {
+            closeCart();
+            window.location.href = "/login?redirect=checkout";
+            return;
+        }
+
+        setIsCheckingOut(true);
+
+        try {
+            const checkoutItems = items.map(item => ({
+                merchandiseId: item.merchandiseId || item.id,
+                quantity: item.quantity || 1,
+                handle: item.handle,
+                variantTitle: item.variantTitle
+            }));
+
+            const response = await fetch('/api/checkout/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items: checkoutItems, discountCode: appliedCoupon || undefined })
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.checkoutUrl) {
+                window.location.href = data.checkoutUrl;
+            } else {
+                console.error("Checkout failed:", data);
+                alert(data.error || "Sorry, there was an issue creating the checkout. Please try again.");
+                setIsCheckingOut(false);
+            }
+        } catch (error) {
+            console.error("Checkout exception:", error);
+            alert("A network error occurred. Please try again.");
+            setIsCheckingOut(false);
+        }
+    };
 
     useEffect(() => {
         setMounted(true);
@@ -350,7 +408,6 @@ export default function CartDrawer() {
                                                             onClick={() => {
                                                                 setAppliedCoupon(null);
                                                                 setCouponCode("");
-                                                                // Future: Trigger Storefront mutation to remove discount
                                                             }}
                                                             className="px-4 py-2 bg-red-50 text-red-600 border border-red-100 rounded-md text-sm font-medium hover:bg-red-100 transition-colors"
                                                         >
@@ -360,7 +417,6 @@ export default function CartDrawer() {
                                                         <button
                                                             onClick={() => {
                                                                 if (!couponCode) return;
-                                                                // Placeholder: Real validation happens in Shopify GraphQL Phase
                                                                 setAppliedCoupon(couponCode);
                                                             }}
                                                             className="px-4 py-2 bg-slate-900 text-white rounded-md text-sm font-medium hover:bg-slate-800 transition-colors disabled:opacity-50"
@@ -372,7 +428,7 @@ export default function CartDrawer() {
                                                 </div>
                                                 {appliedCoupon && (
                                                     <p className="text-xs text-[#006D77] font-medium mt-2 flex items-center gap-1">
-                                                        ✓ Code applied successfully
+                                                        ✓ Code &quot;{appliedCoupon}&quot; will be applied at checkout
                                                     </p>
                                                 )}
                                             </motion.div>
@@ -396,14 +452,14 @@ export default function CartDrawer() {
                                 </div>
 
                                 <LiquidButton
-                                    onClick={() => {
-                                        if (checkoutUrl) window.location.href = checkoutUrl;
-                                    }}
+                                    onClick={handleCheckout}
                                     className="w-full py-4 bg-[#0E4D55] text-white hover:bg-[#0A3A40] shadow-lg shadow-[#0E4D55]/20 group"
-                                    disabled={!checkoutUrl}
+                                    disabled={isCheckingOut || items.length === 0}
                                 >
                                     <div className="flex items-center justify-center gap-2">
-                                        <span className="font-semibold tracking-wide">Proceed to Checkout</span>
+                                        <span className="font-semibold tracking-wide">
+                                            {isCheckingOut ? "Creating Checkout..." : "Proceed to Checkout"}
+                                        </span>
                                         <motion.div
                                             variants={{
                                                 idle: { x: 0 },

@@ -9,6 +9,7 @@ export async function GET() {
         let productCount = 0;
         let userCount = 0;
         let todayViews = 0;
+        let totalViews = 0;
 
         // 1. Fetch Products
         try {
@@ -26,13 +27,17 @@ export async function GET() {
             console.error("[Admin Stats] Failed to fetch users from Firebase:", e);
         }
 
-        // 3. Fetch Today's Page Views from Firebase
+        // 3. Fetch Today's Page Views + Total Views from Firebase
         try {
             const today = new Date().toISOString().split('T')[0];
-            const viewDoc = await db.collection('page_views').doc(today).get();
-            if (viewDoc.exists) {
-                todayViews = viewDoc.data()?.count || 0;
-            }
+            const viewsSnapshot = await db.collection('page_views').get();
+            viewsSnapshot.docs.forEach(doc => {
+                const count = doc.data()?.count || 0;
+                totalViews += count;
+                if (doc.id === today) {
+                    todayViews = count;
+                }
+            });
         } catch (e: any) {
             console.error("[Admin Stats] Failed to fetch page views:", e);
         }
@@ -40,11 +45,11 @@ export async function GET() {
         return NextResponse.json({
             productCount,
             userCount,
-            todayViews
+            todayViews,
+            totalViews
         });
     } catch (error) {
         console.error("Error fetching admin stats:", error);
-        return NextResponse.json({ productCount: 0, userCount: 0, todayViews: 0 }, { status: 500 });
+        return NextResponse.json({ productCount: 0, userCount: 0, todayViews: 0, totalViews: 0 }, { status: 500 });
     }
 }
-
