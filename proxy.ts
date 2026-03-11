@@ -63,7 +63,7 @@ function checkRateLimit(ip: string): boolean {
     return true;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const hostname = request.headers.get("host") || request.nextUrl.hostname;
     const origin = request.headers.get("origin") || "";
