@@ -44,32 +44,46 @@ async function retryBackfill() {
         page++;
     } while (cursor);
 
-    // 2. Check which ones already have a published shadow product
-    console.log(`\nChecking ${allHandles.length} handles against existing Shopify products...\n`);
-    const needsSync: string[] = [];
-
-    for (const handle of allHandles) {
-        const checkQuery = `
-            query checkProduct($handle: String!) {
-                productByHandle(handle: $handle) {
-                    id
-                    status
-                    variants(first: 1) {
-                        edges { node { id } }
-                    }
+    // 2. Fetch all existing shadow products in one go to cross-reference
+    console.log(`\nChecking against existing Shopify products in bulk...\n`);
+    const existingProducts = new Set<string>();
+    
+    let prodCursor: string | null = null;
+    do {
+        const prodQuery = `
+          query GetExistingProducts($cursor: String) {
+            products(first: 250, after: $cursor) {
+              edges {
+                node {
+                  handle
+                  status
+                  variants(first: 1) {
+                    edges { node { id } }
+                  }
                 }
+              }
+              pageInfo {
+                hasNextPage
+                endCursor
+              }
             }
+          }
         `;
-        const res = await shopifyFetch(checkQuery, { handle });
-        const product = res.productByHandle;
-
-        // Skip if product exists, is ACTIVE, and has at least 1 variant
-        if (product?.id && product?.status === "ACTIVE" && product?.variants?.edges?.length > 0) {
-            continue; // Already synced
+        const res = await shopifyFetch(prodQuery, { cursor: prodCursor });
+        const edges = res.products?.edges || [];
+        
+        for (const edge of edges) {
+            const p = edge.node;
+            if (p.status === "ACTIVE" && p.variants.edges.length > 0) {
+                existingProducts.add(p.handle);
+            }
         }
+        
+        const pageInfo = res.products?.pageInfo;
+        prodCursor = pageInfo?.hasNextPage ? pageInfo.endCursor : null;
+    } while (prodCursor);
 
-        needsSync.push(handle);
-    }
+    const needsSync: string[] = allHandles.filter(h => !existingProducts.has(h));
 
     console.log(`Found ${needsSync.length} products needing sync (out of ${allHandles.length} total)\n`);
 

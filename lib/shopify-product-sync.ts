@@ -148,7 +148,8 @@ export async function syncMetaobjectToShopifyProduct(customProductHandle: string
 
         if (sizeList.length === 0 && colorList.length === 0) {
             // No options — single default variant
-            variantsInput.push({ price, inventoryPolicy: "DENY" });
+            productOptionsInput.push({ name: "Title", values: [{ name: "Default Title" }] });
+            variantsInput.push({ price, optionValues: [{ optionName: "Title", name: "Default Title" }], inventoryPolicy: "DENY" });
         } else {
             // Ensure at least one value per dimension for the loop
             if (sizeList.length === 0) sizeList = ["Default Size"];
@@ -358,6 +359,7 @@ export async function syncProductInventory(productId: string, stock: number) {
             input: {
                 name: "available",
                 reason: "correction",
+                ignoreCompareQuantity: true,
                 quantities
             }
         });
