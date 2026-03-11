@@ -129,9 +129,20 @@ export async function POST(req: Request) {
         console.log("[Checkout] ✅ Checkout URL:", cartData.cart.checkoutUrl);
         console.log("[Checkout] Discount codes:", appliedDiscounts);
 
+        // Map the checkout URL to the .myshopify.com domain so Vercel doesn't intercept it and 404
+        let finalCheckoutUrl = cartData.cart.checkoutUrl;
+        const shopifyDomain = process.env.SHOPIFY_STORE_DOMAIN || "bkbkiz-7h.myshopify.com";
+        try {
+            const urlObj = new URL(finalCheckoutUrl);
+            urlObj.hostname = shopifyDomain;
+            finalCheckoutUrl = urlObj.toString();
+        } catch (e) {
+            console.error("[Checkout] Failed to replace checkout URL domain:", e);
+        }
+
         return NextResponse.json({
             success: true,
-            checkoutUrl: cartData.cart.checkoutUrl,
+            checkoutUrl: finalCheckoutUrl,
             discountApplied,
             discountCodes: appliedDiscounts
         });
