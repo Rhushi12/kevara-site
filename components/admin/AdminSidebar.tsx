@@ -1,5 +1,5 @@
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, Users, UserPlus, FileText, Share2, Package, Settings, LogOut, Warehouse } from "lucide-react";
+import { LayoutDashboard, Users, UserPlus, FileText, Share2, Package, Settings, LogOut, Warehouse, ShoppingCart } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
 
@@ -9,6 +9,7 @@ export default function AdminSidebar({ activeTab, setActiveTab }: { activeTab: s
 
     const menuItems = [
         { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { id: "orders", label: "Orders", icon: ShoppingCart },
         { id: "leads", label: "Users & Accounts", icon: Users },
         { id: "wholesale", label: "Wholesale Inquiries", icon: UserPlus },
         { id: "cms", label: "Content Editor", icon: FileText },

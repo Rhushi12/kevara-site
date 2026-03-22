@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createCustomProduct } from '@/lib/custom-products';
 import { requireAdmin } from '@/lib/auth';
+import { syncMetaobjectToShopifyProduct } from '@/lib/shopify-product-sync';
 
 // Route segment config for App Router
 export const maxDuration = 60;
@@ -54,6 +55,10 @@ export async function POST(request: NextRequest) {
         if (!product) {
             throw new Error("Product creation failed - no product returned");
         }
+
+        // Force a sync to create the Shadow Product so checkout works immediately
+        console.log(`[CreateAPI] Triggering shadow product sync for newly created: ${product.handle}`);
+        await syncMetaobjectToShopifyProduct(product.handle);
 
         return NextResponse.json({ success: true, product });
     } catch (error: any) {

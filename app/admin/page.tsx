@@ -17,6 +17,7 @@ import AdminManager from "@/components/admin/AdminManager";
 import SeoSettings from "@/components/admin/SeoSettings";
 import WholesaleLeadsTable from "@/components/admin/WholesaleLeadsTable";
 import ProductsTable from "@/components/admin/ProductsTable";
+import OrdersTable from "@/components/admin/OrdersTable";
 import { db } from "@/lib/firebase";
 import { collection, writeBatch, doc } from "firebase/firestore";
 import { MOCK_SHOPIFY_PRODUCTS } from "@/lib/mockData";
@@ -112,6 +113,16 @@ export default function AdminPage() {
                                 <QuickActions onNavigate={setActiveTab} />
                             </div>
                         </div>
+                    </div>
+                );
+            case "orders":
+                return (
+                    <div className="space-y-8 animate-in fade-in duration-500 slide-in-from-bottom-2">
+                        <div className="pb-4 border-b border-gray-200/60">
+                            <h1 className="text-3xl font-lora font-medium text-slate-900 tracking-tight">Order Management</h1>
+                            <p className="text-slate-500 text-sm mt-1">Track, manage, and fulfill customer orders.</p>
+                        </div>
+                        <OrdersTable />
                     </div>
                 );
             case "wholesale":
