@@ -237,6 +237,17 @@ export default function AccountPage() {
                         {/* Orders Tab */}
                         {activeTab === 'orders' && (
                             <div className="space-y-4">
+                                {orders.length > 0 && (
+                                    <div className="flex justify-end">
+                                        <a
+                                            href="/track"
+                                            className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-[#0E4D55] hover:text-[#0A3A40] transition-colors"
+                                        >
+                                            <Truck size={13} />
+                                            Track Your Order
+                                        </a>
+                                    </div>
+                                )}
                                 {loadingOrders ? (
                                     <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
                                         <div className="inline-block w-8 h-8 border-2 border-[#0E4D55] border-t-transparent rounded-full animate-spin" />
