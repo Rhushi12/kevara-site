@@ -88,6 +88,11 @@ export default function OrdersTable() {
     const [editTrackingUrl, setEditTrackingUrl] = useState("");
     const [saving, setSaving] = useState(false);
 
+    // Delhivery fulfillment state
+    const [fulfilling, setFulfilling] = useState<string | null>(null);
+    const [fulfillError, setFulfillError] = useState("");
+    const [fulfillSuccess, setFulfillSuccess] = useState("");
+
     const fetchOrders = async () => {
         setLoading(true);
         try {
@@ -135,6 +140,31 @@ export default function OrdersTable() {
         setEditCourier(order.courier || "");
         setEditAwb(order.awbNumber || "");
         setEditTrackingUrl(order.trackingUrl || "");
+    };
+
+    const fulfillWithDelhivery = async (orderId: string) => {
+        if (!confirm("Create a Delhivery shipment for this order? An AWB will be generated and the order marked as Shipped.")) return;
+        setFulfilling(orderId);
+        setFulfillError("");
+        setFulfillSuccess("");
+        try {
+            const res = await fetch("/api/admin/fulfill", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ orderId, weight: 500 }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setFulfillSuccess(`✅ AWB ${data.waybill} generated! Order marked as Shipped.`);
+                await fetchOrders();
+            } else {
+                setFulfillError(data.error || "Failed to create shipment");
+            }
+        } catch (err: any) {
+            setFulfillError(err.message || "Network error");
+        } finally {
+            setFulfilling(null);
+        }
     };
 
     // Filter logic
@@ -378,6 +408,22 @@ export default function OrdersTable() {
                                                 ))}
                                             </div>
                                         </div>
+
+                                        {/* Fulfill with Delhivery */}
+                                        {(!order.awbNumber && (!order.status || order.status === "unfulfilled")) && (
+                                            <div className="space-y-2">
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); fulfillWithDelhivery(order.id); }}
+                                                    disabled={fulfilling === order.id}
+                                                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors uppercase tracking-wider"
+                                                >
+                                                    <Truck size={13} />
+                                                    {fulfilling === order.id ? "Creating Shipment..." : "Fulfill with Delhivery"}
+                                                </button>
+                                                {fulfillError && <p className="text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">{fulfillError}</p>}
+                                                {fulfillSuccess && <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">{fulfillSuccess}</p>}
+                                            </div>
+                                        )}
 
                                         {/* Edit Controls */}
                                         {!isEditing ? (
