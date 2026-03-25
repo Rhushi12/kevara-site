@@ -1,5 +1,10 @@
 import type { NextConfig } from "next";
 
+// Bundle analyzer: run with ANALYZE=true npm run build to generate treemaps
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const nextConfig: NextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
@@ -90,4 +95,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

@@ -1,38 +1,42 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { useAuth } from "@/context/AuthContext";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import HeroSlider from "@/components/HeroSlider";
-import WomenShopEssentials from "@/components/WomenShopEssentials";
-import LookbookFeature from "@/components/LookbookFeature";
-import FeaturedProduct from "@/components/FeaturedProduct";
-import CollectionGrid from "@/components/CollectionGrid";
-import PremiumPreloader from "@/components/PremiumPreloader";
-import UnderConstruction from "@/components/UnderConstruction";
-import AdminPageBuilder from "@/components/admin/AdminPageBuilder";
-import ShopByOccasion from "@/components/ShopByOccasion";
-import CleanGrid from "@/components/CleanGrid";
-import ShopCategory from "@/components/ShopCategory";
-import ScrollFadeBanner from "@/components/ScrollFadeBanner";
-import PromoWindows from "@/components/PromoWindows";
-import EssentialsHero from "@/components/EssentialsHero";
-import FeaturedIn from "@/components/FeaturedIn";
-
-import SalesSplit from "@/components/SalesSplit";
-import EditorialSection from "@/components/EditorialSection";
-import VideoPromo from "@/components/VideoPromo";
-import FabricFeature from "@/components/FabricFeature";
-import Testimonials from "@/components/Testimonials";
-import Features from "@/components/Features";
-import AboutUsSection from "@/components/AboutUsSection";
 import { PageContent, PageSection } from "@/types/page-editor";
 import { Trash2 } from "lucide-react";
-import Template2Renderer from "@/components/renderers/Template2Renderer";
-import Template3Renderer from "@/components/renderers/Template3Renderer";
 import { useToast } from "@/context/ToastContext";
+
+// ─── CRITICAL (above-the-fold): loaded eagerly ───
+import Navbar from "@/components/Navbar";
+import HeroSlider from "@/components/HeroSlider";
+import PremiumPreloader from "@/components/PremiumPreloader";
+import UnderConstruction from "@/components/UnderConstruction";
+import LazySection from "@/components/LazySection";
+
+// ─── DEFERRED (below-the-fold): loaded lazily via next/dynamic ───
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
+const WomenShopEssentials = dynamic(() => import("@/components/WomenShopEssentials"), { ssr: false });
+const LookbookFeature = dynamic(() => import("@/components/LookbookFeature"), { ssr: false });
+const FeaturedProduct = dynamic(() => import("@/components/FeaturedProduct"), { ssr: false });
+const CollectionGrid = dynamic(() => import("@/components/CollectionGrid"), { ssr: false });
+const AdminPageBuilder = dynamic(() => import("@/components/admin/AdminPageBuilder"), { ssr: false });
+const ShopByOccasion = dynamic(() => import("@/components/ShopByOccasion"), { ssr: false });
+const CleanGrid = dynamic(() => import("@/components/CleanGrid"), { ssr: false });
+const ShopCategory = dynamic(() => import("@/components/ShopCategory"), { ssr: false });
+const ScrollFadeBanner = dynamic(() => import("@/components/ScrollFadeBanner"), { ssr: false });
+const PromoWindows = dynamic(() => import("@/components/PromoWindows"), { ssr: false });
+const EssentialsHero = dynamic(() => import("@/components/EssentialsHero"), { ssr: false });
+const FeaturedIn = dynamic(() => import("@/components/FeaturedIn"), { ssr: false });
+const SalesSplit = dynamic(() => import("@/components/SalesSplit"), { ssr: false });
+const VideoPromo = dynamic(() => import("@/components/VideoPromo"), { ssr: false });
+const FabricFeature = dynamic(() => import("@/components/FabricFeature"), { ssr: false });
+const Testimonials = dynamic(() => import("@/components/Testimonials"), { ssr: false });
+const Features = dynamic(() => import("@/components/Features"), { ssr: false });
+const AboutUsSection = dynamic(() => import("@/components/AboutUsSection"), { ssr: false });
+const Template2Renderer = dynamic(() => import("@/components/renderers/Template2Renderer"), { ssr: false });
+const Template3Renderer = dynamic(() => import("@/components/renderers/Template3Renderer"), { ssr: false });
 
 interface PageRendererProps {
     slug: string;
@@ -238,8 +242,9 @@ export default function PageRenderer({ slug, initialContent }: PageRendererProps
                 </div>
             )}
 
-            {/* Dynamic Section Rendering */}
-            {content.sections.map((section) => {
+            {/* Dynamic Section Rendering — first 3 sections render instantly, the rest lazy-load on scroll */}
+            {content.sections.map((section, index) => {
+                const sectionContent = (() => {
                 switch (section.type) {
                     case "hero_slider":
                         return (
@@ -387,9 +392,26 @@ export default function PageRenderer({ slug, initialContent }: PageRendererProps
                     default:
                         return null;
                 }
+                })();
+
+                if (!sectionContent) return null;
+
+                // First 3 sections render immediately (above-the-fold)
+                // Remaining sections are wrapped with LazySection for viewport-triggered loading
+                if (index < 3) {
+                    return <div key={section.id}>{sectionContent}</div>;
+                }
+
+                return (
+                    <LazySection key={section.id} minHeight="300px">
+                        {sectionContent}
+                    </LazySection>
+                );
             })}
 
-            <Footer />
+            <LazySection minHeight="200px">
+                <Footer />
+            </LazySection>
         </main>
     );
 }

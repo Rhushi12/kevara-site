@@ -50,7 +50,7 @@ export async function POST(req: Request) {
                 liveTracking = trackingResult;
 
                 // Auto-update the order status in Firebase based on Delhivery's status
-                const delhiveryStatus = trackingResult.status?.toLowerCase();
+                const delhiveryStatus = trackingResult.data?.status?.toLowerCase();
                 let mappedStatus = order.status;
 
                 if (delhiveryStatus === 'delivered') {

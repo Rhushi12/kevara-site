@@ -3,12 +3,9 @@ import { Figtree, Lora, Prata } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import QuickViewPanel from "@/components/QuickViewPanel";
-import SearchPanel from "@/components/SearchPanel";
-import ToastNotification from "@/components/admin/ToastNotification";
 import FirstVisitHandler from "@/components/FirstVisitHandler";
 import NextTopLoader from "nextjs-toploader";
-import CartDrawer from "@/components/CartDrawer";
+import ClientOverlays from "@/components/ClientOverlays";
 
 const figtree = Figtree({
   variable: "--font-figtree",
@@ -117,9 +114,6 @@ import { ToastProvider } from "@/context/ToastContext";
 import OfferSidebar from "@/components/OfferSidebar";
 import AdminOfferButton from "@/components/admin/AdminOfferButton";
 import ToastContainer from "@/components/ToastContainer";
-import GlobalWholesaleInquiryModal from "@/components/GlobalWholesaleInquiryModal";
-import WholesaleFloatingButton from "@/components/WholesaleFloatingButton";
-import PageViewsTracker from "@/components/PageViewsTracker";
 
 export default async function RootLayout({
   children,
@@ -185,20 +179,13 @@ export default async function RootLayout({
               <div className="relative w-full overflow-x-hidden min-h-screen flex flex-col">
                 {children}
               </div>
-              <CartDrawer />
-              <QuickViewPanel />
-              <SearchPanel />
-              <ToastNotification />
-              <AdminOfferButton />
-              <WholesaleFloatingButton />
+              <ClientOverlays />
               <ToastContainer />
-              <GlobalWholesaleInquiryModal />
             </OfferProvider>
           </ToastProvider>
         </AuthProvider>
         <Analytics />
         <SpeedInsights />
-        <PageViewsTracker />
       </body>
     </html>
   );
