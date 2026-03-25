@@ -33,8 +33,8 @@ export default function InventoryAlerts() {
     }, []);
 
     if (loading) return (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200/60 h-[300px] flex items-center justify-center animate-pulse">
-            <span className="text-sm font-medium text-slate-400 tracking-widest uppercase">Loading...</span>
+        <div className="bg-white p-6 md:p-8 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 h-[300px] flex items-center justify-center animate-pulse">
+            <span className="text-sm font-medium text-slate-300 tracking-widest uppercase font-figtree">Loading...</span>
         </div>
     );
 
@@ -48,17 +48,17 @@ export default function InventoryAlerts() {
     const allGood = productsNeedingAttention.length === 0;
 
     return (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200/60 transition-shadow hover:shadow-md h-full flex flex-col">
-            <div className="flex items-center justify-between mb-6">
+        <div className="group relative bg-white p-6 md:p-8 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 transition-all duration-300 hover:shadow-[0_8px_30px_-4px_rgba(245,158,11,0.08)] hover:-translate-y-1 h-full flex flex-col">
+            <div className="flex items-center justify-between mb-6 relative z-10">
                 <div>
-                    <h3 className="text-lg font-lora font-medium text-slate-900 tracking-tight">Catalog Health</h3>
-                    <p className="text-xs text-slate-500 font-medium">Products needing attention</p>
+                    <h3 className="text-2xl font-kamundi font-medium text-slate-900 tracking-tight">Catalog Health</h3>
+                    <p className="text-xs text-slate-400 font-medium tracking-wide uppercase mt-1">Products needing attention</p>
                 </div>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${allGood ? 'bg-emerald-50' : 'bg-amber-50'}`}>
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-transform duration-300 group-hover:scale-110 ${allGood ? 'bg-emerald-50 border-emerald-100/50' : 'bg-amber-50 border-amber-100/50'}`}>
                     {allGood ? (
-                        <CheckCircle size={16} className="text-emerald-500" />
+                        <CheckCircle size={20} className="text-emerald-500" />
                     ) : (
-                        <AlertTriangle size={16} className="text-amber-500" />
+                        <AlertTriangle size={20} className="text-amber-500" />
                     )}
                 </div>
             </div>

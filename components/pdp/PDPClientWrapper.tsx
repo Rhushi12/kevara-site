@@ -30,6 +30,8 @@ interface PDPClientWrapperProps {
         sizes: string[];
         siblingColors?: { name: string; hex: string; url: string; isCurrent?: boolean }[];
         stock?: number;
+        variantStock?: Record<string, number>;
+        returnDays?: number;
     };
 }
 
@@ -83,6 +85,8 @@ export default function PDPClientWrapper({ product }: PDPClientWrapperProps) {
                     imageUrls={imageUrls}
                     siblingColors={product.siblingColors}
                     stock={product.stock}
+                    variantStock={product.variantStock}
+                    returnDays={product.returnDays}
                     onImagesChange={handleImagesChange}
                     onEditModeChange={handleEditModeChange}
                 />

@@ -14,6 +14,8 @@ export interface CartItem {
     handle?: string; // product slug/handle
     availableSizes?: string[];
     availableColors?: { name: string; hex: string; handle?: string; image?: string }[];
+    stock?: number;
+    variantStock?: Record<string, number>;
 }
 
 export interface CartState {

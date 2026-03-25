@@ -150,7 +150,9 @@ export default async function ProductPage({ params }: { params: { slug: string }
                     image: productImages[0],
                     colors: colors,
                     sizes: sizes,
-                    handle: product.handle
+                    handle: product.handle,
+                    stock: product.stock,
+                    variantStock: product.variantStock
                 }}
             />
             <SizeGuidePanel />
@@ -175,7 +177,9 @@ export default async function ProductPage({ params }: { params: { slug: string }
                         colors, // Local colors (legacy)
                         sizes,
                         siblingColors, // Cross-product colors
-                        stock: product.stock // For Out of Stock checks
+                        stock: product.stock, // For Out of Stock checks
+                        variantStock: product.variantStock, // Per-size stock
+                        returnDays: product.returnDays ?? 30 // Return window
                     }}
                 />
             </div>

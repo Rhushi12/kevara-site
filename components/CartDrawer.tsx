@@ -300,26 +300,47 @@ export default function CartDrawer() {
                                                                                             transition={{ duration: 0.15, ease: "easeOut" }}
                                                                                             className="absolute top-full left-0 mt-1 w-20 max-h-40 overflow-y-auto scrollbar-hide bg-white border border-gray-100 shadow-xl rounded-lg py-1 z-50"
                                                                                         >
-                                                                                            {item.availableSizes.map((s) => (
-                                                                                                <button
-                                                                                                    key={s}
-                                                                                                    className="w-full text-center px-3 py-2 text-[10px] font-bold tracking-wider text-slate-700 hover:text-slate-900 hover:bg-slate-50 uppercase transition-colors"
-                                                                                                    onClick={() => {
-                                                                                                        const parts = item.variantTitle.split(' / ');
-                                                                                                        const colorPart = parts.length > 1 ? parts[1] : null;
-                                                                                                        const newVariantTitle = colorPart ? `${s} / ${colorPart.trim()}` : s;
-                                                                                                        const newVariantId = `${item.handle || 'prod'}-${s}-${colorPart ? colorPart.trim() : 'default'}`;
+                                                                                            {item.availableSizes.map((s) => {
+                                                                                                const hasVariantStock = item.variantStock && Object.keys(item.variantStock).length > 0;
+                                                                                                const isOutOfStock = hasVariantStock
+                                                                                                    ? (item.variantStock![s] !== undefined && item.variantStock![s] <= 0)
+                                                                                                    : (item.stock !== undefined && item.stock <= 0);
 
-                                                                                                        updateItemVariant(item.id, {
-                                                                                                            variantTitle: newVariantTitle,
-                                                                                                            merchandiseId: newVariantId
-                                                                                                        });
-                                                                                                        setOpenDropdownId(null);
-                                                                                                    }}
-                                                                                                >
-                                                                                                    {s}
-                                                                                                </button>
-                                                                                            ))}
+                                                                                                return (
+                                                                                                    <button
+                                                                                                        key={s}
+                                                                                                        disabled={isOutOfStock}
+                                                                                                        className={`relative w-full text-center px-3 py-2 text-[10px] font-bold tracking-wider uppercase transition-colors overflow-hidden ${
+                                                                                                            isOutOfStock 
+                                                                                                                ? 'text-slate-300 cursor-not-allowed bg-slate-50' 
+                                                                                                                : 'text-slate-700 hover:text-slate-900 hover:bg-slate-50'
+                                                                                                        }`}
+                                                                                                        onClick={() => {
+                                                                                                            if (isOutOfStock) return;
+                                                                                                            const parts = item.variantTitle.split(' / ');
+                                                                                                            const colorPart = parts.length > 1 ? parts[1] : null;
+                                                                                                            const newVariantTitle = colorPart ? `${s} / ${colorPart.trim()}` : s;
+                                                                                                            const newVariantId = `${item.handle || 'prod'}-${s}-${colorPart ? colorPart.trim() : 'default'}`;
+
+                                                                                                            updateItemVariant(item.id, {
+                                                                                                                variantTitle: newVariantTitle,
+                                                                                                                merchandiseId: newVariantId
+                                                                                                            });
+                                                                                                            setOpenDropdownId(null);
+                                                                                                        }}
+                                                                                                    >
+                                                                                                        {s}
+                                                                                                        {isOutOfStock && (
+                                                                                                            <span
+                                                                                                                className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                                                                                                                aria-hidden="true"
+                                                                                                            >
+                                                                                                                <span className="block w-[140%] h-[1.5px] bg-slate-400 rotate-[-15deg]" />
+                                                                                                            </span>
+                                                                                                        )}
+                                                                                                    </button>
+                                                                                                );
+                                                                                            })}
                                                                                         </motion.div>
                                                                                     </>
                                                                                 )}

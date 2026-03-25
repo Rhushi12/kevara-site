@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Copy, MapPin, Receipt, AlertTriangle } from "lucide-react";
+import { adminFetch } from "@/lib/admin-fetch";
 
 interface Order {
     id: string;
@@ -21,7 +22,7 @@ export default function RecentOrders() {
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const response = await fetch('/api/admin/orders/recent');
+                const response = await adminFetch('/api/admin/orders/recent');
                 if (response.ok) {
                     const data = await response.json();
                     if (data.needsScope) {

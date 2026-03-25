@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import ImageUploadModal from "@/components/admin/SimpleImageUploadModal";
 import LiquidButton from "@/components/ui/LiquidButton";
 import { Loader2, Save, Image as ImageIcon } from "lucide-react";
+import { adminFetch } from "@/lib/admin-fetch";
 
 export default function SeoSettings() {
     const [config, setConfig] = useState({
@@ -25,7 +26,7 @@ export default function SeoSettings() {
 
     const fetchConfig = async () => {
         try {
-            const res = await fetch('/api/admin/seo');
+            const res = await adminFetch('/api/admin/seo');
             if (res.ok) {
                 const data = await res.json();
                 setConfig({
@@ -48,7 +49,7 @@ export default function SeoSettings() {
         setSaving(true);
         setMessage("");
         try {
-            const res = await fetch('/api/admin/seo', {
+            const res = await adminFetch('/api/admin/seo', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(config),

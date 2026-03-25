@@ -1,10 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getCustomProducts } from "@/lib/custom-products";
 import { db } from "@/lib/firebase-admin";
+import { requireAdmin } from "@/lib/auth";
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+    const authError = await requireAdmin(req);
+    if (authError) return authError;
+
     try {
         let productCount = 0;
         let userCount = 0;

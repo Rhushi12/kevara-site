@@ -16,6 +16,8 @@ interface StickyProductBarProps {
         sizes?: string[];
         handle: string;
         siblingColors?: { name: string; hex: string; url: string; isCurrent?: boolean; image?: string }[];
+        stock?: number;
+        variantStock?: Record<string, number>;
     };
 }
 
@@ -60,6 +62,16 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
     const colors = product.colors || [];
     // Filter out "One Size" - it should never be displayed
     const sizes = (product.sizes || []).filter((s: string) => s.toLowerCase() !== 'one size');
+
+    // Helper to check if a size is out of stock
+    const isSizeOutOfStock = (size: string) => {
+        const hasVariantStock = product.variantStock && Object.keys(product.variantStock).length > 0;
+        return hasVariantStock
+            ? (product.variantStock![size] !== undefined && product.variantStock![size] <= 0)
+            : (product.stock !== undefined && product.stock <= 0);
+    };
+
+    const isCurrentSelectionOutOfStock = selectedSize ? isSizeOutOfStock(selectedSize) : false;
 
     return (
         <AnimatePresence>
@@ -185,18 +197,38 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
                                                     exit={{ opacity: 0, y: 10 }}
                                                     className="absolute top-full right-0 mt-2 w-full min-w-[120px] bg-white border border-gray-100 rounded-lg shadow-xl overflow-hidden py-1 z-50"
                                                 >
-                                                    {sizes.map((size) => (
-                                                        <button
-                                                            key={size}
-                                                            onClick={() => {
-                                                                setSelectedSize(size);
-                                                                setIsSizeOpen(false);
-                                                            }}
-                                                            className={`w-full px-4 py-2 text-left hover:bg-gray-50 text-sm transition-colors ${selectedSize === size ? 'font-medium text-slate-900 bg-gray-50' : 'text-slate-600'}`}
-                                                        >
-                                                            {size}
-                                                        </button>
-                                                    ))}
+                                                    {sizes.map((size) => {
+                                                        const isOutOfStock = isSizeOutOfStock(size);
+                                                        return (
+                                                            <button
+                                                                key={size}
+                                                                onClick={() => {
+                                                                    if (!isOutOfStock) {
+                                                                        setSelectedSize(size);
+                                                                        setIsSizeOpen(false);
+                                                                    }
+                                                                }}
+                                                                disabled={isOutOfStock}
+                                                                className={`relative w-full px-4 py-2 text-left text-sm transition-colors overflow-hidden ${
+                                                                    isOutOfStock
+                                                                        ? 'text-slate-300 cursor-not-allowed bg-slate-50'
+                                                                        : selectedSize === size 
+                                                                            ? 'font-medium text-slate-900 bg-gray-50' 
+                                                                            : 'text-slate-600 hover:bg-gray-50'
+                                                                }`}
+                                                            >
+                                                                {size}
+                                                                {isOutOfStock && (
+                                                                    <span
+                                                                        className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                                                                        aria-hidden="true"
+                                                                    >
+                                                                        <span className="block w-[140%] h-[1.5px] bg-slate-400 rotate-[-15deg]" />
+                                                                    </span>
+                                                                )}
+                                                            </button>
+                                                        );
+                                                    })}
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>
@@ -219,6 +251,9 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
                                 onClick={() => {
                                     if (!selectedSize) {
                                         setIsSizeOpen(true);
+                                        return;
+                                    }
+                                    if (isCurrentSelectionOutOfStock) {
                                         return;
                                     }
 
@@ -249,6 +284,8 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
                                             handle: product.handle,
                                             availableSizes: sizes,
                                             availableColors: siblingData,
+                                            stock: product.stock,
+                                            variantStock: product.variantStock
                                         });
                                     }
 
@@ -256,9 +293,16 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
                                     setCart(newItems, newSubtotal.toString(), null);
                                     openCart();
                                 }}
-                                className="px-4 md:px-6 py-2 md:py-2.5 text-xs h-9 md:h-10 min-w-[140px] uppercase tracking-wider bg-slate-900 border-none text-white hover:bg-slate-800"
+                                disabled={isCurrentSelectionOutOfStock}
+                                className={`px-4 md:px-6 py-2 md:py-2.5 text-xs h-9 md:h-10 min-w-[140px] uppercase tracking-wider border-none text-white ${
+                                    isCurrentSelectionOutOfStock 
+                                        ? 'bg-slate-300 cursor-not-allowed hidden md:flex' 
+                                        : 'bg-slate-900 hover:bg-slate-800'
+                                }`}
                             >
-                                <span className="font-medium">{!selectedSize ? 'Select Size' : 'Add to Cart'}</span>
+                                <span className="font-medium">
+                                    {!selectedSize ? 'Select Size' : isCurrentSelectionOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+                                </span>
                             </LiquidButton>
                         </div>
                     </div>

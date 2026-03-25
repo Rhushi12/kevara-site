@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
+import { requireAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,7 +9,10 @@ export const dynamic = 'force-dynamic';
  * GET: Fetches all orders from Firebase `orders` collection.
  * PATCH: Updates order status/tracking for a specific order.
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
+    const authError = await requireAdmin(req);
+    if (authError) return authError;
+
     try {
         const snapshot = await db.collection('orders')
             .orderBy('createdAt', 'desc')
@@ -27,7 +31,10 @@ export async function GET() {
     }
 }
 
-export async function PATCH(req: Request) {
+export async function PATCH(req: NextRequest) {
+    const authError = await requireAdmin(req);
+    if (authError) return authError;
+
     try {
         const body = await req.json();
         const { orderId, status, courier, awbNumber, trackingUrl, expectedDeliveryDate } = body;

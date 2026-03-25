@@ -69,6 +69,8 @@ export interface CustomProductInput {
   sizes?: string[];
   status?: string;
   stock?: number;
+  variantStock?: Record<string, number>; // Per-size/variant stock map
+  returnDays?: number; // Return window in days, defaults to 30
 }
 
 // Helper to bulk resolve GIDs to URLs
@@ -189,6 +191,20 @@ export async function createCustomProduct(data: CustomProductInput) {
     });
   }
 
+  // Add variant stock if provided
+  if (data.variantStock && Object.keys(data.variantStock).length > 0) {
+    fields.push({
+      key: "variant_stock",
+      value: JSON.stringify(data.variantStock)
+    });
+  }
+
+  // Add returnDays (default 30)
+  fields.push({
+    key: "return_days",
+    value: String(data.returnDays ?? 30)
+  });
+
   const metaobjectId = await upsertMetaobject("custom_product", handle, fields);
 
 
@@ -263,7 +279,8 @@ export async function createCustomProduct(data: CustomProductInput) {
     sizes: data.sizes || [],
     relatedProducts: [],
     video: null,
-    status: data.status || "ACTIVE"
+    status: data.status || "ACTIVE",
+    returnDays: data.returnDays ?? 30
   };
 }
 
@@ -451,7 +468,9 @@ function transformMetaobjectToProduct(metaobject: any) {
       relatedProducts,
       video: (fields.video && fields.video.startsWith('http')) ? fields.video : (fields.videoUrl || null),
       status: fields.status,
-      stock: fields.stock ? parseInt(fields.stock) : 0
+      stock: fields.stock ? parseInt(fields.stock) : 0,
+      variantStock: fields.variant_stock ? JSON.parse(fields.variant_stock) : {},
+      returnDays: fields.return_days ? parseInt(fields.return_days) : 30
     },
     // Attach internal params for getCustomProducts to use if needed
     _params: {
@@ -488,6 +507,8 @@ export interface UpdateCustomProductInput {
   status?: string;
   imageUrls?: string[]; // Direct R2 URLs for product images
   stock?: number; // Inventory stock count
+  variantStock?: Record<string, number>; // Per-size/variant stock map
+  returnDays?: number; // Return window in days
 }
 
 export async function updateCustomProduct(data: UpdateCustomProductInput) {
@@ -521,6 +542,12 @@ export async function updateCustomProduct(data: UpdateCustomProductInput) {
   }
   if (data.stock !== undefined) {
     fields.push({ key: "stock", value: String(data.stock) });
+  }
+  if (data.variantStock !== undefined) {
+    fields.push({ key: "variant_stock", value: JSON.stringify(data.variantStock) });
+  }
+  if (data.returnDays !== undefined) {
+    fields.push({ key: "return_days", value: String(data.returnDays) });
   }
 
   if (fields.length === 0) {

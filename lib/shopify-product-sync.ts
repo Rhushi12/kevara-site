@@ -252,8 +252,9 @@ export async function syncMetaobjectToShopifyProduct(customProductHandle: string
         // 8. Set inventory quantities (for both new products and updates)
         if (DEFAULT_LOCATION_ID) {
             const stock = customProduct.stock || 0;
+            const variantStock = customProduct.variantStock || {};
             // Always dispatch a sync to ensure inventory matches the metaobject
-            await syncProductInventory(newProductId, stock);
+            await syncProductInventory(newProductId, stock, variantStock);
         }
 
         return {
@@ -305,14 +306,14 @@ async function publishToHeadlessChannel(productId: string) {
 /**
  * Sets a specific inventory quantity for each variant of a shadow product.
  */
-export async function syncProductInventory(productId: string, stock: number) {
+export async function syncProductInventory(productId: string, stock: number, variantStock?: Record<string, number>) {
     if (!DEFAULT_LOCATION_ID) {
         console.warn("[Inventory] Skipping sync — no SHOPIFY_DEFAULT_LOCATION_ID env var set.");
         return;
     }
 
     try {
-        // Fetch variant inventory item IDs
+        // Fetch variant inventory item IDs AND their titles/options
         const query = `
             query getInventoryItems($id: ID!) {
                 product(id: $id) {
@@ -320,6 +321,11 @@ export async function syncProductInventory(productId: string, stock: number) {
                         edges {
                             node {
                                 id
+                                title
+                                selectedOptions {
+                                    name
+                                    value
+                                }
                                 inventoryItem {
                                     id
                                 }
@@ -334,12 +340,33 @@ export async function syncProductInventory(productId: string, stock: number) {
 
         if (variantEdges.length === 0) return;
 
-        // Build quantities input
-        const quantities = variantEdges.map((v: any) => ({
-            inventoryItemId: v.node.inventoryItem.id,
-            locationId: DEFAULT_LOCATION_ID,
-            quantity: Number(stock) || 0
-        }));
+        const hasVariantStock = variantStock && Object.keys(variantStock).length > 0;
+
+        // Build quantities input — match each variant to its specific stock
+        const quantities = variantEdges.map((v: any) => {
+            const variantTitle = v.node.title; // e.g. "M" or "M / Black"
+            const sizeOption = v.node.selectedOptions?.find((o: any) => o.name === "Size");
+            const sizeName = sizeOption?.value;
+
+            let quantity = Number(stock) || 0; // Default fallback = global stock
+
+            if (hasVariantStock) {
+                // Try matching by size name first (most common use case)
+                if (sizeName && variantStock![sizeName] !== undefined) {
+                    quantity = Number(variantStock![sizeName]);
+                }
+                // Fallback: try matching by full variant title (e.g. "M / Black")
+                else if (variantStock![variantTitle] !== undefined) {
+                    quantity = Number(variantStock![variantTitle]);
+                }
+            }
+
+            return {
+                inventoryItemId: v.node.inventoryItem.id,
+                locationId: DEFAULT_LOCATION_ID,
+                quantity: quantity
+            };
+        });
 
         const mutation = `
             mutation inventorySetQuantities($input: InventorySetQuantitiesInput!) {
@@ -367,7 +394,10 @@ export async function syncProductInventory(productId: string, stock: number) {
         if (res.inventorySetQuantities?.userErrors?.length > 0) {
             console.error("[Inventory] Error setting quantities:", res.inventorySetQuantities.userErrors);
         } else {
-            console.log(`[Inventory] ✅ Set ${stock} units for ${variantEdges.length} variants on ${productId}`);
+            const stockSummary = hasVariantStock
+                ? `per-variant stock for ${variantEdges.length} variants`
+                : `${stock} units for ${variantEdges.length} variants`;
+            console.log(`[Inventory] ✅ Set ${stockSummary} on ${productId}`);
         }
     } catch (err: any) {
         console.error(`[Inventory] Failed to sync quantities:`, err.message);

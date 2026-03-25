@@ -1,10 +1,14 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/firebase-admin";
+import { requireAdmin } from "@/lib/auth";
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
+    const authError = await requireAdmin(req);
+    if (authError) return authError;
+
     try {
         const docRef = db.collection("config").doc("seo");
         const docSnap = await docRef.get();
@@ -28,6 +32,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+    const authError = await requireAdmin(req);
+    if (authError) return authError;
+
     try {
         const body = await req.json();
 

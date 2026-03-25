@@ -1,7 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getShopifyCustomers } from "@/lib/shopify-customers";
+import { requireAdmin } from "@/lib/auth";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+    const authError = await requireAdmin(req);
+    if (authError) return authError;
+
     try {
         const customers = await getShopifyCustomers(50);
         return NextResponse.json({ customers });

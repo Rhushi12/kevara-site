@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/firebase-admin";
+import { requireAdmin } from "@/lib/auth";
 
 // Opt out of caching for admin data
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
+    const authError = await requireAdmin(req);
+    if (authError) return authError;
+
     try {
         // 1. Fetch User Signups (last 100 for trend)
         const usersSnapshot = await db.collection("users")

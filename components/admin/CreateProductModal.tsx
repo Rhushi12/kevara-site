@@ -46,6 +46,8 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
     const [loading, setLoading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState<string>("");
     const [error, setError] = useState("");
+    const [returnDays, setReturnDays] = useState(30);
+    const [variantStock, setVariantStock] = useState<Record<string, number>>({});
     const fileInputRef = useRef<HTMLInputElement>(null);
     const videoInputRef = useRef<HTMLInputElement>(null);
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -146,8 +148,14 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
     const toggleSize = (size: string) => {
         if (sizes.includes(size)) {
             setSizes(sizes.filter(s => s !== size));
+            // Remove from variantStock when deselecting
+            const newStock = { ...variantStock };
+            delete newStock[size];
+            setVariantStock(newStock);
         } else {
             setSizes([...sizes, size]);
+            // Default stock is 0 when adding a size
+            setVariantStock({ ...variantStock, [size]: 0 });
         }
     };
 
@@ -163,6 +171,8 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
         setColors([]);
         setSizes([]);
         setError("");
+        setReturnDays(30);
+        setVariantStock({});
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -243,6 +253,8 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
                     videoUrl,
                     colors: colors.length > 0 ? colors : undefined,
                     sizes: sizes.length > 0 ? sizes : undefined,
+                    variantStock: Object.keys(variantStock).length > 0 ? variantStock : undefined,
+                    returnDays,
                 }),
             });
 
@@ -381,6 +393,29 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
                                     placeholder="Describe your product..."
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all duration-200 placeholder:text-gray-400 min-h-[100px] resize-y"
                                 />
+                            </div>
+                        </div>
+
+                        {/* Return Window */}
+                        <div className="space-y-4">
+                            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Return Policy</h3>
+                            <div className="flex items-center gap-4">
+                                <div className="flex-1">
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        Return Window (Days)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="365"
+                                        value={returnDays}
+                                        onChange={(e) => setReturnDays(parseInt(e.target.value) || 0)}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all duration-200 placeholder:text-gray-400"
+                                    />
+                                </div>
+                                <p className="text-xs text-gray-500 flex-1 mt-6">
+                                    Number of days after delivery within which customers can request a return. Set to 0 for non-returnable items.
+                                </p>
                             </div>
                         </div>
 
@@ -627,6 +662,32 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
                                 <p className="text-xs text-slate-600">Selected: {sizes.join(", ")}</p>
                             )}
                         </div>
+
+                        {/* Per-Size Stock Inputs (only show when sizes are selected) */}
+                        {sizes.length > 0 && (
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Stock Per Size</h3>
+                                    <span className="text-xs text-slate-400 font-normal normal-case">Set inventory for each size</span>
+                                </div>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                    {sizes.map((size) => (
+                                        <div key={size} className="flex items-center gap-2 bg-slate-50 rounded-lg p-3 border border-slate-200">
+                                            <span className="text-sm font-bold text-slate-800 min-w-[36px]">{size}</span>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                value={variantStock[size] ?? 0}
+                                                onChange={(e) => setVariantStock({ ...variantStock, [size]: parseInt(e.target.value) || 0 })}
+                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm text-center focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all duration-200 w-full"
+                                                placeholder="0"
+                                            />
+                                            <span className="text-xs text-slate-400">units</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Submit Buttons */}
                         <div className="pt-4 border-t space-y-3">

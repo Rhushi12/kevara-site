@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/firebase-admin";
+import { requireAdmin } from "@/lib/auth";
 
 // Collection name for storing custom colors
 const COLORS_COLLECTION = "custom_colors";
@@ -13,7 +14,10 @@ export interface CustomColor {
 }
 
 // GET - Fetch all saved custom colors
-export async function GET() {
+export async function GET(req: NextRequest) {
+    const authError = await requireAdmin(req);
+    if (authError) return authError;
+
     try {
         const docRef = db.collection(COLORS_COLLECTION).doc(COLORS_DOC);
         const doc = await docRef.get();
@@ -39,7 +43,10 @@ export async function GET() {
 }
 
 // POST - Add a new custom color
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+    const authError = await requireAdmin(request);
+    if (authError) return authError;
+
     try {
         const body = await request.json();
         const { name, hex } = body;

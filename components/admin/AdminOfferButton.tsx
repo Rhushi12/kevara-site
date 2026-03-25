@@ -3,12 +3,14 @@
 import { useOffer } from "@/context/OfferContext";
 import { useAuth } from "@/context/AuthContext";
 import { Tag } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export default function AdminOfferButton() {
     const { openSidebar } = useOffer();
     const { isAdmin } = useAuth();
+    const pathname = usePathname();
 
-    if (!isAdmin) return null;
+    if (!isAdmin || pathname?.startsWith('/admin')) return null;
 
     return (
         <button

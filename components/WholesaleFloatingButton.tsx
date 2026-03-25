@@ -2,9 +2,13 @@
 
 import { MessageSquare } from "lucide-react";
 import { useWholesaleInquiryStore } from "@/lib/store";
+import { usePathname } from "next/navigation";
 
 export default function WholesaleFloatingButton() {
     const { openInquiry } = useWholesaleInquiryStore();
+    const pathname = usePathname();
+
+    if (pathname?.startsWith('/admin')) return null;
 
     return (
         <button

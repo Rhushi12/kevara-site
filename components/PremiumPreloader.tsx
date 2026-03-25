@@ -7,25 +7,23 @@ export default function PremiumPreloader() {
         <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#0E4D55]">
             <div className="relative p-8">
                 {/* Text Animation */}
-                <div className="flex items-center gap-[0.05em] overflow-hidden">
-                    {["K", "e", "v", "a", "r", "a"].map((letter, i) => (
-                        <motion.span
-                            key={i}
-                            initial={{ y: "100%" }}
-                            animate={{ y: "0%" }}
-                            transition={{
-                                duration: 1,
-                                delay: i * 0.08,
-                                ease: [0.22, 1, 0.36, 1],
-                                repeat: Infinity,
-                                repeatDelay: 3,
-                                repeatType: "reverse"
-                            }}
-                            className="text-5xl md:text-7xl lg:text-8xl font-prata font-medium text-white tracking-[-0.04em]"
-                        >
-                            {letter}
-                        </motion.span>
-                    ))}
+                {/* Text Animation */}
+                <div className="overflow-hidden">
+                    <motion.div
+                        initial={{ y: "100%" }}
+                        animate={{ y: "0%" }}
+                        transition={{
+                            duration: 1.2,
+                            ease: [0.22, 1, 0.36, 1],
+                            repeat: Infinity,
+                            repeatDelay: 2,
+                            repeatType: "reverse"
+                        }}
+                        className="text-5xl md:text-7xl lg:text-8xl font-kamundi text-white"
+                        style={{ fontVariantLigatures: "common-ligatures" }}
+                    >
+                        Kevara
+                    </motion.div>
                 </div>
 
                 {/* Elegant Line Animation */}

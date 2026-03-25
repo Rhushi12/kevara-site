@@ -36,20 +36,20 @@ export default function TopProducts() {
     }, []);
 
     if (loading) return (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200/60 h-[400px] flex items-center justify-center animate-pulse">
-            <span className="text-sm font-medium text-slate-400 tracking-widest uppercase">Loading Products...</span>
+        <div className="bg-white p-6 md:p-8 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 h-[400px] flex items-center justify-center animate-pulse">
+            <span className="text-sm font-medium text-slate-300 tracking-widest uppercase font-figtree">Loading Products...</span>
         </div>
     );
 
     return (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200/60 transition-shadow hover:shadow-md h-full flex flex-col">
+        <div className="group relative bg-white p-6 md:p-8 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 transition-all duration-300 hover:shadow-[0_8px_30px_-4px_rgba(16,185,129,0.06)] hover:-translate-y-1 h-full flex flex-col">
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h3 className="text-lg font-lora font-medium text-slate-900 tracking-tight">Product Catalog</h3>
-                    <p className="text-xs text-slate-500 font-medium">Your active products</p>
+                    <h3 className="text-2xl font-kamundi font-medium text-slate-900 tracking-tight">Product Catalog</h3>
+                    <p className="text-xs text-slate-400 font-medium tracking-wide uppercase mt-1">Your active products</p>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center">
-                    <TrendingUp size={16} className="text-emerald-600" />
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center border border-emerald-100/50 transition-transform duration-300 group-hover:scale-110">
+                    <TrendingUp size={20} className="text-emerald-600" />
                 </div>
             </div>
 

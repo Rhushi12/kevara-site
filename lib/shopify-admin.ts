@@ -1,4 +1,4 @@
-﻿
+
 import { Buffer } from 'buffer';
 
 const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || process.env.SHOPIFY_STORE_DOMAIN;
@@ -1482,4 +1482,167 @@ export async function saveOfferSlides(slides: any[]) {
     console.error("[saveOfferSlides] Failed:", error);
     throw error;
   }
+}
+
+// ============================================================================
+// AUTOMATED INVENTORY MANAGEMENT — Delhivery Restock Integration
+// ============================================================================
+
+/**
+ * Fetch an order's line items with their inventoryItemId from Shopify.
+ * Used by the Delhivery webhook to identify which SKUs need restocking.
+ * 
+ * @param orderId - Shopify order name (e.g., "#KEV-8942") or GID
+ */
+export async function fetchOrderLineItemsForRestock(orderId: string) {
+  // If orderId looks like a name/number (not a GID), query by name
+  const isGid = orderId.startsWith("gid://");
+  
+  const queryStr = isGid ? `
+    query getOrderById($id: ID!) {
+      order(id: $id) {
+        id
+        name
+        lineItems(first: 50) {
+          edges {
+            node {
+              title
+              quantity
+              variant {
+                id
+                inventoryItem {
+                  id
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ` : `
+    query getOrderByName($query: String!) {
+      orders(first: 1, query: $query) {
+        edges {
+          node {
+            id
+            name
+            lineItems(first: 50) {
+              edges {
+                node {
+                  title
+                  quantity
+                  variant {
+                    id
+                    inventoryItem {
+                      id
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const variables = isGid ? { id: orderId } : { query: `name:${orderId}` };
+  const data = await shopifyFetch(queryStr, variables);
+
+  const order = isGid ? data.order : data.orders?.edges?.[0]?.node;
+  if (!order) {
+    console.error(`[Restock] Order not found: ${orderId}`);
+    return null;
+  }
+
+  const items = order.lineItems.edges.map((edge: any) => ({
+    title: edge.node.title,
+    quantity: edge.node.quantity,
+    variantId: edge.node.variant?.id,
+    inventoryItemId: edge.node.variant?.inventoryItem?.id,
+  })).filter((item: any) => item.inventoryItemId); // Only items with valid inventory
+
+  return { orderId: order.id, orderName: order.name, items };
+}
+
+/**
+ * Increment inventory quantities for returned/RTO items using Shopify's
+ * inventoryAdjustQuantities mutation (2024-07+ API).
+ * 
+ * @param items - Array of { inventoryItemId, quantity } to restock
+ * @param reason - Reason for the adjustment (shown in Shopify admin)
+ */
+export async function restockOrderItems(
+  items: Array<{ inventoryItemId: string; quantity: number }>,
+  reason: string = "Delhivery RTO/Return — automated restock"
+) {
+  if (items.length === 0) {
+    console.warn("[Restock] No items to restock.");
+    return null;
+  }
+
+  // First, we need to find the location ID for inventory adjustments.
+  // We'll use the primary location.
+  const locationQuery = `
+    query {
+      locations(first: 1) {
+        edges {
+          node {
+            id
+            name
+          }
+        }
+      }
+    }
+  `;
+  const locationData = await shopifyFetch(locationQuery);
+  const locationId = locationData.locations?.edges?.[0]?.node?.id;
+
+  if (!locationId) {
+    throw new Error("[Restock] No Shopify location found to adjust inventory against.");
+  }
+
+  // Build the changes array for the batch mutation
+  const changes = items.map(item => ({
+    delta: item.quantity,
+    inventoryItemId: item.inventoryItemId,
+    locationId: locationId,
+  }));
+
+  const mutation = `
+    mutation inventoryAdjustQuantities($input: InventoryAdjustQuantitiesInput!) {
+      inventoryAdjustQuantities(input: $input) {
+        userErrors {
+          field
+          message
+        }
+        inventoryAdjustmentGroup {
+          reason
+          changes {
+            name
+            delta
+          }
+        }
+      }
+    }
+  `;
+
+  const variables = {
+    input: {
+      reason: "correction",
+      name: reason,
+      changes: changes,
+    },
+  };
+
+  console.log(`[Restock] Adjusting inventory for ${items.length} item(s)...`);
+  const result = await shopifyFetch(mutation, variables);
+
+  if (result.inventoryAdjustQuantities?.userErrors?.length > 0) {
+    console.error("[Restock] Shopify errors:", result.inventoryAdjustQuantities.userErrors);
+    throw new Error("Inventory restock failed: " + JSON.stringify(result.inventoryAdjustQuantities.userErrors));
+  }
+
+  console.log("[Restock] Successfully restocked:", result.inventoryAdjustQuantities?.inventoryAdjustmentGroup);
+  return result.inventoryAdjustQuantities?.inventoryAdjustmentGroup;
 }

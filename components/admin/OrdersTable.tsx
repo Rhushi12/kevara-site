@@ -19,6 +19,7 @@ import {
     X,
     Save,
 } from "lucide-react";
+import { adminFetch } from "@/lib/admin-fetch";
 
 interface OrderItem {
     id: string;
@@ -96,7 +97,7 @@ export default function OrdersTable() {
     const fetchOrders = async () => {
         setLoading(true);
         try {
-            const res = await fetch("/api/admin/orders");
+            const res = await adminFetch("/api/admin/orders");
             const data = await res.json();
             if (data.success) setOrders(data.orders || []);
         } catch (err) {
@@ -111,7 +112,7 @@ export default function OrdersTable() {
     const saveOrderUpdate = async (orderId: string) => {
         setSaving(true);
         try {
-            const res = await fetch("/api/admin/orders", {
+            const res = await adminFetch("/api/admin/orders", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -148,7 +149,7 @@ export default function OrdersTable() {
         setFulfillError("");
         setFulfillSuccess("");
         try {
-            const res = await fetch("/api/admin/fulfill", {
+            const res = await adminFetch("/api/admin/fulfill", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ orderId, weight: 500 }),

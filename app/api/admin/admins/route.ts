@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase-admin";
+import { requireAdmin, getVerifiedAdmin } from "@/lib/auth";
+import { NextRequest } from "next/server";
 
 export const dynamic = 'force-dynamic';
 
-// GET - Fetch all admin emails
-export async function GET() {
+// GET - Fetch all admin emails (admin-only)
+export async function GET(req: NextRequest) {
+    const authError = await requireAdmin(req);
+    if (authError) return authError;
+
     try {
         const adminsDoc = await db.collection('settings').doc('admins').get();
 
         if (!adminsDoc.exists) {
-            // Return default admin if no settings exist
             const defaultAdmin = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(",")[0] || "rhushimanumehta@gmail.com";
             return NextResponse.json({ emails: [defaultAdmin.trim().toLowerCase()] });
         }
@@ -22,30 +26,27 @@ export async function GET() {
     }
 }
 
-// POST - Add a new admin email
-export async function POST(req: Request) {
-    try {
-        const { email, requesterEmail } = await req.json();
+// POST - Add a new admin email (admin-only, verified via Firebase token)
+export async function POST(req: NextRequest) {
+    const { error: authError, auth } = await getVerifiedAdmin(req);
+    if (authError) return authError;
 
-        if (!email || !requesterEmail) {
+    try {
+        const { email } = await req.json();
+
+        if (!email) {
             return NextResponse.json({ error: "Email required" }, { status: 400 });
         }
 
-        // Verify requester is an admin
         const adminsDoc = await db.collection('settings').doc('admins').get();
         let currentAdmins: string[] = [];
 
         if (adminsDoc.exists) {
             currentAdmins = adminsDoc.data()?.emails || [];
         } else {
-            // Initialize with env variable admins
             const envAdmins = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "rhushimanumehta@gmail.com")
                 .split(",").map(e => e.trim().toLowerCase());
             currentAdmins = envAdmins;
-        }
-
-        if (!currentAdmins.includes(requesterEmail.toLowerCase())) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
         // Add new admin
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
         await db.collection('settings').doc('admins').set({
             emails: currentAdmins,
             updatedAt: new Date(),
-            updatedBy: requesterEmail
+            updatedBy: auth.email // from verified token, not from body
         });
 
         return NextResponse.json({ success: true, emails: currentAdmins });
@@ -67,18 +68,19 @@ export async function POST(req: Request) {
     }
 }
 
-// DELETE - Remove an admin email
-export async function DELETE(req: Request) {
+// DELETE - Remove an admin email (admin-only, verified via Firebase token)
+export async function DELETE(req: NextRequest) {
+    const { error: authError, auth } = await getVerifiedAdmin(req);
+    if (authError) return authError;
+
     try {
         const { searchParams } = new URL(req.url);
         const email = searchParams.get('email');
-        const requesterEmail = searchParams.get('requester');
 
-        if (!email || !requesterEmail) {
+        if (!email) {
             return NextResponse.json({ error: "Email required" }, { status: 400 });
         }
 
-        // Verify requester is an admin
         const adminsDoc = await db.collection('settings').doc('admins').get();
         let currentAdmins: string[] = [];
 
@@ -86,22 +88,22 @@ export async function DELETE(req: Request) {
             currentAdmins = adminsDoc.data()?.emails || [];
         }
 
-        if (!currentAdmins.includes(requesterEmail.toLowerCase())) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-        }
-
         // Prevent removing the last admin
         if (currentAdmins.length <= 1) {
             return NextResponse.json({ error: "Cannot remove the last admin" }, { status: 400 });
         }
 
-        // Remove admin
+        // Prevent admins from removing themselves
+        if (email.toLowerCase() === auth.email?.toLowerCase()) {
+            return NextResponse.json({ error: "Cannot remove your own admin access" }, { status: 400 });
+        }
+
         const updatedAdmins = currentAdmins.filter(e => e !== email.toLowerCase());
 
         await db.collection('settings').doc('admins').set({
             emails: updatedAdmins,
             updatedAt: new Date(),
-            updatedBy: requesterEmail
+            updatedBy: auth.email // from verified token
         });
 
         return NextResponse.json({ success: true, emails: updatedAdmins });

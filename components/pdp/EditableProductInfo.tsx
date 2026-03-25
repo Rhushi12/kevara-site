@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Heart, Save, X, Plus, Trash2, Palette, Search } from "lucide-react";
+import { Heart, Save, X, Plus, Trash2, Palette, Search, RotateCcw } from "lucide-react";
 import LiquidButton from "@/components/ui/LiquidButton";
 import { useSizeGuideStore } from "@/lib/store";
 import { useAuth } from "@/context/AuthContext";
@@ -24,6 +24,8 @@ export interface EditableProductInfoProps {
     onEditModeChange?: (isEditMode: boolean) => void;
     siblingColors?: { name: string; hex: string; url: string; isCurrent?: boolean; image?: string }[];
     stock?: number;
+    variantStock?: Record<string, number>;
+    returnDays?: number;
 }
 
 const ALL_SIZES = ["24", "26", "28", "30", "32", "34", "36", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"];
@@ -57,6 +59,8 @@ export default function EditableProductInfo({
     onEditModeChange,
     siblingColors,
     stock = undefined,
+    variantStock = {},
+    returnDays = 30,
 }: EditableProductInfoProps) {
     const { isAdmin, user } = useAuth();
     const [selectedColor, setSelectedColor] = useState(colors[0]?.name || "");
@@ -75,6 +79,8 @@ export default function EditableProductInfo({
     const [editedSizes, setEditedSizes] = useState<string[]>(sizes);
     const [editedColors, setEditedColors] = useState<{ name: string; hex: string }[]>(colors);
     const [editedImageUrls, setEditedImageUrls] = useState<string[]>(imageUrls);
+    const [editedReturnDays, setEditedReturnDays] = useState(returnDays);
+    const [editedVariantStock, setEditedVariantStock] = useState<Record<string, number>>(variantStock || {});
     const [customColorName, setCustomColorName] = useState("");
     const [customColorHex, setCustomColorHex] = useState("#000000");
 
@@ -125,6 +131,8 @@ export default function EditableProductInfo({
         setEditedSizes([...sizes]);
         setEditedColors([...colors]);
         setEditedImageUrls([...imageUrls]);
+        setEditedReturnDays(returnDays);
+        setEditedVariantStock(variantStock || {});
         setCustomColorName("");
         setCustomColorHex("#000000");
         setIsEditMode(true);
@@ -152,7 +160,9 @@ export default function EditableProductInfo({
                     description: editedDescription || "",
                     sizes: editedSizes,
                     colors: editedColors,
-                    imageUrls: editedImageUrls
+                    imageUrls: editedImageUrls,
+                    returnDays: editedReturnDays,
+                    variantStock: Object.keys(editedVariantStock).length > 0 ? editedVariantStock : undefined
                 })
             });
 
@@ -186,8 +196,14 @@ export default function EditableProductInfo({
     const toggleSize = (size: string) => {
         setEditedSizes(prev => {
             if (prev.includes(size)) {
+                // Remove from variant stock when deselecting
+                const newStock = { ...editedVariantStock };
+                delete newStock[size];
+                setEditedVariantStock(newStock);
                 return prev.filter(s => s !== size);
             } else {
+                // Add to variant stock with default 0
+                setEditedVariantStock({ ...editedVariantStock, [size]: editedVariantStock[size] ?? 0 });
                 return [...prev, size];
             }
         });
@@ -352,6 +368,51 @@ export default function EditableProductInfo({
                         className="w-full border border-[#006D77] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#006D77]"
                         placeholder="Product description (HTML supported)"
                     />
+                </div>
+            )}
+
+            {/* Return Window (Edit Mode Only) */}
+            {isEditMode && (
+                <div className="space-y-2">
+                    <label className="text-sm font-bold uppercase tracking-widest text-slate-900">
+                        Return Window
+                    </label>
+                    <div className="flex items-center gap-3">
+                        <input
+                            type="number"
+                            min="0"
+                            max="365"
+                            value={editedReturnDays}
+                            onChange={(e) => setEditedReturnDays(parseInt(e.target.value) || 0)}
+                            className="w-24 border border-[#006D77] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#006D77] text-center"
+                        />
+                        <span className="text-sm text-slate-500">days after delivery (0 = non-returnable)</span>
+                    </div>
+                </div>
+            )}
+
+            {/* Per-Size Stock (Edit Mode Only) */}
+            {isEditMode && editedSizes.length > 0 && (
+                <div className="space-y-2">
+                    <label className="text-sm font-bold uppercase tracking-widest text-slate-900">
+                        Stock Per Size
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {editedSizes.map((size) => (
+                            <div key={size} className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2 border border-slate-200">
+                                <span className="text-sm font-bold text-slate-800 min-w-[30px]">{size}</span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={editedVariantStock[size] ?? 0}
+                                    onChange={(e) => setEditedVariantStock({ ...editedVariantStock, [size]: parseInt(e.target.value) || 0 })}
+                                    className="flex-1 border border-[#006D77] rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#006D77] text-center w-full"
+                                    placeholder="0"
+                                />
+                                <span className="text-[10px] text-slate-400">pcs</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
 
@@ -590,18 +651,36 @@ export default function EditableProductInfo({
                     <div className="relative">
                         {/* Mobile: Horizontal scroll carousel | Desktop: Flex wrap */}
                         <div className="flex gap-2 overflow-x-auto md:overflow-visible md:flex-wrap scrollbar-hide pb-2 md:pb-0 -mx-1 px-1">
-                            {displaySizes.map((size) => (
-                                <button
-                                    key={size}
-                                    onClick={() => setSelectedSize(size)}
-                                    className={`h-10 min-w-[3rem] px-3 rounded border text-sm font-medium transition-all flex-shrink-0 ${selectedSize === size
-                                        ? "border-slate-900 bg-slate-900 text-white"
-                                        : "border-slate-200 text-slate-600 hover:border-slate-900 hover:text-slate-900"
-                                        }`}
-                                >
-                                    {size}
-                                </button>
-                            ))}
+                            {displaySizes.map((size) => {
+                                const hasVariantStock = variantStock && Object.keys(variantStock).length > 0;
+                                const isOutOfStock = hasVariantStock
+                                    ? (variantStock[size] !== undefined && variantStock[size] <= 0)
+                                    : (stock !== undefined && stock <= 0);
+                                return (
+                                    <button
+                                        key={size}
+                                        onClick={() => !isOutOfStock && setSelectedSize(size)}
+                                        disabled={isOutOfStock}
+                                        className={`relative h-10 min-w-[3rem] px-3 rounded border text-sm font-medium transition-all flex-shrink-0 overflow-hidden ${isOutOfStock
+                                            ? "border-slate-200 text-slate-300 cursor-not-allowed bg-slate-50"
+                                            : selectedSize === size
+                                                ? "border-slate-900 bg-slate-900 text-white"
+                                                : "border-slate-200 text-slate-600 hover:border-slate-900 hover:text-slate-900"
+                                            }`}
+                                        title={isOutOfStock ? `${size} — Out of Stock` : size}
+                                    >
+                                        {size}
+                                        {isOutOfStock && (
+                                            <span
+                                                className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                                                aria-hidden="true"
+                                            >
+                                                <span className="block w-[140%] h-[1.5px] bg-slate-400 rotate-[-30deg]" />
+                                            </span>
+                                        )}
+                                    </button>
+                                );
+                            })}
                         </div>
                         {/* Scroll fade indicator on mobile (right edge) */}
                         {displaySizes.length > 5 && (
@@ -612,6 +691,20 @@ export default function EditableProductInfo({
                     <p className="text-sm text-slate-500 italic">No sizes available - click Edit to add sizes</p>
                 )}
             </div>
+
+            {/* Return Policy Badge */}
+            {!isEditMode && (
+                <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <RotateCcw size={16} className="text-[#006D77] flex-shrink-0" />
+                    <span className="text-sm text-slate-600">
+                        {returnDays > 0 ? (
+                            <><span className="font-semibold text-slate-800">{returnDays}-day</span> easy returns from delivery</>
+                        ) : (
+                            <span className="text-slate-400">This item is non-returnable</span>
+                        )}
+                    </span>
+                </div>
+            )}
 
             {/* Wholesale Inquiry Button */}
             {/* E-commerce Actions */}
@@ -653,6 +746,8 @@ export default function EditableProductInfo({
                                     availableColors: siblingColors && siblingColors.length > 0
                                         ? siblingColors.map(c => ({ name: c.name, hex: c.hex, handle: c.url.replace('/products/', ''), image: c.image }))
                                         : colors.map(c => ({ name: c.name, hex: c.hex, handle: handle, image: imageUrls?.[0] || "" })),
+                                    stock: stock,
+                                    variantStock: variantStock
                                 });
                             }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import {
     Search,
@@ -15,7 +15,8 @@ import {
     EyeOff,
     Loader2,
     Package,
-    ExternalLink
+    ExternalLink,
+    RotateCcw
 } from "lucide-react";
 
 interface Product {
@@ -39,6 +40,9 @@ interface Product {
     status?: string;
     sizes?: string[];
     colors?: { name: string; hex: string }[];
+    returnDays?: number;
+    stock?: number;
+    variantStock?: Record<string, number>;
 }
 
 interface ProductsTableProps {
@@ -56,6 +60,13 @@ export default function ProductsTable({ onAddProduct }: ProductsTableProps) {
     const [bulkUploading, setBulkUploading] = useState(false);
     const [bulkMessage, setBulkMessage] = useState("");
     const tableRef = useRef<HTMLDivElement>(null);
+    // Stock editing state
+    const [expandedStockId, setExpandedStockId] = useState<string | null>(null);
+    const [editingStock, setEditingStock] = useState<Record<string, number>>({});
+    const [editingSizes, setEditingSizes] = useState<string[]>([]);
+    const [stockSaving, setStockSaving] = useState(false);
+
+    const PRESET_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '24', '26', '28', '30', '32', '34', '36', 'FREE SIZE'];
 
     useEffect(() => {
         fetchProducts();
@@ -164,6 +175,41 @@ export default function ProductsTable({ onAddProduct }: ProductsTableProps) {
             setBulkMessage(`❌ Error: ${e.message}`);
         } finally {
             setBulkUploading(false);
+        }
+    };
+
+    const handleSaveStock = async (product: Product) => {
+        setStockSaving(true);
+        try {
+            // Clean up stock: only keep entries for current editingSizes
+            const cleanedStock: Record<string, number> = {};
+            editingSizes.forEach(s => { cleanedStock[s] = editingStock[s] ?? 0; });
+
+            const res = await fetch('/api/products/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    handle: product.handle,
+                    title: product.title,
+                    sizes: editingSizes,
+                    variantStock: cleanedStock,
+                })
+            });
+            if (res.ok) {
+                setProducts(products.map(p =>
+                    p.handle === product.handle
+                        ? { ...p, sizes: [...editingSizes], variantStock: { ...cleanedStock } }
+                        : p
+                ));
+                setExpandedStockId(null);
+            } else {
+                const err = await res.json();
+                alert('Failed to save: ' + (err.error || 'Unknown error'));
+            }
+        } catch (e: any) {
+            alert('Failed to save: ' + e.message);
+        } finally {
+            setStockSaving(false);
         }
     };
 
@@ -320,14 +366,15 @@ export default function ProductsTable({ onAddProduct }: ProductsTableProps) {
                                 <th className="p-4">Product</th>
                                 <th className="p-4">Status</th>
                                 <th className="p-4">Price</th>
-                                <th className="p-4">Variants</th>
+                                <th className="p-4">Variants / Stock</th>
+                                <th className="p-4">Return</th>
                                 <th className="p-4 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {filteredProducts.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="p-16 text-center">
+                                    <td colSpan={7} className="p-16 text-center">
                                         <Package className="mx-auto text-gray-300 mb-3" size={32} />
                                         <p className="text-gray-500 font-medium">No products found</p>
                                         <p className="text-gray-400 text-sm mt-1">Try adjusting your search or add a new product</p>
@@ -335,7 +382,8 @@ export default function ProductsTable({ onAddProduct }: ProductsTableProps) {
                                 </tr>
                             ) : (
                                 filteredProducts.map((product, index) => (
-                                    <tr key={`${product.id || 'prod'}-${index}`} className="hover:bg-gray-50/50 transition-colors group">
+                                    <React.Fragment key={`${product.id || 'prod'}-${index}`}>
+                                    <tr className="hover:bg-gray-50/50 transition-colors group">
                                         <td className="p-4">
                                             <input
                                                 type="checkbox"
@@ -383,36 +431,168 @@ export default function ProductsTable({ onAddProduct }: ProductsTableProps) {
                                             }
                                         </td>
                                         <td className="p-4">
-                                            <div className="flex flex-col gap-1">
-                                                {product.sizes && product.sizes.length > 0 ? (
-                                                    <div className="flex flex-wrap gap-1">
-                                                        {product.sizes.slice(0, 3).map(size => (
-                                                            <span key={size} className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded font-medium">
-                                                                {size}
+                                            {product.sizes && product.sizes.length > 0 ? (
+                                                <div className="flex flex-wrap gap-1">
+                                                    {product.sizes.map(size => {
+                                                        const hasVariantStock = product.variantStock && Object.keys(product.variantStock).length > 0;
+                                                        const sizeStock = hasVariantStock
+                                                            ? (product.variantStock![size] ?? null)
+                                                            : (product.stock ?? null);
+                                                        const isOos = sizeStock !== null && sizeStock <= 0;
+                                                        const isLow = sizeStock !== null && sizeStock > 0 && sizeStock <= 5;
+                                                        return (
+                                                            <span
+                                                                key={size}
+                                                                title={sizeStock !== null ? `${sizeStock} in stock` : 'Stock unknown'}
+                                                                className={`text-[10px] px-1.5 py-0.5 rounded font-semibold border ${
+                                                                    isOos
+                                                                        ? 'bg-red-50 text-red-600 border-red-200'
+                                                                        : isLow
+                                                                        ? 'bg-amber-50 text-amber-600 border-amber-200'
+                                                                        : sizeStock !== null
+                                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                                                        : 'bg-gray-100 text-gray-500 border-gray-200'
+                                                                }`}
+                                                            >
+                                                                {size}{sizeStock !== null ? ` · ${sizeStock}` : ''}
                                                             </span>
-                                                        ))}
-                                                        {product.sizes.length > 3 && (
-                                                            <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded font-medium">
-                                                                +{product.sizes.length - 3}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-xs text-gray-400">—</span>
-                                                )}
-                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            ) : (
+                                                <span className="text-xs text-gray-400">—</span>
+                                            )}
+                                        </td>
+                                        <td className="p-4">
+                                            {(product.returnDays ?? 30) > 0 ? (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200">
+                                                    <RotateCcw size={10} />
+                                                    {product.returnDays ?? 30}d
+                                                </span>
+                                            ) : (
+                                                <span className="text-xs text-gray-400">No returns</span>
+                                            )}
                                         </td>
                                         <td className="p-4 text-right">
-                                            <a
-                                                href={`/product/${product.handle}`}
-                                                target="_blank"
-                                                className="inline-flex p-2 text-gray-400 hover:text-[#0E4D55] transition-colors rounded-full hover:bg-gray-100"
-                                                title="View on site"
-                                            >
-                                                <ExternalLink size={16} />
-                                            </a>
+                                            <div className="flex items-center justify-end gap-1">
+                                                {product.sizes && product.sizes.length > 0 && (
+                                                    <button
+                                                        onClick={() => {
+                                                            if (expandedStockId === product.handle) {
+                                                                setExpandedStockId(null);
+                                                            } else {
+                                                                setExpandedStockId(product.handle);
+                                                                // Pre-populate sizes and stock
+                                                                const currentSizes = product.sizes || [];
+                                                                setEditingSizes([...currentSizes]);
+                                                                const init: Record<string, number> = {};
+                                                                currentSizes.forEach(s => {
+                                                                    init[s] = product.variantStock?.[s] ?? 0;
+                                                                });
+                                                                setEditingStock(init);
+                                                            }
+                                                        }}
+                                                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-colors ${
+                                                            expandedStockId === product.handle
+                                                                ? 'bg-[#0E4D55] text-white border-[#0E4D55]'
+                                                                : 'bg-white text-[#0E4D55] border-[#0E4D55]/40 hover:border-[#0E4D55] hover:bg-[#0E4D55]/5'
+                                                        }`}
+                                                        title="Edit stock"
+                                                    >
+                                                        <Package size={11} />
+                                                        Stock
+                                                    </button>
+                                                )}
+                                                <a
+                                                    href={`/products/${product.handle}`}
+                                                    target="_blank"
+                                                    className="inline-flex p-2 text-gray-400 hover:text-[#0E4D55] transition-colors rounded-full hover:bg-gray-100"
+                                                    title="View on site"
+                                                >
+                                                    <ExternalLink size={16} />
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
+                                    {/* Inline Stock Editor */}
+                                    {expandedStockId === product.handle && product.sizes && (
+                                        <tr key={`${product.handle}-stock`} className="bg-[#0E4D55]/5 border-t border-[#0E4D55]/10">
+                                            <td colSpan={7} className="px-6 py-4">
+                                                <div className="flex flex-col gap-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-xs font-bold uppercase tracking-widest text-[#0E4D55]">Edit Stock Per Size — {product.title}</span>
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={() => setExpandedStockId(null)}
+                                                                className="h-7 px-3 rounded-lg border border-gray-200 text-slate-600 text-xs font-medium hover:bg-gray-50 transition-colors"
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleSaveStock(product)}
+                                                                disabled={stockSaving}
+                                                                className="h-7 px-3 rounded-lg bg-[#0E4D55] text-white text-xs font-semibold flex items-center gap-1.5 hover:bg-[#0A3A40] transition-colors disabled:opacity-50"
+                                                            >
+                                                                {stockSaving ? <Loader2 className="animate-spin" size={12} /> : <Check size={12} />}
+                                                                Save
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                     <div className="flex flex-col gap-4">
+                                                        {/* Current sizes with stock inputs + remove button */}
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {editingSizes.map(size => (
+                                                                <div key={size} className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg pl-2 pr-1 py-1.5">
+                                                                    <span className="text-xs font-bold text-slate-800 min-w-[24px]">{size}</span>
+                                                                    <input
+                                                                        type="number"
+                                                                        min="0"
+                                                                        value={editingStock[size] ?? 0}
+                                                                        onChange={(e) => setEditingStock(prev => ({ ...prev, [size]: parseInt(e.target.value) || 0 }))}
+                                                                        className="w-14 border border-[#0E4D55]/30 rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-[#0E4D55] text-center"
+                                                                    />
+                                                                    <span className="text-[10px] text-gray-400 mr-1">pcs</span>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setEditingSizes(prev => prev.filter(s => s !== size));
+                                                                            setEditingStock(prev => { const n = {...prev}; delete n[size]; return n; });
+                                                                        }}
+                                                                        className="w-5 h-5 rounded-full bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 flex items-center justify-center transition-colors"
+                                                                        title="Remove size"
+                                                                    >
+                                                                        <X size={10} />
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                            {editingSizes.length === 0 && (
+                                                                <span className="text-xs text-gray-400 italic">No sizes — add from presets below</span>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Add size presets */}
+                                                        <div>
+                                                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-2">Add Size</span>
+                                                            <div className="flex flex-wrap gap-1.5">
+                                                                {PRESET_SIZES.filter(s => !editingSizes.includes(s)).map(size => (
+                                                                    <button
+                                                                        key={size}
+                                                                        onClick={() => {
+                                                                            setEditingSizes(prev => [...prev, size]);
+                                                                            setEditingStock(prev => ({ ...prev, [size]: 0 }));
+                                                                        }}
+                                                                        className="flex items-center gap-1 px-2 py-1 rounded-md border border-dashed border-gray-300 text-[10px] font-semibold text-gray-500 hover:border-[#0E4D55] hover:text-[#0E4D55] hover:bg-[#0E4D55]/5 transition-colors"
+                                                                    >
+                                                                        <Plus size={9} /> {size}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                    </React.Fragment>
                                 ))
                             )}
                         </tbody>

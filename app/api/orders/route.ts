@@ -42,6 +42,14 @@ export async function GET(req: Request) {
                                                 url
                                             }
                                         }
+                                        image {
+                                            url
+                                        }
+                                        product {
+                                            featuredImage {
+                                                url
+                                            }
+                                        }
                                         originalTotalSet {
                                             shopMoney {
                                                 amount
@@ -96,7 +104,7 @@ export async function GET(req: Request) {
                     title: li.node.title,
                     quantity: li.node.quantity,
                     variantTitle: li.node.variant?.title,
-                    image: li.node.variant?.image?.url,
+                    image: li.node.image?.url || li.node.variant?.image?.url || li.node.product?.featuredImage?.url,
                     price: li.node.originalTotalSet?.shopMoney?.amount
                 })),
                 tracking,

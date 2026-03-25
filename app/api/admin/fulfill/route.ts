@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
 import { createDelhiveryShipment, trackDelhiveryShipment } from '@/lib/delhivery';
+import { requireAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +10,10 @@ export const dynamic = 'force-dynamic';
  * POST: Creates a Delhivery shipment for a Firebase order. Generates AWB and updates the order.
  * GET:  Fetches live tracking status for an order's AWB from Delhivery.
  */
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+    const authError = await requireAdmin(req);
+    if (authError) return authError;
+
     try {
         const body = await req.json();
         const { orderId, weight } = body;
@@ -85,7 +89,10 @@ export async function POST(req: Request) {
     }
 }
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
+    const authError = await requireAdmin(req);
+    if (authError) return authError;
+
     try {
         const { searchParams } = new URL(req.url);
         const waybill = searchParams.get('waybill');

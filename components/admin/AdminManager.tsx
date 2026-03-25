@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { UserPlus, Trash2, Shield, Loader2 } from "lucide-react";
+import { adminFetch } from "@/lib/admin-fetch";
 
 export default function AdminManager() {
     const { user } = useAuth();
@@ -18,7 +19,7 @@ export default function AdminManager() {
     useEffect(() => {
         const fetchAdmins = async () => {
             try {
-                const res = await fetch('/api/admin/admins');
+                const res = await adminFetch('/api/admin/admins');
                 if (res.ok) {
                     const data = await res.json();
                     setAdmins(data.emails || []);
@@ -44,12 +45,11 @@ export default function AdminManager() {
         setSuccess("");
 
         try {
-            const res = await fetch('/api/admin/admins', {
+            const res = await adminFetch('/api/admin/admins', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    email: newEmail.trim(),
-                    requesterEmail: user?.email
+                    email: newEmail.trim()
                 })
             });
 
@@ -77,7 +77,7 @@ export default function AdminManager() {
         setSuccess("");
 
         try {
-            const res = await fetch(`/api/admin/admins?email=${encodeURIComponent(email)}&requester=${encodeURIComponent(user?.email || '')}`, {
+            const res = await adminFetch(`/api/admin/admins?email=${encodeURIComponent(email)}`, {
                 method: 'DELETE'
             });
 

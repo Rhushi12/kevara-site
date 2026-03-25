@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { adminFetch } from "@/lib/admin-fetch";
 
 
 interface UserData {
@@ -19,7 +20,7 @@ export default function UsersTable() {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const response = await fetch('/api/admin/users');
+                const response = await adminFetch('/api/admin/users');
                 const data = await response.json();
 
                 if (data.error) throw new Error(data.error);

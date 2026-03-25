@@ -12,6 +12,9 @@ const config: Config = {
                 "deep-teal": "#006D77",
                 "warm-cream": "#FDFBF7",
             },
+            fontFamily: {
+                kamundi: ["var(--font-kamundi)", "sans-serif"],
+            },
         },
     },
     plugins: [],

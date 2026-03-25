@@ -14,6 +14,7 @@ import {
     Filler,
 } from "chart.js";
 import { Bar, Line } from "react-chartjs-2";
+import { adminFetch } from "@/lib/admin-fetch";
 
 ChartJS.register(
     CategoryScale,
@@ -43,7 +44,7 @@ export default function AnalyticsCharts() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await fetch('/api/admin/analytics');
+                const response = await adminFetch('/api/admin/analytics');
                 const data = await response.json();
 
                 if (data.error) throw new Error(data.error);
@@ -123,11 +124,11 @@ export default function AnalyticsCharts() {
 
     if (loading) return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="h-[400px] flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100 animate-pulse">
-                <span className="text-sm font-medium text-slate-400 tracking-widest uppercase">Loading Traffic Trends...</span>
+            <div className="h-[400px] flex items-center justify-center bg-white rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 animate-pulse">
+                <span className="text-sm font-medium text-slate-300 tracking-widest uppercase font-figtree">Loading Traffic Trends...</span>
             </div>
-            <div className="h-[400px] flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100 animate-pulse">
-                <span className="text-sm font-medium text-slate-400 tracking-widest uppercase">Loading Acquisitions...</span>
+            <div className="h-[400px] flex items-center justify-center bg-white rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 animate-pulse">
+                <span className="text-sm font-medium text-slate-300 tracking-widest uppercase font-figtree">Loading Acquisitions...</span>
             </div>
         </div>
     );
@@ -135,9 +136,9 @@ export default function AnalyticsCharts() {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Page Views Line Chart */}
-            <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-200/60 transition-shadow hover:shadow-md relative">
-                <h3 className="text-lg font-lora font-medium mb-1 text-slate-900 tracking-tight">Traffic Trend</h3>
-                <p className="text-xs text-slate-500 mb-8 font-medium">Daily page views (last 7 days)</p>
+            <div className="group relative bg-white p-6 md:p-8 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 transition-all duration-300 hover:shadow-[0_8px_30px_-4px_rgba(37,99,235,0.06)] hover:-translate-y-1">
+                <h3 className="text-2xl font-kamundi font-medium mb-1 text-slate-900 tracking-tight">Traffic Trend</h3>
+                <p className="text-xs text-slate-400 mb-8 font-medium tracking-wide uppercase">Daily page views (last 7 days)</p>
                 <div className="h-[300px]">
                     <Line
                         data={viewsChartData}
@@ -183,9 +184,9 @@ export default function AnalyticsCharts() {
             </div>
 
             {/* Customer Acquisitions Bar Chart */}
-            <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-200/60 transition-shadow hover:shadow-md">
-                <h3 className="text-lg font-lora font-medium mb-1 text-slate-900 tracking-tight">Customer Acquisitions</h3>
-                <p className="text-xs text-slate-500 mb-8 font-medium">New registered accounts (last 7 days)</p>
+            <div className="group relative bg-white p-6 md:p-8 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 transition-all duration-300 hover:shadow-[0_8px_30px_-4px_rgba(79,70,229,0.06)] hover:-translate-y-1">
+                <h3 className="text-2xl font-kamundi font-medium mb-1 text-slate-900 tracking-tight">Customer Acquisitions</h3>
+                <p className="text-xs text-slate-400 mb-8 font-medium tracking-wide uppercase">New registered accounts (last 7 days)</p>
                 <div className="h-[300px]">
                     <Bar
                         data={userChartData}

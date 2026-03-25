@@ -26,6 +26,14 @@ const prata = Prata({
   subsets: ["latin"],
 });
 
+import localFont from "next/font/local";
+
+const kamundi = localFont({
+  src: "../public/fonts/Kamundi.ttf",
+  variable: "--font-kamundi",
+  weight: "400"
+});
+
 import { db } from "@/lib/firebase-admin";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -148,7 +156,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${figtree.variable} ${lora.variable} ${prata.variable} font-figtree antialiased bg-[#FDFBF7] text-slate-900`}
+        className={`${figtree.variable} ${lora.variable} ${prata.variable} ${kamundi.variable} font-figtree antialiased bg-[#FDFBF7] text-slate-900`}
       >
         {/* JSON-LD Schema */}
         {jsonLd && (

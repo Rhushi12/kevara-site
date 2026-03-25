@@ -1,20 +1,205 @@
-/**
- * Delhivery API Client
- * Handles shipment creation, AWB generation, and tracking lookups.
- *
- * Required env vars:
- *   DELHIVERY_API_TOKEN  — Your Delhivery API token
- *   DELHIVERY_BASE_URL   — "https://track.delhivery.com" (production) or "https://staging-express.delhivery.com" (staging)
- *   DELHIVERY_PICKUP_LOCATION — Your registered warehouse/pickup location name on Delhivery
- */
+// ==========================================================================
+// Delhivery Integration Module — Integration-Ready Infrastructure
+// ==========================================================================
+// This file contains types, configuration, and a placeholder client class
+// for Delhivery API integration. When the Delhivery account is activated,
+// replace the placeholder methods with live API calls.
+// ==========================================================================
 
-const BASE_URL = process.env.DELHIVERY_BASE_URL || 'https://track.delhivery.com';
-const API_TOKEN = process.env.DELHIVERY_API_TOKEN || '';
-const PICKUP_LOCATION = process.env.DELHIVERY_PICKUP_LOCATION || '';
+// ---- Firestore Collection Schema ----
+// shipments/{shipmentId}
+//   - awb: string (Delhivery AWB number)
+//   - orderId: string (internal Kevara order ID)
+//   - customer: { name: string, email: string, phone: string }
+//   - type: "outbound" | "return"
+//   - status: ShipmentStatus
+//   - lastScan: { location: string, timestamp: Timestamp }
+//   - eta: string
+//   - returnReason?: string
+//   - createdAt: Timestamp
+//   - updatedAt: Timestamp
 
-// ─── Types ──────────────────────────────────────────────────────────────
+export type ShipmentStatus =
+    | "Manifested"
+    | "Picked Up"
+    | "In Transit"
+    | "Out for Delivery"
+    | "Delivered"
+    | "RTO Initiated"
+    | "RTO In Transit"
+    | "RTO Delivered"
+    | "Cancelled"
+    | "Lost";
 
-export interface DelhiveryShipmentInput {
+export interface ShipmentRecord {
+    id: string;
+    awb: string;
+    orderId: string;
+    customer: {
+        name: string;
+        email: string;
+        phone?: string;
+    };
+    type: "outbound" | "return";
+    status: ShipmentStatus;
+    lastScan: {
+        location: string;
+        timestamp: string;
+    };
+    eta: string;
+    returnReason?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface DelhiveryTrackingResponse {
+    ShipmentData: Array<{
+        Shipment: {
+            Status: { Status: string; StatusLocation: string; StatusDateTime: string };
+            AWB: string;
+            OrderID: string;
+            ExpectedDeliveryDate: string;
+        };
+    }>;
+}
+
+export interface DelhiveryWebhookPayload {
+    Waybill: string;
+    CurrentStatus: string;
+    StatusDateTime: string;
+    StatusLocation: string;
+    OrderID?: string;
+    EDD?: string;
+}
+
+// ---- Configuration (Environment Variables) ----
+// Add these to your .env.local when ready:
+//   DELHIVERY_API_TOKEN=your_api_token_here
+//   DELHIVERY_API_BASE=https://track.delhivery.com (or staging URL)
+//   DELHIVERY_WEBHOOK_SECRET=your_webhook_secret_here
+
+export const DELHIVERY_CONFIG = {
+    apiBase: process.env.DELHIVERY_API_BASE || "https://track.delhivery.com",
+    apiToken: process.env.DELHIVERY_API_TOKEN || "",
+    webhookSecret: process.env.DELHIVERY_WEBHOOK_SECRET || "",
+};
+
+// ---- Status Mapping ----
+// Maps Delhivery's raw status strings to our internal ShipmentStatus enum
+export function mapDelhiveryStatus(rawStatus: string): ShipmentStatus {
+    const normalized = rawStatus.toLowerCase().trim();
+    if (normalized.includes("manifested")) return "Manifested";
+    if (normalized.includes("picked up")) return "Picked Up";
+    if (normalized.includes("in transit") && !normalized.includes("rto")) return "In Transit";
+    if (normalized.includes("out for delivery")) return "Out for Delivery";
+    if (normalized.includes("delivered") && !normalized.includes("rto")) return "Delivered";
+    if (normalized.includes("rto initiated") || normalized.includes("rto_initiated")) return "RTO Initiated";
+    if (normalized.includes("rto") && normalized.includes("transit")) return "RTO In Transit";
+    if (normalized.includes("rto") && normalized.includes("delivered")) return "RTO Delivered";
+    if (normalized.includes("cancelled") || normalized.includes("canceled")) return "Cancelled";
+    if (normalized.includes("lost")) return "Lost";
+    return "In Transit"; // default fallback
+}
+
+// ---- Placeholder Client ----
+// When Delhivery account is ready, implement these methods with real API calls.
+export class DelhiveryClient {
+    private token: string;
+    private baseUrl: string;
+
+    constructor() {
+        this.token = DELHIVERY_CONFIG.apiToken;
+        this.baseUrl = DELHIVERY_CONFIG.apiBase;
+    }
+
+    /**
+     * Track a shipment by AWB number.
+     * TODO: Replace with real Delhivery API call:
+     * GET {baseUrl}/api/v1/packages/json/?waybill={awb}&token={token}
+     */
+    async trackByAWB(awb: string): Promise<DelhiveryTrackingResponse | null> {
+        if (!this.token) {
+            console.warn("[Delhivery] API token not configured. Returning null.");
+            return null;
+        }
+
+        try {
+            const res = await fetch(
+                `${this.baseUrl}/api/v1/packages/json/?waybill=${awb}&token=${this.token}`,
+                { headers: { "Content-Type": "application/json" } }
+            );
+            if (!res.ok) throw new Error(`Delhivery API error: ${res.status}`);
+            return await res.json();
+        } catch (error) {
+            console.error("[Delhivery] Track failed:", error);
+            return null;
+        }
+    }
+
+    /**
+     * Create a shipment / generate AWB.
+     * TODO: Replace with real Delhivery API call:
+     * POST {baseUrl}/api/cmu/create.json
+     */
+    async createShipment(orderData: {
+        orderId: string;
+        customerName: string;
+        address: string;
+        city: string;
+        state: string;
+        pin: string;
+        phone: string;
+        weight: number;
+        paymentMode: "Prepaid" | "COD";
+        codAmount?: number;
+    }): Promise<{ awb: string; success: boolean } | null> {
+        if (!this.token) {
+            console.warn("[Delhivery] API token not configured. Cannot create shipment.");
+            return null;
+        }
+
+        // Placeholder — will be replaced with real API call
+        console.log("[Delhivery] createShipment called with:", orderData);
+        return null;
+    }
+
+    /**
+     * Cancel a shipment.
+     * TODO: Replace with real Delhivery API call:
+     * POST {baseUrl}/api/p/edit
+     */
+    async cancelShipment(awb: string): Promise<boolean> {
+        if (!this.token) {
+            console.warn("[Delhivery] API token not configured.");
+            return false;
+        }
+
+        console.log("[Delhivery] cancelShipment called for AWB:", awb);
+        return false;
+    }
+
+    /**
+     * Verify if the API token is valid by making a test call.
+     */
+    async verifyConnection(): Promise<boolean> {
+        if (!this.token) return false;
+        try {
+            const res = await fetch(`${this.baseUrl}/api/kinko/v1/invoice/charges/.json`, {
+                headers: { Authorization: `Token ${this.token}` },
+            });
+            return res.ok;
+        } catch {
+            return false;
+        }
+    }
+}
+
+// Singleton instance
+export const delhiveryClient = new DelhiveryClient();
+
+// ---- Exported convenience functions (used by fulfill route) ----
+
+export async function createDelhiveryShipment(params: {
     orderNumber: string;
     customerName: string;
     phone: string;
@@ -23,208 +208,35 @@ export interface DelhiveryShipmentInput {
     city: string;
     state: string;
     pin: string;
-    country?: string;
-    paymentMode: 'Prepaid' | 'COD';
+    paymentMode: "Prepaid" | "COD";
     totalAmount: number;
-    codAmount?: number;
     productDescription: string;
-    weight: number; // grams
+    weight: number;
     quantity: number;
-}
+}): Promise<{ success: boolean; waybill?: string; error?: string; rawResponse?: any }> {
+    const result = await delhiveryClient.createShipment({
+        orderId: params.orderNumber,
+        customerName: params.customerName,
+        address: `${params.address1} ${params.address2 || ""}`.trim(),
+        city: params.city,
+        state: params.state,
+        pin: params.pin,
+        phone: params.phone,
+        weight: params.weight,
+        paymentMode: params.paymentMode,
+        codAmount: params.paymentMode === "COD" ? params.totalAmount : undefined,
+    });
 
-export interface DelhiveryCreateResponse {
-    success: boolean;
-    waybill?: string;
-    orderNumber?: string;
-    error?: string;
-    rawResponse?: any;
-}
-
-export interface DelhiveryTrackingResponse {
-    success: boolean;
-    status?: string;
-    statusDetail?: string;
-    currentLocation?: string;
-    estimatedDelivery?: string;
-    scans?: {
-        date: string;
-        location: string;
-        activity: string;
-    }[];
-    error?: string;
-}
-
-// ─── Helpers ────────────────────────────────────────────────────────────
-
-function getHeaders() {
-    return {
-        'Authorization': `Token ${API_TOKEN}`,
-        'Content-Type': 'application/json',
-    };
-}
-
-// ─── Create Shipment (Generate AWB) ─────────────────────────────────────
-
-export async function createDelhiveryShipment(
-    input: DelhiveryShipmentInput
-): Promise<DelhiveryCreateResponse> {
-    try {
-        if (!API_TOKEN) {
-            return { success: false, error: 'Missing DELHIVERY_API_TOKEN environment variable' };
-        }
-        if (!PICKUP_LOCATION) {
-            return { success: false, error: 'Missing DELHIVERY_PICKUP_LOCATION environment variable' };
-        }
-
-        const shipmentData = {
-            shipments: [
-                {
-                    name: input.customerName,
-                    add: input.address1,
-                    add2: input.address2 || '',
-                    city: input.city,
-                    state: input.state,
-                    pin: input.pin,
-                    country: input.country || 'India',
-                    phone: input.phone,
-                    order: input.orderNumber,
-                    payment_mode: input.paymentMode,
-                    total_amount: input.totalAmount,
-                    cod_amount: input.paymentMode === 'COD' ? (input.codAmount || input.totalAmount) : 0,
-                    product_desc: input.productDescription,
-                    weight: input.weight,
-                    quantity: input.quantity,
-                    pickup_location: {
-                        name: PICKUP_LOCATION,
-                    },
-                },
-            ],
-            pickup_location: {
-                name: PICKUP_LOCATION,
-            },
-        };
-
-        const formData = `format=json&data=${encodeURIComponent(JSON.stringify(shipmentData))}`;
-
-        const response = await fetch(`${BASE_URL}/api/cmu/create.json`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Token ${API_TOKEN}`,
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: formData,
-        });
-
-        const result = await response.json();
-
-        // Delhivery returns success in various formats
-        if (result.success || result.upload_wbn) {
-            const pkg = result.packages?.[0];
-            return {
-                success: true,
-                waybill: pkg?.waybill || result.upload_wbn,
-                orderNumber: pkg?.refnum || input.orderNumber,
-                rawResponse: result,
-            };
-        }
-
-        // Check for package-level errors
-        const pkg = result.packages?.[0];
-        if (pkg?.waybill) {
-            return {
-                success: true,
-                waybill: pkg.waybill,
-                orderNumber: pkg.refnum || input.orderNumber,
-                rawResponse: result,
-            };
-        }
-
-        return {
-            success: false,
-            error: pkg?.remarks?.[0] || result.rmk || JSON.stringify(result),
-            rawResponse: result,
-        };
-
-    } catch (error: any) {
-        console.error('[Delhivery] Create shipment error:', error.message);
-        return { success: false, error: error.message };
+    if (!result) {
+        return { success: false, error: "Delhivery API not configured or call failed" };
     }
+    return { success: result.success, waybill: result.awb };
 }
 
-// ─── Track Shipment ─────────────────────────────────────────────────────
-
-export async function trackDelhiveryShipment(
-    waybill: string
-): Promise<DelhiveryTrackingResponse> {
-    try {
-        if (!API_TOKEN) {
-            return { success: false, error: 'Missing DELHIVERY_API_TOKEN' };
-        }
-
-        const response = await fetch(
-            `${BASE_URL}/api/v1/packages/json/?waybill=${waybill}`,
-            { headers: getHeaders() }
-        );
-
-        const result = await response.json();
-        const shipment = result.ShipmentData?.[0]?.Shipment;
-
-        if (!shipment) {
-            return { success: false, error: 'Shipment not found' };
-        }
-
-        const scans = shipment.Scans?.map((scan: any) => ({
-            date: scan.ScanDetail?.ScanDateTime,
-            location: scan.ScanDetail?.ScannedLocation,
-            activity: scan.ScanDetail?.Instructions,
-        })) || [];
-
-        return {
-            success: true,
-            status: shipment.Status?.Status,
-            statusDetail: shipment.Status?.StatusType,
-            currentLocation: shipment.Status?.StatusLocation,
-            estimatedDelivery: shipment.EstimatedDate,
-            scans,
-        };
-
-    } catch (error: any) {
-        console.error('[Delhivery] Tracking error:', error.message);
-        return { success: false, error: error.message };
+export async function trackDelhiveryShipment(waybill: string): Promise<{ success: boolean; data?: any; error?: string }> {
+    const result = await delhiveryClient.trackByAWB(waybill);
+    if (!result) {
+        return { success: false, error: "Tracking data unavailable" };
     }
-}
-
-// ─── Pincode Serviceability Check ───────────────────────────────────────
-
-export async function checkDelhiveryServiceability(
-    pin: string
-): Promise<{ success: boolean; serviceable?: boolean; prepaid?: boolean; cod?: boolean; error?: string }> {
-    try {
-        if (!API_TOKEN) {
-            return { success: false, error: 'Missing DELHIVERY_API_TOKEN' };
-        }
-
-        const response = await fetch(
-            `${BASE_URL}/c/api/pin-codes/json/?filter_codes=${pin}`,
-            { headers: getHeaders() }
-        );
-
-        const result = await response.json();
-        const info = result.delivery_codes?.[0]?.postal_code;
-
-        if (!info) {
-            return { success: true, serviceable: false };
-        }
-
-        return {
-            success: true,
-            serviceable: true,
-            prepaid: info.pre_paid === 'Y',
-            cod: info.cod === 'Y',
-        };
-
-    } catch (error: any) {
-        console.error('[Delhivery] Serviceability error:', error.message);
-        return { success: false, error: error.message };
-    }
+    return { success: true, data: result };
 }
