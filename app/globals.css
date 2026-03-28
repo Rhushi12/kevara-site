@@ -47,3 +47,18 @@
     display: none;
   }
 }
+
+/* Marquee infinite scroll animation */
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee-scroll {
+  animation: marquee-scroll 40s linear infinite;
+  will-change: transform;
+}

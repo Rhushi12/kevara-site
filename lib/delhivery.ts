@@ -82,6 +82,7 @@ export const DELHIVERY_CONFIG = {
     apiBase: process.env.DELHIVERY_API_BASE || "https://track.delhivery.com",
     apiToken: process.env.DELHIVERY_API_TOKEN || "",
     webhookSecret: process.env.DELHIVERY_WEBHOOK_SECRET || "",
+    pickupName: process.env.DELHIVERY_PICKUP_NAME || "KEVARA CLOTHING",
 };
 
 // ---- Status Mapping ----
@@ -152,15 +153,89 @@ export class DelhiveryClient {
         weight: number;
         paymentMode: "Prepaid" | "COD";
         codAmount?: number;
-    }): Promise<{ awb: string; success: boolean } | null> {
+        productDescription?: string;
+        quantity?: number;
+    }): Promise<{ awb: string; success: boolean; rawResponse?: any } | null> {
         if (!this.token) {
             console.warn("[Delhivery] API token not configured. Cannot create shipment.");
             return null;
         }
 
-        // Placeholder — will be replaced with real API call
-        console.log("[Delhivery] createShipment called with:", orderData);
-        return null;
+        try {
+            const shipmentPayload = {
+                shipments: [
+                    {
+                        name: orderData.customerName,
+                        add: orderData.address,
+                        pin: orderData.pin,
+                        city: orderData.city,
+                        state: orderData.state,
+                        country: "India",
+                        phone: orderData.phone,
+                        order: orderData.orderId,
+                        payment_mode: orderData.paymentMode,
+                        return_pin: "",
+                        return_city: "",
+                        return_phone: "",
+                        return_add: "",
+                        return_state: "",
+                        return_country: "",
+                        products_desc: orderData.productDescription || "Kevara Clothing",
+                        hsn_code: "",
+                        cod_amount: orderData.paymentMode === "COD" ? (orderData.codAmount || 0).toString() : "0",
+                        order_date: new Date().toISOString(),
+                        total_amount: (orderData.codAmount || 0).toString(),
+                        seller_add: "",
+                        seller_name: "",
+                        seller_inv: "",
+                        quantity: orderData.quantity || 1,
+                        waybill: "", // Empty = Delhivery auto-generates AWB
+                        shipment_width: 20,
+                        shipment_height: 10,
+                        weight: orderData.weight,
+                        seller_gst_tin: "",
+                        shipping_mode: "Surface",
+                        address_type: "home",
+                    },
+                ],
+                pickup_location: {
+                    name: DELHIVERY_CONFIG.pickupName,
+                },
+            };
+
+            const formData = `format=json&data=${encodeURIComponent(JSON.stringify(shipmentPayload))}`;
+
+            const res = await fetch(`${this.baseUrl}/api/cmu/create.json`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    Authorization: `Token ${this.token}`,
+                },
+                body: formData,
+            });
+
+            const data = await res.json();
+            console.log("[Delhivery] createShipment response:", JSON.stringify(data));
+
+            if (data.success && data.packages && data.packages.length > 0) {
+                const pkg = data.packages[0];
+                if (pkg.waybill) {
+                    return { success: true, awb: pkg.waybill, rawResponse: data };
+                }
+                // Package created but has remarks (validation error)
+                return { success: false, awb: "", rawResponse: data };
+            }
+
+            // Check for rmk (remark) field indicating errors
+            if (data.rmk) {
+                console.error("[Delhivery] Shipment creation error:", data.rmk);
+            }
+
+            return { success: false, awb: "", rawResponse: data };
+        } catch (error) {
+            console.error("[Delhivery] createShipment failed:", error);
+            return null;
+        }
     }
 
     /**
@@ -174,8 +249,23 @@ export class DelhiveryClient {
             return false;
         }
 
-        console.log("[Delhivery] cancelShipment called for AWB:", awb);
-        return false;
+        try {
+            const res = await fetch(`${this.baseUrl}/api/p/edit`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Token ${this.token}`,
+                },
+                body: JSON.stringify({ waybill: awb, cancellation: true }),
+            });
+
+            const data = await res.json();
+            console.log("[Delhivery] cancelShipment response:", JSON.stringify(data));
+            return res.ok;
+        } catch (error) {
+            console.error("[Delhivery] cancelShipment failed:", error);
+            return false;
+        }
     }
 
     /**
@@ -225,12 +315,14 @@ export async function createDelhiveryShipment(params: {
         weight: params.weight,
         paymentMode: params.paymentMode,
         codAmount: params.paymentMode === "COD" ? params.totalAmount : undefined,
+        productDescription: params.productDescription,
+        quantity: params.quantity,
     });
 
     if (!result) {
         return { success: false, error: "Delhivery API not configured or call failed" };
     }
-    return { success: result.success, waybill: result.awb };
+    return { success: result.success, waybill: result.awb, rawResponse: result.rawResponse, error: result.success ? undefined : "Shipment creation failed — check rawResponse" };
 }
 
 export async function trackDelhiveryShipment(waybill: string): Promise<{ success: boolean; data?: any; error?: string }> {

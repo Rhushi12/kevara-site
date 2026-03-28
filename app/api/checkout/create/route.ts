@@ -24,7 +24,7 @@ interface CartItemPayload {
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { items, discountCode } = body as { items: CartItemPayload[]; discountCode?: string };
+        const { items, discountCode, phone } = body as { items: CartItemPayload[]; discountCode?: string; phone?: string };
 
         if (!items || items.length === 0) {
             return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
@@ -98,7 +98,8 @@ export async function POST(req: Request) {
                             merchandiseId: li.variantId,
                             quantity: li.quantity
                         })),
-                        ...(discountCode ? { discountCodes: [discountCode] } : {})
+                        ...(discountCode ? { discountCodes: [discountCode] } : {}),
+                        ...(phone ? { buyerIdentity: { phone: phone.startsWith('+') ? phone : `+91${phone}` } } : {})
                     }
                 }
             });
@@ -135,6 +136,9 @@ export async function POST(req: Request) {
         console.log("[Checkout] Discount codes:", appliedDiscounts);
 
         // Map the checkout URL to the .myshopify.com domain so Vercel doesn't intercept it and 404
+        // NOTE: Once kevara.in is fully connected as Shopify's primary domain,
+        // the "Continue Shopping" button will automatically point to kevara.in.
+        // Until then, the .myshopify.com domain is used for checkout.
         let finalCheckoutUrl = cartData.cart.checkoutUrl;
         const shopifyDomain = process.env.SHOPIFY_STORE_DOMAIN || "bkbkiz-7h.myshopify.com";
         try {

@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { LogOut, ChevronRight } from "lucide-react";
 import { OrderTrackingBlock } from "@/components/blocks/OrderTrackingBlock";
-import { LoyaltyCommandCenter } from "@/components/blocks/LoyaltyCommandCenter";
 import ProductCard from "@/components/ProductCard";
 
 interface Order {
@@ -108,7 +107,7 @@ export default function AccountPage() {
                 <div className="grid grid-cols-1 md:grid-cols-12 auto-rows-[minmax(180px,auto)] gap-8">
                     
                     {/* User Profile Cell */}
-                    <div className="col-span-1 md:col-span-5 lg:col-span-4">
+                    <div className="col-span-1 md:col-span-12 lg:col-span-12">
                         <div className="h-full bg-white shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-slate-100 p-8 flex flex-col">
                             <div className="flex flex-col items-center text-center mb-8">
                                 <div className="w-24 h-24 bg-[#006D77] text-[#FDFBF7] flex items-center justify-center text-3xl font-prata rounded-full mb-6 mx-auto">
@@ -139,10 +138,7 @@ export default function AccountPage() {
                         </div>
                     </div>
 
-                    {/* Loyalty Command Center */}
-                    <div className="col-span-1 md:col-span-7 lg:col-span-8">
-                        <LoyaltyCommandCenter />
-                    </div>
+
 
                     {/* Active Order / Logistics block */}
                     {recentOrder ? (
@@ -158,24 +154,31 @@ export default function AccountPage() {
                         </div>
                     )}
 
-                    {/* Saved Payment / Addresses */}
+                    {/* Concierge Support Block */}
                     <div className="col-span-1 md:col-span-6 lg:col-span-4">
-                        <div className="h-full bg-white shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-slate-100 p-8 flex flex-col">
-                            <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
-                                <h3 className="text-xl font-prata text-slate-900">
-                                    Payment
-                                </h3>
-                                <button onClick={() => router.push('/account/payment')} className="text-[10px] font-bold uppercase tracking-widest text-[#006D77] hover:text-[#004e55] transition-colors">Manage</button>
-                            </div>
+                        <div className="h-full bg-white shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-slate-100 p-8 flex flex-col justify-between relative overflow-hidden group">
+                            <div className="absolute -right-6 -top-6 w-24 h-24 bg-[#0E4D55]/5 rounded-full blur-2xl group-hover:bg-[#0E4D55]/10 transition-colors pointer-events-none" />
                             
-                            <div className="flex items-center justify-between p-4 bg-[#FDFBF7] border border-slate-100">
-                                <div className="flex items-center gap-4">
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest border border-slate-200 px-2 py-1 bg-white">Visa</span>
-                                    <div>
-                                        <p className="text-sm font-semibold text-slate-900 tracking-wide">•••• 4242</p>
-                                        <p className="text-xs text-slate-500 font-lora italic mt-0.5">Expires 12/28</p>
-                                    </div>
-                                </div>
+                            <div>
+                                <h3 className="text-xl font-prata text-slate-900 mb-2">Concierge</h3>
+                                <p className="text-xs text-slate-500 font-figtree mb-6 leading-relaxed">
+                                    Need assistance with styling, sizing, or an existing order? Our premium support team is here to help.
+                                </p>
+                            </div>
+
+                            <div className="space-y-3">
+                                <a 
+                                    href="/contact" 
+                                    className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-[#0E4D55] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#0A3A40] transition-colors rounded-sm"
+                                >
+                                    Contact Support
+                                </a>
+                                <a 
+                                    href="/faq" 
+                                    className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-white border border-gray-200 text-slate-700 text-xs font-bold uppercase tracking-widest hover:border-[#0E4D55] hover:text-[#0E4D55] transition-colors rounded-sm"
+                                >
+                                    Read FAQ
+                                </a>
                             </div>
                         </div>
                     </div>

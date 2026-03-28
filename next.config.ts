@@ -62,10 +62,10 @@ const nextConfig: NextConfig = {
             value: [
               // Default fallback
               "default-src 'self'",
-              // API connections - Firebase, Shopify, Cloudflare R2
-              "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.myshopify.com https://*.shopify.com https://*.r2.dev https://*.cloudflarestorage.com https://cdn.shopify.com https://www.google.com",
-              // Scripts - Firebase, Google APIs, blob for dynamic scripts
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: https://cdn.shopify.com https://*.firebaseapp.com https://apis.google.com https://www.gstatic.com",
+              // API connections - Firebase, Shopify, Cloudflare R2, Analytics, Vercel
+              "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.myshopify.com https://*.shopify.com https://*.r2.dev https://*.cloudflarestorage.com https://cdn.shopify.com https://www.google.com https://www.google-analytics.com https://overbridgenet.com https://vercel.live wss://ws-us3.pusher.com",
+              // Scripts - Firebase, Google APIs, blob for dynamic scripts, Vercel Live
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: https://cdn.shopify.com https://*.firebaseapp.com https://apis.google.com https://www.gstatic.com https://vercel.live https://static.cloudflareinsights.com",
               // Styles
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               // Images - all sources used including user uploads
@@ -73,7 +73,7 @@ const nextConfig: NextConfig = {
               // Fonts
               "font-src 'self' https://fonts.gstatic.com data:",
               // Frames for auth popups and embedded videos
-              "frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://*.google.com https://www.youtube.com https://youtube.com https://*.youtube.com",
+              "frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://*.google.com https://www.youtube.com https://youtube.com https://*.youtube.com https://vercel.live",
               // Who can frame this site
               "frame-ancestors 'self' https://admin.shopify.com https://*.myshopify.com",
               // Media (video/audio)
@@ -92,6 +92,22 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '100mb',
     },
+  },
+  async redirects() {
+    return [
+      {
+        // Catch all traffic on *.vercel.app and redirect to kevara.in
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: '(?!kevara\\.in).*\\.vercel\\.app',
+          },
+        ],
+        destination: 'https://kevara.in/:path*',
+        permanent: true,
+      },
+    ];
   },
 };
 

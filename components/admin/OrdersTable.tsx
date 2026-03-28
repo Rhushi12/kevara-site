@@ -93,6 +93,7 @@ export default function OrdersTable() {
     const [fulfilling, setFulfilling] = useState<string | null>(null);
     const [fulfillError, setFulfillError] = useState("");
     const [fulfillSuccess, setFulfillSuccess] = useState("");
+    const [fulfillWeight, setFulfillWeight] = useState<number>(500);
 
     const fetchOrders = async () => {
         setLoading(true);
@@ -152,7 +153,7 @@ export default function OrdersTable() {
             const res = await adminFetch("/api/admin/fulfill", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ orderId, weight: 500 }),
+                body: JSON.stringify({ orderId, weight: fulfillWeight }),
             });
             const data = await res.json();
             if (data.success) {
@@ -412,15 +413,53 @@ export default function OrdersTable() {
 
                                         {/* Fulfill with Delhivery */}
                                         {(!order.awbNumber && (!order.status || order.status === "unfulfilled")) && (
-                                            <div className="space-y-2">
+                                            <div className="space-y-3 bg-slate-50 border border-slate-200 rounded-xl p-4">
+                                                <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">Ship with Delhivery</p>
+                                                
+                                                {/* Phone display */}
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs text-slate-500 w-16">Phone:</span>
+                                                    <span className="text-xs font-medium text-slate-800">
+                                                        {order.shippingAddress?.phone || order.customerInfo?.phone || "⚠️ No phone on file"}
+                                                    </span>
+                                                </div>
+
+                                                {/* Weight input */}
+                                                <div className="flex items-center gap-2">
+                                                    <label className="text-xs text-slate-500 w-16">Weight:</label>
+                                                    <input
+                                                        type="number"
+                                                        min={100}
+                                                        step={50}
+                                                        value={fulfillWeight}
+                                                        onChange={(e) => setFulfillWeight(Number(e.target.value))}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className="w-24 px-2 py-1.5 text-xs border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-[#0E4D55] focus:border-transparent"
+                                                    />
+                                                    <span className="text-xs text-slate-400">grams</span>
+                                                </div>
+
+                                                {/* Address preview */}
+                                                {order.shippingAddress && (
+                                                    <div className="flex items-start gap-2">
+                                                        <span className="text-xs text-slate-500 w-16 shrink-0">Address:</span>
+                                                        <span className="text-xs text-slate-600 leading-relaxed">
+                                                            {order.shippingAddress.address1}{order.shippingAddress.address2 ? `, ${order.shippingAddress.address2}` : ''}, {order.shippingAddress.city}, {order.shippingAddress.state} — {order.shippingAddress.zip}
+                                                        </span>
+                                                    </div>
+                                                )}
+
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); fulfillWithDelhivery(order.id); }}
-                                                    disabled={fulfilling === order.id}
+                                                    disabled={fulfilling === order.id || !order.shippingAddress?.phone}
                                                     className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors uppercase tracking-wider"
                                                 >
                                                     <Truck size={13} />
-                                                    {fulfilling === order.id ? "Creating Shipment..." : "Fulfill with Delhivery"}
+                                                    {fulfilling === order.id ? "Creating Shipment..." : `Generate AWB (${fulfillWeight}g)`}
                                                 </button>
+                                                {!order.shippingAddress?.phone && !order.customerInfo?.phone && (
+                                                    <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">⚠️ No phone number — Delhivery requires a phone number for delivery. Update the order first.</p>
+                                                )}
                                                 {fulfillError && <p className="text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">{fulfillError}</p>}
                                                 {fulfillSuccess && <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">{fulfillSuccess}</p>}
                                             </div>

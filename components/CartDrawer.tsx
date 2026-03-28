@@ -21,6 +21,9 @@ export default function CartDrawer() {
     const [couponCode, setCouponCode] = useState("");
     const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
 
+    // Phone State for Delhivery Delivery
+    const [phone, setPhone] = useState("");
+
     // Auth — for auto-applying welcome discount and checking auth status
     const { isFirstPurchase, user } = useAuth();
 
@@ -59,7 +62,11 @@ export default function CartDrawer() {
             const response = await fetch('/api/checkout/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ items: checkoutItems, discountCode: appliedCoupon || undefined })
+                body: JSON.stringify({ 
+                    items: checkoutItems, 
+                    discountCode: appliedCoupon || undefined,
+                    phone: phone.trim()
+                })
             });
 
             const data = await response.json();
@@ -458,7 +465,26 @@ export default function CartDrawer() {
                                 </div>
 
                                 <div className="space-y-3 mb-6">
-                                    <div className="flex justify-between text-sm text-slate-600">
+                                    <div className="flex flex-col gap-2">
+                                        <label htmlFor="cart-phone" className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                                            Contact Phone <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            id="cart-phone"
+                                            type="tel"
+                                            value={phone}
+                                            onChange={(e) => setPhone(e.target.value)}
+                                            placeholder="Mobile number for delivery updates"
+                                            className={`w-full bg-white border ${phone && phone.length < 10 ? 'border-red-300 focus:ring-red-500' : 'border-gray-200 focus:ring-[#0E4D55]'} rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-1 transition-colors`}
+                                            required
+                                        />
+                                        {phone && phone.length < 10 && (
+                                            <p className="text-[10px] text-red-500">Please enter a valid phone number</p>
+                                        )}
+                                        <p className="text-[10px] text-slate-500">Required by our courier partners (Delhivery) to deliver your order.</p>
+                                    </div>
+
+                                    <div className="flex justify-between text-sm text-slate-600 mt-4">
                                         <span>Subtotal</span>
                                         <span className="font-medium text-slate-900">₹{subtotal}</span>
                                     </div>
@@ -474,8 +500,8 @@ export default function CartDrawer() {
 
                                 <LiquidButton
                                     onClick={handleCheckout}
-                                    className="w-full py-4 bg-[#0E4D55] text-white hover:bg-[#0A3A40] shadow-lg shadow-[#0E4D55]/20 group"
-                                    disabled={isCheckingOut || items.length === 0}
+                                    className="w-full py-4 bg-[#0E4D55] text-white hover:bg-[#0A3A40] shadow-lg shadow-[#0E4D55]/20 group disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={isCheckingOut || items.length === 0 || phone.length < 10}
                                 >
                                     <div className="flex items-center justify-center gap-2">
                                         <span className="font-semibold tracking-wide">

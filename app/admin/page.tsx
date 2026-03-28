@@ -19,6 +19,7 @@ import WholesaleLeadsTable from "@/components/admin/WholesaleLeadsTable";
 import ProductsTable from "@/components/admin/ProductsTable";
 import OrdersTable from "@/components/admin/OrdersTable";
 import LogisticsDashboard from "@/components/admin/LogisticsDashboard";
+import AdminDiscounts from "@/components/admin/AdminDiscounts";
 import { db } from "@/lib/firebase";
 import { collection, writeBatch, doc } from "firebase/firestore";
 import { MOCK_SHOPIFY_PRODUCTS } from "@/lib/mockData";
@@ -141,6 +142,16 @@ export default function AdminPage() {
                             <p className="font-lora italic text-slate-500 text-lg">Manage B2B and bulk product lead requests.</p>
                         </div>
                         <WholesaleLeadsTable />
+                    </div>
+                );
+            case "discounts":
+                return (
+                    <div className="space-y-8 animate-in fade-in duration-500 slide-in-from-bottom-2 pb-12">
+                        <div className="pb-8 border-b border-black/5 mb-8">
+                            <h1 className="text-4xl font-prata text-slate-900 tracking-tight mb-2">Discount Manager</h1>
+                            <p className="font-lora italic text-slate-500 text-lg">Create and manage Shopify discount codes, sales, and special offers.</p>
+                        </div>
+                        <AdminDiscounts />
                     </div>
                 );
             case "leads":

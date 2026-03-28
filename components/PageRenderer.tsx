@@ -11,6 +11,7 @@ import { useToast } from "@/context/ToastContext";
 // ─── CRITICAL (above-the-fold): loaded eagerly ───
 import Navbar from "@/components/Navbar";
 import HeroSlider from "@/components/HeroSlider";
+import Marquee from "@/components/Marquee";
 import PremiumPreloader from "@/components/PremiumPreloader";
 import UnderConstruction from "@/components/UnderConstruction";
 import LazySection from "@/components/LazySection";
@@ -248,12 +249,15 @@ export default function PageRenderer({ slug, initialContent }: PageRendererProps
                 switch (section.type) {
                     case "hero_slider":
                         return (
-                            <HeroSlider
-                                key={section.id}
-                                slides={(section.settings as any).slides || []}
-                                isEditMode={isEditMode}
-                                onUpdate={(newSlides) => updateSection(section.id, { slides: newSlides })}
-                            />
+                            <>
+                                <HeroSlider
+                                    key={section.id}
+                                    slides={(section.settings as any).slides || []}
+                                    isEditMode={isEditMode}
+                                    onUpdate={(newSlides) => updateSection(section.id, { slides: newSlides })}
+                                />
+                                <Marquee />
+                            </>
                         );
                     case "shop_essentials":
                         return (
