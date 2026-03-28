@@ -69,8 +69,7 @@ export async function POST(req: Request) {
         const variables = {
             handle: { type: "marquee_item", handle: itemHandle },
             metaobject: {
-                fields: [{ key: "text", value: text }],
-                capabilities: { publishable: { status: "ACTIVE" } }
+                fields: [{ key: "text", value: text }]
             }
         };
 

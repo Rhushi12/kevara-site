@@ -1,0 +1,28 @@
+﻿[dotenv@17.2.3] injecting env (25) from .env.local -- tip: Γ£à audit secrets and track compliance: https://dotenvx.com/ops
+{
+  "data": {
+    "discountCodeBasicCreate": {
+      "codeDiscountNode": null,
+      "userErrors": [
+        {
+          "field": [
+            "basicCodeDiscount",
+            "code"
+          ],
+          "message": "Code must be unique. Please try a different code."
+        }
+      ]
+    }
+  },
+  "extensions": {
+    "cost": {
+      "requestedQueryCost": 10,
+      "actualQueryCost": 10,
+      "throttleStatus": {
+        "maximumAvailable": 2000,
+        "currentlyAvailable": 1990,
+        "restoreRate": 100
+      }
+    }
+  }
+}
