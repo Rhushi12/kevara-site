@@ -34,15 +34,15 @@ const kamundi = localFont({
 import { db } from "@/lib/firebase-admin";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const defaultTitle = "Kevara | Timeless Elegance";
-  const defaultDesc = "Discover Kevara's high-end fashion collection. Timeless elegance designed for the modern era.";
+  const defaultTitle = "Kevara | Premium Oversized Streetwear & Custom Fashion India";
+  const defaultDesc = "Experience true comfort with Kevara. Shop India's finest 280 GSM heavyweight oversized t-shirts, premium hoodies, and limited edition streetwear drops.";
   const defaultImage = "/og-image.jpg";
 
   let title = defaultTitle;
   let description = defaultDesc;
   let ogImage = defaultImage;
 
-  let keywords = ["fashion", "luxury", "clothing", "kevara", "elegance", "women's fashion", "men's fashion"];
+  let keywords = ["oversized t shirt mens", "premium streetwear india", "280 GSM oversized t shirt", "custom graphic hoodies India", "kevara", "heavyweight cotton streetwear"];
 
   try {
     const docRef = db.collection("config").doc("seo");
@@ -132,18 +132,38 @@ export default async function RootLayout({
     console.warn("Failed to fetch SEO config for schema:", error);
   }
 
-  // Generate JSON-LD
+  // Generate JSON-LD (Advanced Entity SEO)
   const jsonLd = seoConfig.enableSchema !== false ? {
     "@context": "https://schema.org",
     "@type": "Organization",
+    "@id": `${process.env.NEXT_PUBLIC_SITE_URL || "https://kevara.in"}/#organization`,
     "name": "Kevara",
+    "legalName": "Kevara Apparel Private Limited", 
     "url": process.env.NEXT_PUBLIC_SITE_URL || "https://kevara.in",
     "logo": seoConfig.ogImage || "https://kevara.in/logo.png",
-    "description": seoConfig.description || "Timeless Elegance",
+    "description": seoConfig.description || "Premium Oversized Streetwear & Custom Fashion. India's fastest growing D2C fashion brand.",
+    "iso6523Code": "0060:KevaraApparel", // D&B identifier
+    "taxID": "PENDING_GSTIN", // Ensure this matches legal entity later
+    "foundingDate": "2024",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "email": "kevaraecommerce@gmail.com",
+      "contactType": "customer support",
+      "availableLanguage": ["English", "Hindi"]
+    },
+    "hasMerchantReturnPolicy": {
+      "@type": "MerchantReturnPolicy",
+      "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+      "merchantReturnDays": "30",
+      "returnMethod": "https://schema.org/ReturnByMail",
+      "returnFees": "https://schema.org/FreeReturn"
+    },
     "sameAs": [
       seoConfig.social?.instagram,
       seoConfig.social?.facebook,
-      seoConfig.social?.twitter
+      seoConfig.social?.twitter,
+      "https://www.linkedin.com/company/kevara",
+      "https://www.justdial.com/kevara"
     ].filter(Boolean)
   } : null;
 
