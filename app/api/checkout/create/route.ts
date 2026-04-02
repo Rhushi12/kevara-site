@@ -135,19 +135,7 @@ export async function POST(req: Request) {
         console.log("[Checkout] ✅ Checkout URL:", cartData.cart.checkoutUrl);
         console.log("[Checkout] Discount codes:", appliedDiscounts);
 
-        // Map the checkout URL to the .myshopify.com domain so Vercel doesn't intercept it and 404
-        // NOTE: Once kevara.in is fully connected as Shopify's primary domain,
-        // the "Continue Shopping" button will automatically point to kevara.in.
-        // Until then, the .myshopify.com domain is used for checkout.
         let finalCheckoutUrl = cartData.cart.checkoutUrl;
-        const shopifyDomain = process.env.SHOPIFY_STORE_DOMAIN || "bkbkiz-7h.myshopify.com";
-        try {
-            const urlObj = new URL(finalCheckoutUrl);
-            urlObj.hostname = shopifyDomain;
-            finalCheckoutUrl = urlObj.toString();
-        } catch (e) {
-            console.error("[Checkout] Failed to replace checkout URL domain:", e);
-        }
 
         return NextResponse.json({
             success: true,
