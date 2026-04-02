@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/firebase";
 import { collection, doc, updateDoc, getDoc, serverTimestamp, query, where, getDocs, addDoc } from "firebase/firestore";
 import { mapDelhiveryStatus, DelhiveryWebhookPayload, DELHIVERY_CONFIG } from "@/lib/delhivery";
-import { fetchOrderLineItemsForRestock, restockOrderItems } from "@/lib/shopify-admin";
+import { fetchOrderLineItemsForRestock, restockOrderItems } from "@/lib/inventory";
 
 /**
  * POST /api/webhooks/delhivery

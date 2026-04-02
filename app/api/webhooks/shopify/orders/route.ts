@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { db } from '@/lib/firebase-admin';
+import { sendOrderConfirmation } from '@/lib/whatsapp';
+import { decrementStockForOrder } from '@/lib/inventory';
 
 export const dynamic = 'force-dynamic';
 
@@ -113,6 +115,37 @@ export async function POST(req: NextRequest) {
             await orderRef.set(normalizedOrder, { merge: true });
 
             console.log(`[Webhook] ✅ Order ${normalizedOrder.orderNumber} successfully synced to Firebase`);
+
+            // Decrement stock for each ordered item (non-blocking)
+            if (topic === 'orders/create' && normalizedOrder.items?.length > 0) {
+                decrementStockForOrder(
+                    normalizedOrder.items.map((i: any) => ({
+                        productId: i.productId,
+                        variantId: i.variantId,
+                        variantTitle: i.variantTitle,
+                        title: i.title,
+                        quantity: i.quantity || 1,
+                        sku: i.sku,
+                    }))
+                ).catch(err => console.error('[Webhook] Stock decrement error (non-blocking):', err.message));
+            }
+
+            // Send WhatsApp order confirmation (non-blocking)
+            if (topic === 'orders/create' && normalizedOrder.customerInfo?.phone) {
+                const itemsSummary = normalizedOrder.items
+                    .map((i: any) => `${i.title}${i.variantTitle ? ` (${i.variantTitle})` : ''} x${i.quantity}`)
+                    .join(', ');
+                const customerName = `${normalizedOrder.customerInfo.firstName} ${normalizedOrder.customerInfo.lastName}`.trim();
+
+                sendOrderConfirmation(
+                    normalizedOrder.customerInfo.phone,
+                    customerName,
+                    normalizedOrder.orderNumber,
+                    itemsSummary,
+                    `${normalizedOrder.totalPrice}`
+                ).catch(err => console.error('[Webhook] WhatsApp notification error (non-blocking):', err.message));
+            }
+
             return NextResponse.json({ success: true, message: `Synced order ${orderId}` });
         }
 
