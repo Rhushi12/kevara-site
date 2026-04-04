@@ -127,6 +127,14 @@ export default function AccountPage() {
                                 </button>
                                 <div className="h-px bg-slate-100 w-full my-1"></div>
                                 <button 
+                                    onClick={() => router.push('/account/returns')}
+                                    className="w-full flex items-center justify-between py-3 px-2 hover:bg-[#FDFBF7] transition-colors group text-sm"
+                                >
+                                    <span className="font-semibold tracking-wide text-slate-700 group-hover:text-[#006D77] transition-colors">Returns & Exchanges</span>
+                                    <ChevronRight size={16} className="text-slate-300 group-hover:text-[#006D77] transition-colors" />
+                                </button>
+                                <div className="h-px bg-slate-100 w-full my-1"></div>
+                                <button 
                                     onClick={() => logout()}
                                     className="w-full flex items-center justify-between py-3 px-2 hover:bg-rose-50 transition-colors group text-sm"
                                     aria-label="Sign Out"

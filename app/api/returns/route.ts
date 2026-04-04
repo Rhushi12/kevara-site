@@ -47,26 +47,61 @@ export async function GET(req: NextRequest) {
         const { searchParams } = new URL(req.url);
         const email = searchParams.get('email');
 
-        let query: FirebaseFirestore.Query = db.collection('return_requests')
-            .orderBy('createdAt', 'desc')
-            .limit(50);
+        const allRequests: any[] = [];
 
-        if (email) {
-            query = db.collection('return_requests')
-                .where('customerEmail', '==', email)
+        // Query 'return_requests' collection (from the simple POST endpoint)
+        try {
+            let query1: FirebaseFirestore.Query = db.collection('return_requests')
                 .orderBy('createdAt', 'desc')
-                .limit(20);
+                .limit(50);
+
+            if (email) {
+                query1 = db.collection('return_requests')
+                    .where('customerEmail', '==', email)
+                    .orderBy('createdAt', 'desc')
+                    .limit(20);
+            }
+
+            const snapshot1 = await query1.get();
+            snapshot1.docs.forEach(doc => {
+                allRequests.push({ id: doc.id, ...doc.data() });
+            });
+        } catch (e: any) {
+            // Index may not exist yet — skip gracefully
+            console.warn("[ReturnRequest] return_requests query failed (index may be missing):", e.message);
         }
 
-        const snapshot = await query.get();
-        const requests = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
+        // Also query 'returns' collection (from the authenticated request endpoint)
+        try {
+            let query2: FirebaseFirestore.Query = db.collection('returns')
+                .orderBy('createdAt', 'desc')
+                .limit(50);
 
-        return NextResponse.json({ success: true, requests });
+            if (email) {
+                query2 = db.collection('returns')
+                    .where('userEmail', '==', email)
+                    .orderBy('createdAt', 'desc')
+                    .limit(20);
+            }
+
+            const snapshot2 = await query2.get();
+            snapshot2.docs.forEach(doc => {
+                allRequests.push({ id: doc.id, ...doc.data() });
+            });
+        } catch (e: any) {
+            console.warn("[ReturnRequest] returns query failed (index may be missing):", e.message);
+        }
+
+        // Sort combined results by createdAt descending
+        allRequests.sort((a, b) => {
+            const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
+            const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
+            return dateB.getTime() - dateA.getTime();
+        });
+
+        return NextResponse.json({ success: true, requests: allRequests });
     } catch (error: any) {
         console.error("[ReturnRequest] GET Error:", error.message);
-        return NextResponse.json({ error: "Failed to fetch return requests" }, { status: 500 });
+        return NextResponse.json({ success: true, requests: [] });
     }
 }

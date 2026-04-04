@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
 import { createDelhiveryShipment, trackDelhiveryShipment } from '@/lib/delhivery';
 import { requireAdmin } from '@/lib/auth';
+import { sendShipmentNotification } from '@/lib/whatsapp';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,6 +76,22 @@ export async function POST(req: NextRequest) {
             trackingUrl,
             updatedAt: new Date().toISOString(),
         });
+
+        // Send WhatsApp shipping notification (non-blocking)
+        const customerPhone = order.shippingAddress?.phone || order.customerInfo?.phone;
+        if (customerPhone) {
+            const customerName = order.shippingAddress?.name
+                || `${order.customerInfo?.firstName || ''} ${order.customerInfo?.lastName || ''}`.trim();
+
+            sendShipmentNotification(
+                customerPhone,
+                customerName,
+                order.orderNumber?.toString() || orderId,
+                'Delhivery',
+                result.waybill!,
+                trackingUrl
+            ).catch(err => console.error('[Fulfillment] WhatsApp notification error (non-blocking):', err.message));
+        }
 
         return NextResponse.json({
             success: true,

@@ -17,6 +17,8 @@ import {
     Plus,
     Minus,
     Edit3,
+    CheckSquare,
+    Square
 } from "lucide-react";
 
 interface InventoryProduct {
@@ -56,11 +58,54 @@ export default function InventoryManager() {
     const [editingStock, setEditingStock] = useState<string | null>(null);
     const [stockInputs, setStockInputs] = useState<Record<string, number>>({});
     const [saving, setSaving] = useState<string | null>(null);
-    const [saveMessage, setSaveMessage] = useState<{ handle: string; msg: string; ok: boolean } | null>(null);
+    const [saveMessage, setSaveMessage] = useState<{ handle: string | 'bulk'; msg: string; ok: boolean } | null>(null);
+
+    // Bulk action state
+    const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+    const [bulkStockAction, setBulkStockAction] = useState<'add' | 'remove' | 'set'>('add');
+    const [bulkStockAmount, setBulkStockAmount] = useState<string>("0");
+    const [isSavingBulk, setIsSavingBulk] = useState(false);
 
     useEffect(() => {
         fetchProducts();
     }, []);
+
+    // Filter & Sort
+    const getPrice = (p: InventoryProduct): number => {
+        return parseFloat(p.priceRange?.minVariantPrice?.amount || '0');
+    };
+
+    const getStock = (p: InventoryProduct): number => {
+        return p.stock ?? 0;
+    };
+
+    const filteredProducts = products
+        .filter(p => {
+            const matchesSearch =
+                (p.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (p.handle || '').toLowerCase().includes(searchQuery.toLowerCase());
+            const stock = getStock(p);
+            const matchesFilter =
+                stockFilter === 'all' ? true :
+                stockFilter === 'in-stock' ? stock > 10 :
+                stockFilter === 'low-stock' ? (stock > 0 && stock <= 10) :
+                stock === 0;
+            return matchesSearch && matchesFilter;
+        })
+        .sort((a, b) => {
+            let aVal: any, bVal: any;
+            switch (sortField) {
+                case 'title': aVal = a.title; bVal = b.title; break;
+                case 'stock': aVal = getStock(a); bVal = getStock(b); break;
+                case 'price': aVal = getPrice(a); bVal = getPrice(b); break;
+                case 'status': aVal = a.status || ''; bVal = b.status || ''; break;
+            }
+            if (typeof aVal === 'string') {
+                return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+            }
+            return sortDir === 'asc' ? aVal - bVal : bVal - aVal;
+        });
+
 
     const fetchProducts = async () => {
         setLoading(true);
@@ -76,6 +121,7 @@ export default function InventoryManager() {
                     };
                 });
                 setProducts(mapped);
+                setSelectedItems(new Set());
             }
         } catch (error) {
             console.error("Failed to fetch products:", error);
@@ -84,15 +130,7 @@ export default function InventoryManager() {
         }
     };
 
-    const getPrice = (p: InventoryProduct): number => {
-        return parseFloat(p.priceRange?.minVariantPrice?.amount || '0');
-    };
-
-    const getStock = (p: InventoryProduct): number => {
-        return p.stock ?? 0;
-    };
-
-    // Save stock update
+    // Save stock update (single)
     const saveStock = async (handle: string) => {
         const newStock = stockInputs[handle];
         if (newStock === undefined || newStock < 0) return;
@@ -126,6 +164,58 @@ export default function InventoryManager() {
         }
     };
 
+    // Save bulk stock update
+    const saveBulkStock = async () => {
+        if (selectedItems.size === 0) return;
+        const amount = parseInt(bulkStockAmount) || 0;
+        if (bulkStockAction === 'set' && amount < 0) return;
+
+        setIsSavingBulk(true);
+        try {
+            const itemsToUpdate = Array.from(selectedItems).map(handle => {
+                const product = products.find(p => p.handle === handle);
+                const currentStock = product ? getStock(product) : 0;
+                let newStock = currentStock;
+
+                if (bulkStockAction === 'add') {
+                    newStock = currentStock + amount;
+                } else if (bulkStockAction === 'remove') {
+                    newStock = Math.max(0, currentStock - amount);
+                } else if (bulkStockAction === 'set') {
+                    newStock = Math.max(0, amount);
+                }
+
+                return { handle, stock: newStock };
+            });
+
+            const res = await fetch('/api/products', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items: itemsToUpdate }),
+            });
+
+            if (res.ok) {
+                const updateMap = new Map(itemsToUpdate.map(i => [i.handle, i.stock]));
+                setProducts(products.map(p =>
+                    updateMap.has(p.handle) ? { ...p, stock: updateMap.get(p.handle) } : p
+                ));
+                setSelectedItems(new Set());
+                setBulkStockAmount("0");
+                setSaveMessage({ handle: 'bulk', msg: `Updated ${itemsToUpdate.length} items successfully!`, ok: true });
+                setTimeout(() => setSaveMessage(null), 3000);
+            } else {
+                setSaveMessage({ handle: 'bulk', msg: 'Failed to perform bulk update', ok: false });
+                setTimeout(() => setSaveMessage(null), 3000);
+            }
+        } catch (e) {
+            setSaveMessage({ handle: 'bulk', msg: 'Error performing bulk update', ok: false });
+            setTimeout(() => setSaveMessage(null), 3000);
+        } finally {
+            setIsSavingBulk(false);
+        }
+    };
+
+
     const startEditing = (handle: string, currentStock: number) => {
         setEditingStock(handle);
         setStockInputs(prev => ({ ...prev, [handle]: currentStock }));
@@ -138,6 +228,26 @@ export default function InventoryManager() {
         }));
     };
 
+    const toggleSelection = (handle: string) => {
+        setSelectedItems(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(handle)) {
+                newSet.delete(handle);
+            } else {
+                newSet.add(handle);
+            }
+            return newSet;
+        });
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedItems.size === filteredProducts.length && filteredProducts.length > 0) {
+            setSelectedItems(new Set());
+        } else {
+            setSelectedItems(new Set(filteredProducts.map(p => p.handle)));
+        }
+    };
+
     // Stats
     const totalProducts = products.length;
     const inStockCount = products.filter(p => getStock(p) > 10).length;
@@ -145,33 +255,7 @@ export default function InventoryManager() {
     const outOfStockCount = products.filter(p => getStock(p) === 0).length;
     const totalStockUnits = products.reduce((a, p) => a + getStock(p), 0);
 
-    // Filter & Sort
-    const filteredProducts = products
-        .filter(p => {
-            const matchesSearch =
-                (p.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (p.handle || '').toLowerCase().includes(searchQuery.toLowerCase());
-            const stock = getStock(p);
-            const matchesFilter =
-                stockFilter === 'all' ? true :
-                stockFilter === 'in-stock' ? stock > 10 :
-                stockFilter === 'low-stock' ? (stock > 0 && stock <= 10) :
-                stock === 0;
-            return matchesSearch && matchesFilter;
-        })
-        .sort((a, b) => {
-            let aVal: any, bVal: any;
-            switch (sortField) {
-                case 'title': aVal = a.title; bVal = b.title; break;
-                case 'stock': aVal = getStock(a); bVal = getStock(b); break;
-                case 'price': aVal = getPrice(a); bVal = getPrice(b); break;
-                case 'status': aVal = a.status || ''; bVal = b.status || ''; break;
-            }
-            if (typeof aVal === 'string') {
-                return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-            }
-            return sortDir === 'asc' ? aVal - bVal : bVal - aVal;
-        });
+
 
     const toggleSort = (field: SortField) => {
         if (sortField === field) {
@@ -194,6 +278,9 @@ export default function InventoryManager() {
             <span className="text-sm text-slate-500">Loading inventory...</span>
         </div>
     );
+
+    const isAllSelected = filteredProducts.length > 0 && selectedItems.size === filteredProducts.length;
+    const isSomeSelected = selectedItems.size > 0 && selectedItems.size < filteredProducts.length;
 
     return (
         <div className="space-y-6">
@@ -252,6 +339,52 @@ export default function InventoryManager() {
                 </div>
             </div>
 
+            {/* Bulk Actions Bar */}
+            {selectedItems.size > 0 && (
+                 <div className="bg-[#0E4D55]/5 border border-[#0E4D55]/20 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4">
+                     <div className="flex items-center gap-3">
+                         <span className="bg-[#0E4D55] text-white text-xs font-bold px-2 py-1 rounded-md">
+                             {selectedItems.size} selected
+                         </span>
+                         <span className="text-sm text-[#0E4D55] font-medium">
+                             Bulk Edit Stock
+                         </span>
+                     </div>
+                     <div className="flex items-center gap-3 w-full sm:w-auto">
+                         <select
+                             value={bulkStockAction}
+                             onChange={(e) => setBulkStockAction(e.target.value as any)}
+                             className="h-10 px-3 bg-white border border-[#0E4D55]/20 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0E4D55]/50"
+                         >
+                             <option value="add">Add</option>
+                             <option value="remove">Remove</option>
+                             <option value="set">Set to</option>
+                         </select>
+                         <input
+                             type="number"
+                             min="0"
+                             value={bulkStockAmount}
+                             onChange={(e) => setBulkStockAmount(e.target.value)}
+                             className="h-10 w-24 px-3 bg-white border border-[#0E4D55]/20 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0E4D55]/50"
+                             placeholder="Amount"
+                         />
+                         <button
+                             onClick={saveBulkStock}
+                             disabled={isSavingBulk || !bulkStockAmount || isNaN(parseInt(bulkStockAmount))}
+                             className="h-10 px-4 bg-[#0E4D55] text-white text-sm font-medium rounded-lg hover:bg-[#0A3A40] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
+                         >
+                             {isSavingBulk ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                             Apply to {selectedItems.size}
+                         </button>
+                     </div>
+                     {saveMessage?.handle === 'bulk' && (
+                         <div className={`text-sm font-medium ${saveMessage.ok ? 'text-emerald-600' : 'text-rose-500'}`}>
+                             {saveMessage.msg}
+                         </div>
+                     )}
+                 </div>
+             )}
+
             {/* Inventory Table */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 {/* Search & Controls */}
@@ -281,6 +414,13 @@ export default function InventoryManager() {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-gray-50 text-gray-500 text-xs font-semibold uppercase tracking-wider">
+                                <th className="p-4 w-12 text-center">
+                                    <button onClick={toggleSelectAll} className="text-gray-400 hover:text-[#0E4D55] transition-colors flex items-center justify-center w-full">
+                                        {isAllSelected ? <CheckSquare size={16} className="text-[#0E4D55]" /> :
+                                         isSomeSelected ? <Minus size={16} strokeWidth={3} className="text-[#0E4D55] bg-[#0E4D55]/10 rounded-sm" /> :
+                                         <Square size={16} />}
+                                    </button>
+                                </th>
                                 <th className="p-4 w-12">#</th>
                                 <th className="p-4 cursor-pointer select-none" onClick={() => toggleSort('title')}>
                                     <span className="flex items-center gap-1">
@@ -308,7 +448,7 @@ export default function InventoryManager() {
                         <tbody className="divide-y divide-gray-100">
                             {filteredProducts.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="p-16 text-center">
+                                    <td colSpan={7} className="p-16 text-center">
                                         <Package className="mx-auto text-gray-300 mb-3" size={32} />
                                         <p className="text-gray-500 font-medium">No products match your filters</p>
                                         <button onClick={() => { setStockFilter('all'); setSearchQuery(''); }} className="text-[#0E4D55] text-sm font-medium mt-2 hover:underline">
@@ -325,9 +465,18 @@ export default function InventoryManager() {
                                     const isEditing = editingStock === product.handle;
                                     const isSaving = saving === product.handle;
                                     const msg = saveMessage?.handle === product.handle ? saveMessage : null;
+                                    const isSelected = selectedItems.has(product.handle);
 
                                     return (
-                                        <tr key={product.handle} className="hover:bg-gray-50/50 transition-colors group">
+                                        <tr key={product.handle} className={`hover:bg-gray-50/50 transition-colors group ${isSelected ? 'bg-[#0E4D55]/5' : ''}`}>
+                                            <td className="p-4 text-center">
+                                                <button
+                                                    onClick={() => toggleSelection(product.handle)}
+                                                    className="text-gray-400 hover:text-[#0E4D55] transition-colors flex items-center justify-center w-full"
+                                                >
+                                                    {isSelected ? <CheckSquare size={16} className="text-[#0E4D55]" /> : <Square size={16} />}
+                                                </button>
+                                            </td>
                                             <td className="p-4 text-xs text-gray-400 font-mono">{index + 1}</td>
                                             <td className="p-4">
                                                 <div className="flex items-center gap-3">

@@ -314,7 +314,7 @@ export default function Navbar() {
             </AnimatePresence>
 
             <nav className="sticky top-0 left-0 right-0 z-50 bg-[#0E4D55] text-white border-b border-white/10 transition-all duration-300">
-                <div className="container mx-auto px-4 h-16 lg:h-20 flex items-center justify-between relative">
+                <div className="w-full mx-auto px-6 lg:px-10 h-16 lg:h-20 flex items-center justify-between relative">
                     {/* Mobile Left: Menu + Search */}
                     <div className="flex lg:hidden items-center gap-4">
                         <button
