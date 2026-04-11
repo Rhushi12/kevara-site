@@ -65,6 +65,7 @@ export default function InventoryManager() {
     const [bulkStockAction, setBulkStockAction] = useState<'add' | 'remove' | 'set'>('add');
     const [bulkStockAmount, setBulkStockAmount] = useState<string>("0");
     const [isSavingBulk, setIsSavingBulk] = useState(false);
+    const [bulkProgress, setBulkProgress] = useState<{ completed: number; total: number; failed: number } | null>(null);
 
     useEffect(() => {
         fetchProducts();
@@ -137,11 +138,22 @@ export default function InventoryManager() {
 
         setSaving(handle);
         try {
+            // Use sizes from local state to build variantStock
+            const product = products.find(p => p.handle === handle);
+            const sizes: string[] = (product as any)?.sizes || [];
+            let variantStock: Record<string, number> | undefined = undefined;
+            if (sizes.length > 0) {
+                variantStock = {};
+                for (const size of sizes) {
+                    variantStock[size] = newStock;
+                }
+            }
+
             const res = await fetch('/api/products', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    items: [{ handle, stock: newStock }]
+                    items: [{ handle, stock: newStock, ...(variantStock ? { variantStock } : {}) }]
                 }),
             });
 
@@ -164,54 +176,88 @@ export default function InventoryManager() {
         }
     };
 
-    // Save bulk stock update
+    // Save bulk stock update — sends in frontend batches for progress tracking
+    const FRONTEND_BATCH_SIZE = 5;
     const saveBulkStock = async () => {
         if (selectedItems.size === 0) return;
         const amount = parseInt(bulkStockAmount) || 0;
         if (bulkStockAction === 'set' && amount < 0) return;
 
         setIsSavingBulk(true);
-        try {
-            const itemsToUpdate = Array.from(selectedItems).map(handle => {
-                const product = products.find(p => p.handle === handle);
-                const currentStock = product ? getStock(product) : 0;
-                let newStock = currentStock;
+        const allItems = Array.from(selectedItems).map(handle => {
+            const product = products.find(p => p.handle === handle);
+            const currentStock = product ? getStock(product) : 0;
+            let newStock = currentStock;
 
-                if (bulkStockAction === 'add') {
-                    newStock = currentStock + amount;
-                } else if (bulkStockAction === 'remove') {
-                    newStock = Math.max(0, currentStock - amount);
-                } else if (bulkStockAction === 'set') {
-                    newStock = Math.max(0, amount);
-                }
-
-                return { handle, stock: newStock };
-            });
-
-            const res = await fetch('/api/products', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ items: itemsToUpdate }),
-            });
-
-            if (res.ok) {
-                const updateMap = new Map(itemsToUpdate.map(i => [i.handle, i.stock]));
-                setProducts(products.map(p =>
-                    updateMap.has(p.handle) ? { ...p, stock: updateMap.get(p.handle) } : p
-                ));
-                setSelectedItems(new Set());
-                setBulkStockAmount("0");
-                setSaveMessage({ handle: 'bulk', msg: `Updated ${itemsToUpdate.length} items successfully!`, ok: true });
-                setTimeout(() => setSaveMessage(null), 3000);
-            } else {
-                setSaveMessage({ handle: 'bulk', msg: 'Failed to perform bulk update', ok: false });
-                setTimeout(() => setSaveMessage(null), 3000);
+            if (bulkStockAction === 'add') {
+                newStock = currentStock + amount;
+            } else if (bulkStockAction === 'remove') {
+                newStock = Math.max(0, currentStock - amount);
+            } else if (bulkStockAction === 'set') {
+                newStock = Math.max(0, amount);
             }
+
+            // Build variantStock from sizes already in local state
+            const sizes: string[] = (product as any)?.sizes || [];
+            let variantStock: Record<string, number> | undefined = undefined;
+            if (sizes.length > 0) {
+                variantStock = {};
+                for (const size of sizes) {
+                    variantStock[size] = newStock;
+                }
+            }
+
+            return { handle, stock: newStock, ...(variantStock ? { variantStock } : {}) };
+        });
+
+        const total = allItems.length;
+        let completed = 0;
+        let failed = 0;
+        setBulkProgress({ completed: 0, total, failed: 0 });
+
+        try {
+            for (let i = 0; i < total; i += FRONTEND_BATCH_SIZE) {
+                const batch = allItems.slice(i, i + FRONTEND_BATCH_SIZE);
+                try {
+                    const res = await fetch('/api/products', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ items: batch }),
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        completed += data.updatedCount || batch.length;
+                        failed += batch.length - (data.updatedCount || batch.length);
+                    } else {
+                        failed += batch.length;
+                    }
+                } catch {
+                    failed += batch.length;
+                }
+                setBulkProgress({ completed, total, failed });
+            }
+
+            // Update local state with new stock values
+            const updateMap = new Map(allItems.map(i => [i.handle, i.stock]));
+            setProducts(products.map(p =>
+                updateMap.has(p.handle) ? { ...p, stock: updateMap.get(p.handle) } : p
+            ));
+            setSelectedItems(new Set());
+            setBulkStockAmount("0");
+            setSaveMessage({
+                handle: 'bulk',
+                msg: failed > 0
+                    ? `Updated ${completed} of ${total} items (${failed} failed)`
+                    : `Updated ${completed} items successfully!`,
+                ok: failed === 0
+            });
+            setTimeout(() => setSaveMessage(null), 4000);
         } catch (e) {
             setSaveMessage({ handle: 'bulk', msg: 'Error performing bulk update', ok: false });
             setTimeout(() => setSaveMessage(null), 3000);
         } finally {
             setIsSavingBulk(false);
+            setTimeout(() => setBulkProgress(null), 2000);
         }
     };
 
@@ -340,44 +386,85 @@ export default function InventoryManager() {
             </div>
 
             {/* Bulk Actions Bar */}
-            {selectedItems.size > 0 && (
-                 <div className="bg-[#0E4D55]/5 border border-[#0E4D55]/20 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4">
-                     <div className="flex items-center gap-3">
-                         <span className="bg-[#0E4D55] text-white text-xs font-bold px-2 py-1 rounded-md">
-                             {selectedItems.size} selected
-                         </span>
-                         <span className="text-sm text-[#0E4D55] font-medium">
-                             Bulk Edit Stock
-                         </span>
+            {(selectedItems.size > 0 || bulkProgress) && (
+                 <div className="bg-[#0E4D55]/5 border border-[#0E4D55]/20 rounded-xl p-4 space-y-3 animate-in fade-in slide-in-from-top-4">
+                     {/* Top row: selection info + controls */}
+                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                         <div className="flex items-center gap-3">
+                             <span className="bg-[#0E4D55] text-white text-xs font-bold px-2 py-1 rounded-md">
+                                 {selectedItems.size} selected
+                             </span>
+                             <span className="text-sm text-[#0E4D55] font-medium">
+                                 Bulk Edit Stock
+                             </span>
+                         </div>
+                         <div className="flex items-center gap-3 w-full sm:w-auto">
+                             <select
+                                 value={bulkStockAction}
+                                 onChange={(e) => setBulkStockAction(e.target.value as any)}
+                                 disabled={isSavingBulk}
+                                 className="h-10 px-3 bg-white border border-[#0E4D55]/20 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0E4D55]/50 disabled:opacity-50"
+                             >
+                                 <option value="add">Add</option>
+                                 <option value="remove">Remove</option>
+                                 <option value="set">Set to</option>
+                             </select>
+                             <input
+                                 type="number"
+                                 min="0"
+                                 value={bulkStockAmount}
+                                 onChange={(e) => setBulkStockAmount(e.target.value)}
+                                 disabled={isSavingBulk}
+                                 className="h-10 w-24 px-3 bg-white border border-[#0E4D55]/20 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0E4D55]/50 disabled:opacity-50"
+                                 placeholder="Amount"
+                             />
+                             <button
+                                 onClick={saveBulkStock}
+                                 disabled={isSavingBulk || !bulkStockAmount || isNaN(parseInt(bulkStockAmount))}
+                                 className="h-10 px-4 bg-[#0E4D55] text-white text-sm font-medium rounded-lg hover:bg-[#0A3A40] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
+                             >
+                                 {isSavingBulk ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                                 {isSavingBulk ? 'Updating...' : `Apply to ${selectedItems.size}`}
+                             </button>
+                         </div>
                      </div>
-                     <div className="flex items-center gap-3 w-full sm:w-auto">
-                         <select
-                             value={bulkStockAction}
-                             onChange={(e) => setBulkStockAction(e.target.value as any)}
-                             className="h-10 px-3 bg-white border border-[#0E4D55]/20 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0E4D55]/50"
-                         >
-                             <option value="add">Add</option>
-                             <option value="remove">Remove</option>
-                             <option value="set">Set to</option>
-                         </select>
-                         <input
-                             type="number"
-                             min="0"
-                             value={bulkStockAmount}
-                             onChange={(e) => setBulkStockAmount(e.target.value)}
-                             className="h-10 w-24 px-3 bg-white border border-[#0E4D55]/20 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0E4D55]/50"
-                             placeholder="Amount"
-                         />
-                         <button
-                             onClick={saveBulkStock}
-                             disabled={isSavingBulk || !bulkStockAmount || isNaN(parseInt(bulkStockAmount))}
-                             className="h-10 px-4 bg-[#0E4D55] text-white text-sm font-medium rounded-lg hover:bg-[#0A3A40] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
-                         >
-                             {isSavingBulk ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                             Apply to {selectedItems.size}
-                         </button>
-                     </div>
-                     {saveMessage?.handle === 'bulk' && (
+
+                     {/* Progress Bar */}
+                     {bulkProgress && (
+                         <div className="space-y-2">
+                             <div className="flex items-center justify-between text-xs">
+                                 <span className="text-[#0E4D55] font-semibold">
+                                     {bulkProgress.completed >= bulkProgress.total && !isSavingBulk
+                                         ? '✓ Complete'
+                                         : `Updating ${bulkProgress.completed} of ${bulkProgress.total} products...`
+                                     }
+                                 </span>
+                                 <span className="text-slate-500 font-mono tabular-nums">
+                                     {Math.round((bulkProgress.completed / bulkProgress.total) * 100)}%
+                                 </span>
+                             </div>
+                             <div className="w-full h-2 bg-[#0E4D55]/10 rounded-full overflow-hidden">
+                                 <div
+                                     className={`h-full rounded-full transition-all duration-500 ease-out ${
+                                         bulkProgress.failed > 0
+                                             ? 'bg-gradient-to-r from-emerald-500 to-amber-500'
+                                             : bulkProgress.completed >= bulkProgress.total
+                                                 ? 'bg-emerald-500'
+                                                 : 'bg-gradient-to-r from-[#0E4D55] to-[#1a7a85]'
+                                     }`}
+                                     style={{ width: `${Math.round((bulkProgress.completed / bulkProgress.total) * 100)}%` }}
+                                 />
+                             </div>
+                             {bulkProgress.failed > 0 && (
+                                 <p className="text-xs text-amber-600 font-medium">
+                                     ⚠ {bulkProgress.failed} items failed to update
+                                 </p>
+                             )}
+                         </div>
+                     )}
+
+                     {/* Success/Error Message */}
+                     {saveMessage?.handle === 'bulk' && !bulkProgress && (
                          <div className={`text-sm font-medium ${saveMessage.ok ? 'text-emerald-600' : 'text-rose-500'}`}>
                              {saveMessage.msg}
                          </div>

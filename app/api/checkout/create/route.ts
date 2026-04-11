@@ -24,7 +24,7 @@ interface CartItemPayload {
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { items, discountCode, phone } = body as { items: CartItemPayload[]; discountCode?: string; phone?: string };
+        const { items, discountCode, phone, email } = body as { items: CartItemPayload[]; discountCode?: string; phone?: string; email?: string };
 
         if (!items || items.length === 0) {
             return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
@@ -99,7 +99,12 @@ export async function POST(req: Request) {
                             quantity: li.quantity
                         })),
                         ...(discountCode ? { discountCodes: [discountCode] } : {}),
-                        ...(phone ? { buyerIdentity: { phone: phone.startsWith('+') ? phone : `+91${phone}` } } : {})
+                        ...((phone || email) ? { 
+                            buyerIdentity: { 
+                                ...(phone ? { phone: phone.startsWith('+') ? phone : `+91${phone}` } : {}),
+                                ...(email ? { email } : {}) 
+                            } 
+                        } : {})
                     }
                 }
             });

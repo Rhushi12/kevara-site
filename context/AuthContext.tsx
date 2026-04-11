@@ -89,7 +89,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (user && user.email) {
                 // Check admin status from Firestore first, then fall back to env variable
                 try {
-                    const res = await fetch('/api/admin/admins');
+                    const token = await user.getIdToken();
+                    const res = await fetch('/api/admin/admins', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
                     if (res.ok) {
                         const data = await res.json();
                         const adminEmails = (data.emails || []).map((e: string) => e.toLowerCase());

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { getAuth } from 'firebase/auth';
 
 interface QueuedProduct {
     id: string;
@@ -50,10 +51,19 @@ export const useProductQueueStore = create<ProductQueueStore>((set, get) => ({
 
         // Helper function to upload a single file to R2
         const uploadFileToR2 = async (file: File, folder: string = "products"): Promise<string> => {
+            // Get current user's auth token
+            const auth = getAuth();
+            const user = auth.currentUser;
+            if (!user) throw new Error("Not authenticated");
+            const token = await user.getIdToken();
+
             // Step 1: Get presigned URL
             const presignRes = await fetch("/api/r2/presign", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
                 body: JSON.stringify({
                     filename: file.name,
                     contentType: file.type,
@@ -112,9 +122,15 @@ export const useProductQueueStore = create<ProductQueueStore>((set, get) => ({
                 }
 
                 // Send JSON payload to API
+                const auth = getAuth();
+                const user = auth.currentUser;
+                const token = user ? await user.getIdToken() : '';
                 const res = await fetch('/api/products/create', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
                     body: JSON.stringify({
                         title: pendingItem.title,
                         price: pendingItem.price,

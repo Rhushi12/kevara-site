@@ -10,6 +10,7 @@ import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Upload, X, Plus } from "lucide-react";
+import { adminFetch } from "@/lib/admin-fetch";
 
 import { Suspense } from "react";
 
@@ -50,7 +51,7 @@ function CreateProductContent() {
             const imageUrls: string[] = [];
             for (const file of images) {
                 // Get presigned URL
-                const presignRes = await fetch("/api/r2/presign", {
+                const presignRes = await adminFetch("/api/r2/presign", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -83,7 +84,7 @@ function CreateProductContent() {
                 imageUrls,
             };
 
-            const res = await fetch("/api/products/create", {
+            const res = await adminFetch("/api/products/create", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(productData),

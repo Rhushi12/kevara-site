@@ -68,11 +68,6 @@ export async function GET(req: Request) {
                                 status
                                 createdAt
                             }
-                            shippingAddress {
-                                city
-                                province
-                                country
-                            }
                         }
                     }
                 }
@@ -108,8 +103,8 @@ export async function GET(req: Request) {
                     price: li.node.originalTotalSet?.shopMoney?.amount
                 })),
                 tracking,
-                shippingCity: order.shippingAddress?.city,
-                shippingCountry: order.shippingAddress?.country
+                shippingCity: null,
+                shippingCountry: null
             };
         }) || [];
 

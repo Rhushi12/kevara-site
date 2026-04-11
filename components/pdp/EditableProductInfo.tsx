@@ -147,7 +147,8 @@ export default function EditableProductInfo({
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     items: [item], 
-                    phone: buyNowPhone.trim()
+                    phone: buyNowPhone.trim(),
+                    email: user?.email
                 })
             });
 

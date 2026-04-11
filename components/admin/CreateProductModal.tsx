@@ -3,6 +3,7 @@ import { X, Upload, Image as ImageIcon, Plus, Trash2, Palette, Ruler, GripVertic
 import Image from "next/image";
 import FileInput from "@/components/admin/FileInput";
 import { useProductQueueStore } from "@/lib/productQueueStore";
+import { adminFetch } from "@/lib/admin-fetch";
 
 interface CreateProductModalProps {
     isOpen: boolean;
@@ -190,7 +191,7 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
             // Helper function to upload a single file to R2
             const uploadFileToR2 = async (file: File, folder: string = "products"): Promise<string> => {
                 // Step 1: Get presigned URL from our API
-                const presignRes = await fetch("/api/r2/presign", {
+                const presignRes = await adminFetch("/api/r2/presign", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -242,7 +243,7 @@ export default function CreateProductModal({ isOpen, onClose, onSuccess }: Creat
 
             // Now send just the URLs to the API (no file data)
             const finalTitle = batchNumber.trim() ? `${title.trim()} (${batchNumber.trim()})` : title.trim();
-            const res = await fetch("/api/products/create", {
+            const res = await adminFetch("/api/products/create", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

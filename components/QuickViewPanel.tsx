@@ -10,10 +10,12 @@ import LiquidButton from "@/components/ui/LiquidButton";
 import WholesaleInquiryModal from "@/components/pdp/WholesaleInquiryModal";
 import { useCartStore } from "@/lib/cartStore";
 import { parseProductTitle } from "@/lib/productUtils";
+import { useAuth } from "@/context/AuthContext";
 
 export default function QuickViewPanel() {
     const { isOpen, selectedProduct, closeQuickView } = useQuickViewStore();
     const { openCart, setCart, items } = useCartStore();
+    const { user } = useAuth();
     const panelRef = useRef<HTMLDivElement>(null);
     const overlayRef = useRef<HTMLDivElement>(null);
     const preLayersRef = useRef<HTMLDivElement>(null);
@@ -47,7 +49,8 @@ export default function QuickViewPanel() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     items: [item], 
-                    phone: buyNowPhone.trim()
+                    phone: buyNowPhone.trim(),
+                    email: user?.email
                 })
             });
 

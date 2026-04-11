@@ -56,17 +56,38 @@ export async function PUT(request: Request) {
         const { updateCustomProduct } = await import('@/lib/custom-products');
         const { syncMetaobjectToShopifyProduct } = await import('@/lib/shopify-product-sync');
 
+        // Helper: check if an update is stock-only (no need to sync shadow product)
+        const isStockOnlyUpdate = (item: any) => {
+            const keys = Object.keys(item).filter(k => k !== 'handle');
+            return keys.every(k => k === 'stock' || k === 'variantStock');
+        };
+
+        // Helper: process items in sequential batches to avoid Shopify rate limiting
+        const BATCH_SIZE = 3;
+        const BATCH_DELAY_MS = 1000;
+        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
         let results: PromiseSettledResult<any>[] = [];
 
-        // 1. Handle "Items" (Specific updates per product, e.g., suffixes)
+        // 1. Handle "Items" (Specific updates per product, e.g., stock/variantStock)
         if (items && Array.isArray(items)) {
-            const itemResults = await Promise.allSettled(items.map(async (item: any) => {
-                if (!item.handle) throw new Error("Item handle missing");
-                const res = await updateCustomProduct(item);
-                await syncMetaobjectToShopifyProduct(item.handle);
-                return res;
-            }));
-            results = [...results, ...itemResults];
+            for (let i = 0; i < items.length; i += BATCH_SIZE) {
+                const batch = items.slice(i, i + BATCH_SIZE);
+                const batchResults = await Promise.allSettled(batch.map(async (item: any) => {
+                    if (!item.handle) throw new Error("Item handle missing");
+                    const res = await updateCustomProduct(item);
+                    // Skip expensive Shopify sync for stock-only updates
+                    if (!isStockOnlyUpdate(item)) {
+                        await syncMetaobjectToShopifyProduct(item.handle);
+                    }
+                    return res;
+                }));
+                results = [...results, ...batchResults];
+                // Delay between batches to respect rate limits
+                if (i + BATCH_SIZE < items.length) {
+                    await delay(BATCH_DELAY_MS);
+                }
+            }
         }
 
         // 2. Handle "IDs" (Uniform updates to many products)
@@ -79,12 +100,18 @@ export async function PUT(request: Request) {
             if (colors) commonUpdateData.colors = colors;
 
             if (Object.keys(commonUpdateData).length > 0) {
-                const idResults = await Promise.allSettled(ids.map(async (id) => {
-                    const res = await updateCustomProduct({ handle: id, ...commonUpdateData });
-                    await syncMetaobjectToShopifyProduct(id);
-                    return res;
-                }));
-                results = [...results, ...idResults];
+                for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+                    const batch = ids.slice(i, i + BATCH_SIZE);
+                    const batchResults = await Promise.allSettled(batch.map(async (id) => {
+                        const res = await updateCustomProduct({ handle: id, ...commonUpdateData });
+                        await syncMetaobjectToShopifyProduct(id);
+                        return res;
+                    }));
+                    results = [...results, ...batchResults];
+                    if (i + BATCH_SIZE < ids.length) {
+                        await delay(BATCH_DELAY_MS);
+                    }
+                }
             }
         }
 

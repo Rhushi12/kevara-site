@@ -65,7 +65,8 @@ export default function CartDrawer() {
                 body: JSON.stringify({ 
                     items: checkoutItems, 
                     discountCode: appliedCoupon || undefined,
-                    phone: phone.trim()
+                    phone: phone.trim(),
+                    email: user.email
                 })
             });
 
