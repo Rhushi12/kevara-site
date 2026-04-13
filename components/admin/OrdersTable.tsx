@@ -108,6 +108,24 @@ export default function OrdersTable() {
         }
     };
 
+    const syncFromShopify = async () => {
+        setLoading(true);
+        try {
+            const res = await adminFetch("/api/admin/orders/sync", { method: "POST" });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                await fetchOrders();
+            } else {
+                alert("Sync failed: " + data.error);
+            }
+        } catch (err) {
+            alert("Network error during sync.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => { fetchOrders(); }, []);
 
     const saveOrderUpdate = async (orderId: string) => {
@@ -239,11 +257,13 @@ export default function OrdersTable() {
                         </button>
                     ))}
                     <button
-                        onClick={fetchOrders}
-                        className="p-2.5 rounded-xl border border-gray-200 bg-white text-slate-500 hover:text-[#0E4D55] hover:border-[#0E4D55]/30 transition-all"
-                        title="Refresh"
+                        onClick={syncFromShopify}
+                        disabled={loading}
+                        className="p-2.5 rounded-xl border border-gray-200 bg-white text-slate-500 hover:text-[#0E4D55] disabled:opacity-50 hover:border-[#0E4D55]/30 transition-all font-medium text-xs flex items-center gap-2"
+                        title="Force sync missing orders from Shopify"
                     >
                         <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+                        <span>Sync</span>
                     </button>
                 </div>
             </div>
