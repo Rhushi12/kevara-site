@@ -152,7 +152,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             await saveUserToFirestore(user);
 
         } catch (error: any) {
-            console.error("Error signing in with Google", error);
+            if (error.code !== 'auth/popup-closed-by-user') {
+                console.error("Error signing in with Google", error);
+            }
             if (error.code === 'auth/unauthorized-domain') {
                 alert(`Configuration Error: This domain (${window.location.hostname}) is not authorized in Firebase. \n\nPlease go to Firebase Console -> Authentication -> Settings -> Authorized Domains and add this domain.`);
             } else if (error.code === 'auth/popup-closed-by-user') {
@@ -171,8 +173,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             // Create user in Firebase Firestore
             await createUserInFirestore(result.user, name);
-        } catch (error) {
-            console.error("Signup failed", error);
+        } catch (error: any) {
+            if (error.code !== 'auth/email-already-in-use' && error.code !== 'auth/weak-password' && error.code !== 'auth/operation-not-allowed') {
+                console.error("Signup failed", error);
+            }
             throw error;
         }
     };

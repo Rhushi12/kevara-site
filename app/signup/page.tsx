@@ -23,8 +23,10 @@ export default function SignupPage() {
     const handleGoogleLogin = async () => {
         try {
             await signInWithGoogle();
-        } catch (error) {
-            console.error("Signup failed", error);
+        } catch (error: any) {
+            if (error.code !== 'auth/popup-closed-by-user') {
+                console.error("Signup failed", error);
+            }
         }
     };
 
@@ -49,12 +51,14 @@ export default function SignupPage() {
             await signUpWithEmail(email, password, `${firstName} ${lastName}`);
             router.push("/");
         } catch (err: any) {
-            console.error(err);
             if (err.code === 'auth/email-already-in-use') {
                 setError("Email already in use. Try logging in.");
             } else if (err.code === 'auth/weak-password') {
                 setError("Password should be at least 6 characters.");
+            } else if (err.code === 'auth/operation-not-allowed') {
+                setError("Email/Password signup is disabled. Please enable it in Firebase Console.");
             } else {
+                console.error(err);
                 setError("Failed to create account. Please try again.");
             }
         } finally {

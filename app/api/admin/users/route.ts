@@ -10,10 +10,8 @@ export async function GET(req: NextRequest) {
     if (authError) return authError;
 
     try {
-        // Fetch all users
-        const usersSnapshot = await db.collection("users")
-            .orderBy("createdAt", "desc")
-            .get();
+        // Fetch all users without orderBy, because Firestore drops documents missing the orderBy field
+        const usersSnapshot = await db.collection("users").get();
 
         const users = usersSnapshot.docs.map(doc => {
             const data = doc.data();
@@ -22,10 +20,13 @@ export async function GET(req: NextRequest) {
                 name: data.name || "Unknown",
                 email: data.email || "",
                 role: data.role || "user",
+                ...data,
                 createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt || new Date().toISOString(),
-                ...data
+                lastLogin: data.lastLogin?.toDate?.()?.toISOString() || data.lastLogin || null
             };
         });
+        // Sort in memory to include users missing createdAt
+        users.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
         return NextResponse.json({ users });
 

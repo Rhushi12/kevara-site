@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createCustomProduct } from "@/lib/custom-products";
 import { requireAdmin } from "@/lib/auth";
 import { generateFileKey, uploadToR2 } from "@/lib/r2";
@@ -275,6 +275,9 @@ export async function POST(req: NextRequest) {
 
 
                 // Create Product
+                const parsedStock = data.stock ? parseInt(data.stock, 10) : undefined;
+                const parsedReturns = data.returns ? parseInt(data.returns, 10) : undefined;
+
                 const product = await createCustomProduct({
                     title,
                     description: data.description || "",
@@ -284,6 +287,8 @@ export async function POST(req: NextRequest) {
                     videoUrl,
                     colors,
                     sizes,
+                    stock: isNaN(parsedStock as number) ? undefined : parsedStock,
+                    returnDays: isNaN(parsedReturns as number) ? undefined : parsedReturns,
                     status: data.status || "ACTIVE"
                 });
 

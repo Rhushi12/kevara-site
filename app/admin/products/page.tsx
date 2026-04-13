@@ -8,6 +8,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import CreateProductModal from '@/components/admin/CreateProductModal';
 import BulkEditModal from '@/components/admin/BulkEditModal';
+import BulkUploadModal from '@/components/admin/BulkUploadModal';
 import { Loader2, CheckCircle, XCircle, Clock, Package, RefreshCw, Plus, Trash2, X, Check, Upload, AlertCircle, Edit, RotateCcw, RotateCw } from 'lucide-react';
 
 interface BulkUploadResult {
@@ -50,11 +51,7 @@ export default function AdminProductManager() {
     const [history, setHistory] = useState<HistoryAction[]>([]);
     const [redoStack, setRedoStack] = useState<HistoryAction[]>([]);
 
-    // Bulk upload progress state
-    const [bulkUploading, setBulkUploading] = useState(false);
-    const [bulkProgress, setBulkProgress] = useState('');
-    const [bulkResults, setBulkResults] = useState<BulkUploadResult[]>([]);
-    const [bulkErrors, setBulkErrors] = useState<string[]>([]);
+    // Bulk upload state
     const [showBulkModal, setShowBulkModal] = useState(false);
 
     // Protect route
@@ -327,47 +324,7 @@ export default function AdminProductManager() {
         }
     };
 
-    const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
 
-        setBulkUploading(true);
-        setBulkProgress('Uploading CSV...');
-        setBulkResults([]);
-        setBulkErrors([]);
-        setShowBulkModal(true);
-
-        try {
-            const formData = new FormData();
-            formData.append('file', file);
-
-            setBulkProgress('Processing products...');
-
-            const res = await fetch('/api/products/import', {
-                method: 'POST',
-                body: formData,
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.error || 'Bulk upload failed');
-            }
-
-            setBulkResults(data.results || []);
-            setBulkErrors(data.errors || []);
-            setBulkProgress('Complete!');
-            fetchProducts();
-
-        } catch (error: any) {
-            console.error('Bulk upload error:', error);
-            setBulkErrors([error.message]);
-            setBulkProgress('Failed');
-        } finally {
-            setBulkUploading(false);
-            e.target.value = '';
-        }
-    };
 
     if (authLoading || !isAdmin) {
         return (
@@ -397,20 +354,13 @@ export default function AdminProductManager() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">
-                        <label className={`flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-slate-700 text-sm font-medium rounded-lg shadow-sm transition-all ${bulkUploading ? 'opacity-50 cursor-wait' : 'hover:bg-gray-50 hover:border-gray-300 cursor-pointer'}`}>
-                            <input type="file" accept=".csv" className="hidden" onChange={handleBulkUpload} disabled={bulkUploading} />
-                            {bulkUploading ? (
-                                <>
-                                    <Loader2 size={16} className="animate-spin text-[#0E4D55]" />
-                                    Processing...
-                                </>
-                            ) : (
-                                <>
-                                    <Upload size={16} className="text-slate-400" />
-                                    Bulk Upload
-                                </>
-                            )}
-                        </label>
+                        <button
+                            onClick={() => setShowBulkModal(true)}
+                            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-slate-700 text-sm font-medium rounded-lg shadow-sm transition-all hover:bg-gray-50 hover:border-gray-300"
+                        >
+                            <Upload size={16} className="text-slate-400" />
+                            Bulk Upload
+                        </button>
                         <button
                             onClick={() => setIsCreateModalOpen(true)}
                             className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
@@ -712,98 +662,14 @@ export default function AdminProductManager() {
             </div>
 
             {/* Bulk Upload Progress Modal */}
-            {showBulkModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[80vh] overflow-hidden">
-                        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                {bulkUploading ? (
-                                    <Loader2 className="animate-spin text-blue-600" size={24} />
-                                ) : bulkErrors.length > 0 && bulkResults.length === 0 ? (
-                                    <AlertCircle className="text-red-500" size={24} />
-                                ) : (
-                                    <CheckCircle className="text-green-500" size={24} />
-                                )}
-                                <h3 className="text-lg font-semibold text-slate-900">
-                                    {bulkUploading ? 'Processing Bulk Upload' : 'Bulk Upload Complete'}
-                                </h3>
-                            </div>
-                            {!bulkUploading && (
-                                <button onClick={() => setShowBulkModal(false)} className="p-2 hover:bg-gray-100 rounded-full">
-                                    <X size={20} />
-                                </button>
-                            )}
-                        </div>
-
-                        <div className="p-6 space-y-4 overflow-y-auto max-h-[60vh]">
-                            {bulkUploading && (
-                                <div className="text-center py-8">
-                                    <Loader2 className="animate-spin mx-auto text-blue-600 mb-4" size={48} />
-                                    <p className="text-slate-600">{bulkProgress}</p>
-                                    <p className="text-sm text-slate-400 mt-2">This may take a while for large files...</p>
-                                </div>
-                            )}
-
-                            {!bulkUploading && (
-                                <>
-                                    {/* Summary */}
-                                    <div className="flex gap-4">
-                                        <div className="flex-1 p-4 bg-green-50 rounded-xl text-center">
-                                            <p className="text-2xl font-bold text-green-700">{bulkResults.length}</p>
-                                            <p className="text-sm text-green-600">Successful</p>
-                                        </div>
-                                        <div className="flex-1 p-4 bg-red-50 rounded-xl text-center">
-                                            <p className="text-2xl font-bold text-red-700">{bulkErrors.length}</p>
-                                            <p className="text-sm text-red-600">Errors</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Success List */}
-                                    {bulkResults.length > 0 && (
-                                        <div>
-                                            <h4 className="text-sm font-medium text-slate-700 mb-2">Created Products</h4>
-                                            <div className="space-y-2 max-h-40 overflow-y-auto">
-                                                {bulkResults.map((r, i) => (
-                                                    <div key={i} className="flex items-center gap-2 text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg">
-                                                        <CheckCircle size={14} />
-                                                        <span className="truncate">{r.title}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Error List */}
-                                    {bulkErrors.length > 0 && (
-                                        <div>
-                                            <h4 className="text-sm font-medium text-slate-700 mb-2">Errors</h4>
-                                            <div className="space-y-2 max-h-40 overflow-y-auto">
-                                                {bulkErrors.map((err, i) => (
-                                                    <div key={i} className="flex items-start gap-2 text-sm text-red-700 bg-red-50 px-3 py-2 rounded-lg">
-                                                        <XCircle size={14} className="flex-shrink-0 mt-0.5" />
-                                                        <span>{err}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                        </div>
-
-                        {!bulkUploading && (
-                            <div className="p-6 border-t border-gray-100">
-                                <button
-                                    onClick={() => setShowBulkModal(false)}
-                                    className="w-full py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-colors font-medium"
-                                >
-                                    Done
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
+            <BulkUploadModal 
+                isOpen={showBulkModal} 
+                onClose={() => setShowBulkModal(false)} 
+                onSuccess={() => {
+                    setShowBulkModal(false);
+                    fetchProducts();
+                }}
+            />
 
             <CreateProductModal
                 isOpen={isCreateModalOpen}

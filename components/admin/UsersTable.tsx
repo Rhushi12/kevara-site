@@ -59,7 +59,11 @@ export default function UsersTable() {
                                             <img
                                                 src={user.photoURL}
                                                 alt={user.displayName}
-                                                className="w-8 h-8 rounded-full"
+                                                className="w-8 h-8 rounded-full object-cover"
+                                                onError={(e) => {
+                                                    e.currentTarget.onerror = null;
+                                                    e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'U')}&background=0E4D55&color=fff`;
+                                                }}
                                             />
                                         ) : (
                                             <div className="w-8 h-8 rounded-full bg-[#0E4D55] flex items-center justify-center text-white text-xs font-medium">
@@ -75,10 +79,10 @@ export default function UsersTable() {
                                     {user.email}
                                 </td>
                                 <td className="px-6 py-4 text-gray-500">
-                                    {user.createdAt?.toDate?.()?.toLocaleDateString() || '-'}
+                                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
                                 </td>
                                 <td className="px-6 py-4 text-gray-500">
-                                    {user.lastLogin?.toDate?.()?.toLocaleString() || '-'}
+                                    {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : '-'}
                                 </td>
                             </tr>
                         ))}
