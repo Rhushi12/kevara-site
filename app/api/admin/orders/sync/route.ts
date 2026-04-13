@@ -62,8 +62,6 @@ export async function POST(req: NextRequest) {
                         node {
                             id
                             name
-                            email
-                            phone
                             createdAt
                             updatedAt
                             displayFinancialStatus
@@ -73,23 +71,6 @@ export async function POST(req: NextRequest) {
                                     amount
                                     currencyCode
                                 }
-                            }
-                            customer {
-                                firstName
-                                lastName
-                                email
-                                phone
-                            }
-                            shippingAddress {
-                                firstName
-                                lastName
-                                address1
-                                address2
-                                city
-                                province
-                                zip
-                                country
-                                phone
                             }
                             lineItems(first: 20) {
                                 edges {
