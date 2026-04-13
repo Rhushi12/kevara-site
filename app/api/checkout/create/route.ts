@@ -101,8 +101,14 @@ export async function POST(req: Request) {
                         ...(discountCode ? { discountCodes: [discountCode] } : {}),
                         ...((phone || email) ? { 
                             buyerIdentity: { 
-                                ...(phone ? { phone: phone.startsWith('+') ? phone : `+91${phone}` } : {}),
-                                ...(email ? { email } : {}) 
+                                ...(email ? { email } : {}),
+                                ...(phone ? {
+                                    deliveryAddressPreferences: [{
+                                        deliveryAddress: {
+                                            phone: phone.startsWith('+') ? phone : `+91${phone}`
+                                        }
+                                    }]
+                                } : {})
                             } 
                         } : {})
                     }
