@@ -33,7 +33,7 @@ export default function ProductPicker({ selectedHandles, onSelectionChange, maxS
     useEffect(() => {
         if (isOpen && products.length === 0) {
             setLoading(true);
-            fetch("/api/products")
+            fetch("/api/products?includeDrafts=true")
                 .then((res) => res.json())
                 .then((data) => {
                     if (data.products) {

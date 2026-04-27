@@ -111,7 +111,7 @@ export default function InventoryManager() {
     const fetchProducts = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/products');
+            const res = await fetch('/api/products?includeDrafts=true');
             if (res.ok) {
                 const data = await res.json();
                 const mapped = (data.products || []).map((p: any) => {

@@ -18,7 +18,7 @@ export default function InventoryAlerts() {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const response = await fetch('/api/products');
+                const response = await fetch('/api/products?includeDrafts=true');
                 if (response.ok) {
                     const data = await response.json();
                     setProducts(data.products || []);

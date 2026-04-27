@@ -74,7 +74,7 @@ export default function ProductsTable({ onAddProduct }: ProductsTableProps) {
 
     const fetchProducts = async () => {
         try {
-            const res = await fetch('/api/products');
+            const res = await fetch('/api/products?includeDrafts=true');
             if (res.ok) {
                 const data = await res.json();
                 setProducts((data.products || []).map((p: any) => p.node || p));

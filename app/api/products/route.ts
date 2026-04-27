@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getCustomProducts } from '@/lib/custom-products';
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
-        const products = await getCustomProducts(); // Fetch all custom products
+        const includeDrafts = new URL(request.url).searchParams.get('includeDrafts') === 'true';
+        const products = await getCustomProducts({ includeDrafts });
 
         // Add cache headers for 60 seconds, stale-while-revalidate for 5 minutes
         const response = NextResponse.json({ products });

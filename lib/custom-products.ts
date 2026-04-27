@@ -285,7 +285,7 @@ export async function createCustomProduct(data: CustomProductInput) {
 }
 
 // Get all custom products
-export async function getCustomProducts() {
+export async function getCustomProducts(opts?: { includeDrafts?: boolean }) {
   const query = `
     query GetCustomProducts {
       metaobjects(type: "custom_product", first: 250) {
@@ -364,6 +364,10 @@ export async function getCustomProducts() {
     // Clean up internal params
     delete p._params;
   });
+
+  if (!opts?.includeDrafts) {
+    return products.filter((p: any) => p.node.status === "ACTIVE");
+  }
 
   return products;
 }
@@ -480,17 +484,17 @@ function transformMetaobjectToProduct(metaobject: any) {
 }
 
 // Get a single custom product by handle (product_id)
-export async function getCustomProductByHandle(handle: string) {
+export async function getCustomProductByHandle(handle: string, opts?: { includeDrafts?: boolean }) {
   // Shopify doesn't support querying metaobjects by handle directly
   // We need to fetch all and filter by product_id field
-  const allProducts = await getCustomProducts();
+  const allProducts = await getCustomProducts(opts);
   const product = allProducts.find((p: any) => p.node.handle === handle);
   return product ? product.node : null;
 }
 
 // Get custom product by slug (for PDP)
-export async function getCustomProductBySlug(slug: string) {
-  const products = await getCustomProducts();
+export async function getCustomProductBySlug(slug: string, opts?: { includeDrafts?: boolean }) {
+  const products = await getCustomProducts(opts);
   const product = products.find((p: any) => p.node.slug === slug || p.node.handle === slug);
   return product ? product.node : null;
 }
