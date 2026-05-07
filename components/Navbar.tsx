@@ -14,7 +14,7 @@ import MobileMenu from "@/components/MobileMenu";
 import MenuCarousel from "./MenuCarousel";
 import { useSearchStore } from "@/components/SearchPanel";
 import { useCartStore } from "@/lib/cartStore";
-import { authUpload } from "@/lib/auth-client";
+import { authFetch, authUpload } from "@/lib/auth-client";
 import { useToast } from "@/context/ToastContext";
 import { compressImage } from "@/lib/imageCompression";
 
@@ -53,7 +53,7 @@ export default function Navbar() {
 
     const saveMenuToShopify = async (updatedMenu: any[]) => {
         try {
-            const res = await fetch('/api/navigation/update', {
+            const res = await authFetch('/api/navigation/update', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ menuTabs: updatedMenu }),
