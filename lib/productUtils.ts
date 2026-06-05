@@ -11,9 +11,17 @@ export interface ParsedProductTitle {
 export function parseProductTitle(title: string): ParsedProductTitle {
     if (!title) return { cleanTitle: "", batchNumber: null };
 
-    // Regex to match " (number)" at the end of the string
-    const match = title.match(/\s*\((\d+)\)$/);
+    // Match " (number)" at the end
+    let match = title.match(/\s*\((\d+)\)$/);
+    if (match) {
+        return {
+            cleanTitle: title.replace(match[0], '').trim(),
+            batchNumber: match[1]
+        };
+    }
 
+    // Match "- Batch number" at the end
+    match = title.match(/\s*-\s*Batch\s+(\w+)$/i);
     if (match) {
         return {
             cleanTitle: title.replace(match[0], '').trim(),

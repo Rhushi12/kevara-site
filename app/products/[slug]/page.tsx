@@ -96,45 +96,51 @@ export default async function ProductPage({ params }: { params: { slug: string }
         .map((edge: any) => edge.node);
 
     // --- SIBLING COLOR LOGIC ---
-    // Find products that share the same base title
-    const currentCleanTitle = parseProductTitle(product.title).cleanTitle;
+    // Find products that share the same batch number
+    const currentBatchNumber = parseProductTitle(product.title).batchNumber;
 
     // We determine the current product's primary color (if any) to display
     const currentPrimaryColor = productColors && productColors.length > 0 ? productColors[0] : null;
 
     const siblingColors: { name: string; hex: string; url: string; isCurrent?: boolean; image?: string }[] = [];
 
-    // Add the current product to the swatches first as the "active" one
-    if (currentPrimaryColor) {
-        siblingColors.push({
-            name: currentPrimaryColor.name,
-            hex: currentPrimaryColor.hex,
-            url: `/products/${product.handle}`,
-            isCurrent: true,
-            image: product.images?.edges?.[0]?.node?.url || ""
+    // TEMPORARY FIX: Only show sibling swatches for new products containing "Batch"
+    // to avoid the "all black" swatches issue on old products.
+    const isNewBatchFormat = product.title.toLowerCase().includes('batch');
+
+    if (currentBatchNumber && isNewBatchFormat) {
+        // Add the current product to the swatches first as the "active" one
+        if (currentPrimaryColor) {
+            siblingColors.push({
+                name: currentPrimaryColor.name,
+                hex: currentPrimaryColor.hex,
+                url: `/products/${product.handle}`,
+                isCurrent: true,
+                image: product.images?.edges?.[0]?.node?.url || ""
+            });
+        }
+
+        // Find siblings
+        allProducts.forEach((edge: any) => {
+            const p = edge.node;
+            if (p.handle === product.handle) return; // Skip self
+
+            const pBatchNumber = parseProductTitle(p.title).batchNumber;
+            if (pBatchNumber === currentBatchNumber) {
+                // It's a sibling! Get its primary color
+                const pPrimaryColor = p.colors && p.colors.length > 0 ? p.colors[0] : null;
+                if (pPrimaryColor) {
+                    siblingColors.push({
+                        name: pPrimaryColor.name,
+                        hex: pPrimaryColor.hex,
+                        url: `/products/${p.handle}`,
+                        isCurrent: false,
+                        image: p.images?.edges?.[0]?.node?.url || ""
+                    });
+                }
+            }
         });
     }
-
-    // Find siblings
-    allProducts.forEach((edge: any) => {
-        const p = edge.node;
-        if (p.handle === product.handle) return; // Skip self
-
-        const pCleanTitle = parseProductTitle(p.title).cleanTitle;
-        if (pCleanTitle === currentCleanTitle) {
-            // It's a sibling! Get its primary color
-            const pPrimaryColor = p.colors && p.colors.length > 0 ? p.colors[0] : null;
-            if (pPrimaryColor) {
-                siblingColors.push({
-                    name: pPrimaryColor.name,
-                    hex: pPrimaryColor.hex,
-                    url: `/products/${p.handle}`,
-                    isCurrent: false,
-                    image: p.images?.edges?.[0]?.node?.url || ""
-                });
-            }
-        }
-    });
     // ---------------------------
 
     // Fetch global PDP settings
