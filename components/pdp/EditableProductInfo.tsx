@@ -349,7 +349,7 @@ export default function EditableProductInfo({
                     <div className="flex items-baseline gap-4">
                         {isEditMode ? (
                             <div className="flex items-center gap-2">
-                                <span className="text-lg text-slate-500">â‚¹</span>
+                                <span className="text-lg text-slate-500">₹</span>
                                 <input
                                     type="text"
                                     value={editedPrice}
@@ -370,10 +370,10 @@ export default function EditableProductInfo({
                                         if (p.includes('-')) {
                                             const parts = p.split('-').map((s: string) => s.trim());
                                             if (parts.length === 2 && !isNaN(parseFloat(parts[0])) && !isNaN(parseFloat(parts[1]))) {
-                                                return `â‚¹${parts[0]} - â‚¹${parts[1]}`;
+                                                return `₹${parts[0]} - ₹${parts[1]}`;
                                             }
                                         }
-                                        return p.includes('â‚¹') ? p : `â‚¹${p}`;
+                                        return p.includes('₹') || p.includes('â‚¹') ? p.replace('â‚¹', '₹') : `₹${p}`;
                                     })()
                                 }
                             </span>

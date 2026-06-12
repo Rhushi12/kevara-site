@@ -16,10 +16,16 @@ import {
     Loader2,
     Package,
     ExternalLink,
-    RotateCcw
+    RotateCcw,
+    Pencil,
+    ChevronDown,
+    ChevronUp,
+    Save
 } from "lucide-react";
+import ProductEditModal from "./ProductEditModal";
+import { parseProductTitle } from "@/lib/productUtils";
 
-interface Product {
+export interface Product {
     id: string;
     handle: string;
     title: string;
@@ -65,6 +71,9 @@ export default function ProductsTable({ onAddProduct }: ProductsTableProps) {
     const [editingStock, setEditingStock] = useState<Record<string, number>>({});
     const [editingSizes, setEditingSizes] = useState<string[]>([]);
     const [stockSaving, setStockSaving] = useState(false);
+    // Product edit modal state
+    const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    const [bulkEditingProducts, setBulkEditingProducts] = useState<Product[] | null>(null);
 
     const PRESET_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '24', '26', '28', '30', '32', '34', '36', 'FREE SIZE'];
 
@@ -214,8 +223,7 @@ export default function ProductsTable({ onAddProduct }: ProductsTableProps) {
     };
 
     const filteredProducts = products.filter(product =>
-        (product.title || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (product.handle || "").toLowerCase().includes(searchQuery.toLowerCase())
+        (product.title || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     if (loading) return (
@@ -255,6 +263,16 @@ export default function ProductsTable({ onAddProduct }: ProductsTableProps) {
                                     className="h-8 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
                                 >
                                     <EyeOff size={14} /> Draft
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        const selected = products.filter(p => selectedProducts.includes(p.handle));
+                                        setBulkEditingProducts(selected);
+                                    }}
+                                    disabled={actionLoading}
+                                    className="h-8 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                                >
+                                    <Pencil size={14} /> Edit
                                 </button>
                                 <div className="w-px h-6 bg-white/20 mx-1" />
                                 <button
@@ -409,8 +427,17 @@ export default function ProductsTable({ onAddProduct }: ProductsTableProps) {
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-medium text-slate-900 line-clamp-1">{product.title}</h4>
-                                                    <p className="text-xs text-gray-500 font-mono mt-0.5">{product.handle}</p>
+                                                    <h4 className="font-medium text-slate-900 line-clamp-1">
+                                                        {parseProductTitle(product.title).cleanTitle}
+                                                    </h4>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        {parseProductTitle(product.title).batchNumber && (
+                                                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#0E4D55]/10 text-[#0E4D55] uppercase tracking-wider">
+                                                                Batch {parseProductTitle(product.title).batchNumber}
+                                                            </span>
+                                                        )}
+                                                        <p className="text-[10px] text-gray-400 font-mono">ID: {product.handle}</p>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </td>
@@ -475,6 +502,14 @@ export default function ProductsTable({ onAddProduct }: ProductsTableProps) {
                                         </td>
                                         <td className="p-4 text-right">
                                             <div className="flex items-center justify-end gap-1">
+                                                <button
+                                                    onClick={() => setEditingProduct(product)}
+                                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-colors bg-white text-slate-600 border-gray-200 hover:border-[#0E4D55] hover:text-[#0E4D55] hover:bg-[#0E4D55]/5"
+                                                    title="Edit product details"
+                                                >
+                                                    <Pencil size={11} />
+                                                    Edit
+                                                </button>
                                                 {product.sizes && product.sizes.length > 0 && (
                                                     <button
                                                         onClick={() => {
@@ -604,6 +639,25 @@ export default function ProductsTable({ onAddProduct }: ProductsTableProps) {
                     <span className="text-gray-400">Select products for bulk actions</span>
                 </div>
             </div>
+
+            {/* Product Edit Modal */}
+            <ProductEditModal
+                isOpen={!!editingProduct || !!bulkEditingProducts}
+                onClose={() => {
+                    setEditingProduct(null);
+                    setBulkEditingProducts(null);
+                }}
+                onSuccess={() => {
+                    setEditingProduct(null);
+                    if (bulkEditingProducts) {
+                        setSelectedProducts([]);
+                        setBulkEditingProducts(null);
+                    }
+                    fetchProducts();
+                }}
+                product={editingProduct}
+                bulkProducts={bulkEditingProducts || undefined}
+            />
         </div>
     );
 }

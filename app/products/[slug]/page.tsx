@@ -104,11 +104,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
     const siblingColors: { name: string; hex: string; url: string; isCurrent?: boolean; image?: string }[] = [];
 
-    // TEMPORARY FIX: Only show sibling swatches for new products containing "Batch"
-    // to avoid the "all black" swatches issue on old products.
-    const isNewBatchFormat = product.title.toLowerCase().includes('batch');
-
-    if (currentBatchNumber && isNewBatchFormat) {
+    if (currentBatchNumber) {
         // Add the current product to the swatches first as the "active" one
         if (currentPrimaryColor) {
             siblingColors.push({
@@ -127,16 +123,18 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
             const pBatchNumber = parseProductTitle(p.title).batchNumber;
             if (pBatchNumber === currentBatchNumber) {
-                // It's a sibling! Get its primary color
                 const pPrimaryColor = p.colors && p.colors.length > 0 ? p.colors[0] : null;
                 if (pPrimaryColor) {
-                    siblingColors.push({
-                        name: pPrimaryColor.name,
-                        hex: pPrimaryColor.hex,
-                        url: `/products/${p.handle}`,
-                        isCurrent: false,
-                        image: p.images?.edges?.[0]?.node?.url || ""
-                    });
+                    // Prevent duplicate colors in the swatch list
+                    if (!siblingColors.find(c => c.hex === pPrimaryColor.hex)) {
+                        siblingColors.push({
+                            name: pPrimaryColor.name,
+                            hex: pPrimaryColor.hex,
+                            url: `/products/${p.handle}`,
+                            isCurrent: false,
+                            image: p.images?.edges?.[0]?.node?.url || ""
+                        });
+                    }
                 }
             }
         });
