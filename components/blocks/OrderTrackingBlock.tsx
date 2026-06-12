@@ -64,12 +64,30 @@ export function OrderTrackingBlock({ order, email }: { order: any, email?: strin
         if (liveStatus.includes("delivered") && !liveStatus.includes("rto")) currentStepIndex = 3;
         else if (liveStatus.includes("transit") || liveStatus.includes("dispatched") || liveStatus.includes("picked up")) currentStepIndex = 2;
         
+        const formatStatus = (status: string) => {
+            if (!status) return "";
+            const lower = status.toLowerCase();
+            if (lower === "manifested") return "Packed & Ready to Ship";
+            if (lower === "in transit") return "On the Way";
+            return status;
+        };
+
+        const cleanLoc = (loc: string, status: string) => {
+            if (!loc) return "";
+            if (status.toLowerCase() === "manifested" || status.toLowerCase() === "packed & ready to ship") return "";
+            return loc.replace(/_/g, " ").replace(/\s+/g, " ").trim();
+        };
+
         // Show current location
-        if (liveData.Status?.StatusLocation) {
-            displayInfo = `${liveData.Status.Status} • ${liveData.Status.StatusLocation}`;
+        const cleanedLocation = cleanLoc(liveData.Status?.StatusLocation || "", liveData.Status?.Status || "");
+        
+        if (cleanedLocation) {
+            displayInfo = `${formatStatus(liveData.Status.Status)} • ${cleanedLocation}`;
         } else if (liveData.ExpectedDeliveryDate) {
             const edd = new Date(liveData.ExpectedDeliveryDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
-            displayInfo = `ETA: ${edd}`;
+            displayInfo = `${formatStatus(liveData.Status?.Status || "Processing")} • ETA: ${edd}`;
+        } else {
+            displayInfo = formatStatus(liveData.Status?.Status || "Processing");
         }
     }
 

@@ -157,7 +157,7 @@ export default function AccountPage() {
                     {/* Active Order / Logistics block */}
                     {recentOrder ? (
                         <div className="col-span-1 md:col-span-12">
-                            <OrderTrackingBlock order={recentOrder} email={user.email} />
+                            <OrderTrackingBlock order={recentOrder} email={user.email || undefined} />
                         </div>
                     ) : (
                         <div className="col-span-1 md:col-span-12">

@@ -45,10 +45,27 @@ export function TrackingTimeline({ scans }: { scans: Scan[] }) {
     const getIcon = (scanText: string) => {
         const lower = scanText.toLowerCase();
         if (lower.includes("delivered")) return <CheckCircle size={14} className="text-white" />;
-        if (lower.includes("transit") || lower.includes("dispatched")) return <Truck size={14} className="text-white" />;
-        if (lower.includes("pickup") || lower.includes("manifest")) return <Package size={14} className="text-white" />;
+        if (lower.includes("transit") || lower.includes("dispatched") || lower.includes("way")) return <Truck size={14} className="text-white" />;
+        if (lower.includes("pickup") || lower.includes("manifest") || lower.includes("packed")) return <Package size={14} className="text-white" />;
         if (lower.includes("out for delivery")) return <MapPin size={14} className="text-white" />;
         return <Clock size={14} className="text-white" />;
+    };
+
+    // Format Delhivery's raw status text
+    const formatStatus = (status: string) => {
+        if (!status) return "";
+        const lower = status.toLowerCase();
+        if (lower === "manifested") return "Packed & Ready to Ship";
+        if (lower === "in transit") return "On the Way";
+        return status;
+    };
+
+    // Clean up Delhivery's raw location string
+    const cleanLocation = (loc: string, status: string) => {
+        if (!loc) return "";
+        // Hide location for initial packaging/manifest steps to avoid confusing customers
+        if (status.toLowerCase() === "manifested" || status.toLowerCase() === "packed & ready to ship") return "";
+        return loc.replace(/_/g, " ").replace(/\s+/g, " ").trim();
     };
 
     return (
@@ -81,7 +98,7 @@ export function TrackingTimeline({ scans }: { scans: Scan[] }) {
                             <div className="flex-1 bg-white p-4 rounded-xl border border-slate-100 shadow-sm group-hover:shadow-md transition-shadow">
                                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
                                     <h4 className={`text-sm font-bold uppercase tracking-widest ${isLatest ? 'text-[#006D77]' : 'text-slate-700'}`}>
-                                        {detail.Scan}
+                                        {formatStatus(detail.Scan)}
                                     </h4>
                                     <div className="flex items-center gap-2 text-[10px] sm:text-xs font-semibold tracking-wider text-slate-400 uppercase">
                                         <span>{formatDate(detail.ScanDateTime)}</span>
@@ -90,9 +107,9 @@ export function TrackingTimeline({ scans }: { scans: Scan[] }) {
                                     </div>
                                 </div>
                                 
-                                {detail.ScannedLocation && (
+                                {cleanLocation(detail.ScannedLocation, detail.Scan) && (
                                     <p className="text-xs font-medium text-slate-600 flex items-center gap-1 mb-1">
-                                        <MapPin size={12} className="text-slate-400" /> {detail.ScannedLocation}
+                                        <MapPin size={12} className="text-slate-400" /> {cleanLocation(detail.ScannedLocation, detail.Scan)}
                                     </p>
                                 )}
                                 
