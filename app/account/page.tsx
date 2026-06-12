@@ -34,17 +34,23 @@ export default function AccountPage() {
 
         if (user?.email) {
             fetch(`/api/orders?email=${encodeURIComponent(user.email)}`)
-                .then(res => res.json())
+                .then(async res => {
+                    const text = await res.text();
+                    try { return JSON.parse(text); } catch { console.error("Orders API Error:", text); return {}; }
+                })
                 .then(data => {
-                    if (data.success) setOrders(data.orders || []);
+                    if (data?.success) setOrders(data.orders || []);
                 })
                 .catch(err => console.error("Failed to fetch orders:", err));
         }
 
         fetch('/api/products')
-            .then(res => res.json())
+            .then(async res => {
+                const text = await res.text();
+                try { return JSON.parse(text); } catch { console.error("Products API Error:", text); return {}; }
+            })
             .then(data => {
-                if (data.products) setAllProducts(data.products);
+                if (data?.products) setAllProducts(data.products);
             })
             .catch(err => console.error("Failed to fetch curated products:", err));
 
@@ -151,7 +157,7 @@ export default function AccountPage() {
                     {/* Active Order / Logistics block */}
                     {recentOrder ? (
                         <div className="col-span-1 md:col-span-12">
-                            <OrderTrackingBlock order={recentOrder} />
+                            <OrderTrackingBlock order={recentOrder} email={user.email} />
                         </div>
                     ) : (
                         <div className="col-span-1 md:col-span-12">

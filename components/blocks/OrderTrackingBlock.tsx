@@ -2,9 +2,31 @@
 
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 
-export function OrderTrackingBlock({ order }: { order: any }) {
+export function OrderTrackingBlock({ order, email }: { order: any, email?: string }) {
     const router = useRouter();
+    const [liveData, setLiveData] = useState<any>(null);
+
+    useEffect(() => {
+        if (order?.orderNumber && email && (order.awbNumber || order.courier?.toLowerCase() === 'delhivery')) {
+            fetch('/api/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderNumber: order.orderNumber, email })
+            })
+            .then(async res => {
+                const text = await res.text();
+                try { return JSON.parse(text); } catch { return null; }
+            })
+            .then(data => {
+                if (data?.success && data.liveTracking?.data?.ShipmentData?.[0]?.Shipment) {
+                    setLiveData(data.liveTracking.data.ShipmentData[0].Shipment);
+                }
+            })
+            .catch(err => console.error("Tracking fetch error:", err));
+        }
+    }, [order, email]);
     if (!order) return null;
 
     const steps = [
@@ -15,11 +37,30 @@ export function OrderTrackingBlock({ order }: { order: any }) {
     ];
 
     let currentStepIndex = 0;
-    const status = order.fulfillmentStatus?.toUpperCase();
-    if (status === "DELIVERED") currentStepIndex = 3;
-    else if (status === "FULFILLED") currentStepIndex = 2;
-    else if (status === "PARTIAL") currentStepIndex = 1;
-    else if (status === "UNFULFILLED" || status === "PENDING") currentStepIndex = 1;
+    const baseStatus = order.fulfillmentStatus?.toUpperCase();
+    
+    // Shopify base mapping
+    if (baseStatus === "DELIVERED") currentStepIndex = 3;
+    else if (baseStatus === "FULFILLED") currentStepIndex = 2;
+    else if (baseStatus === "PARTIAL") currentStepIndex = 1;
+    else if (baseStatus === "UNFULFILLED" || baseStatus === "PENDING") currentStepIndex = 1;
+
+    // Live Tracking Override
+    let displayInfo = "ETA Pending";
+    if (liveData) {
+        const liveStatus = liveData.Status?.Status?.toLowerCase() || "";
+        
+        if (liveStatus.includes("delivered") && !liveStatus.includes("rto")) currentStepIndex = 3;
+        else if (liveStatus.includes("transit") || liveStatus.includes("dispatched") || liveStatus.includes("picked up")) currentStepIndex = 2;
+        
+        // Show current location
+        if (liveData.Status?.StatusLocation) {
+            displayInfo = `${liveData.Status.Status} • ${liveData.Status.StatusLocation}`;
+        } else if (liveData.ExpectedDeliveryDate) {
+            const edd = new Date(liveData.ExpectedDeliveryDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+            displayInfo = `ETA: ${edd}`;
+        }
+    }
 
     const handleTrack = () => {
         const url = order.tracking?.[0]?.url;
@@ -36,7 +77,7 @@ export function OrderTrackingBlock({ order }: { order: any }) {
                 <div>
                     <h2 className="text-2xl font-prata text-slate-900 tracking-tight">Active Order</h2>
                     <p className="font-lora italic text-slate-500 mt-1" aria-label={`Tracking for Order ${order.orderNumber}`}>
-                        No. {order.orderNumber} • ETA Pending
+                        No. {order.orderNumber} • {displayInfo}
                     </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
