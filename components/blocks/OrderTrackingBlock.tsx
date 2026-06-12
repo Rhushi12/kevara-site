@@ -16,8 +16,9 @@ export function OrderTrackingBlock({ order }: { order: any }) {
 
     let currentStepIndex = 0;
     const status = order.fulfillmentStatus?.toUpperCase();
-    if (status === "FULFILLED") currentStepIndex = 3;
-    else if (status === "PARTIAL") currentStepIndex = 2;
+    if (status === "DELIVERED") currentStepIndex = 3;
+    else if (status === "FULFILLED") currentStepIndex = 2;
+    else if (status === "PARTIAL") currentStepIndex = 1;
     else if (status === "UNFULFILLED" || status === "PENDING") currentStepIndex = 1;
 
     const handleTrack = () => {
