@@ -125,16 +125,13 @@ export default async function ProductPage({ params }: { params: { slug: string }
             if (pBatchNumber === currentBatchNumber) {
                 const pPrimaryColor = p.colors && p.colors.length > 0 ? p.colors[0] : null;
                 if (pPrimaryColor) {
-                    // Prevent duplicate colors in the swatch list
-                    if (!siblingColors.find(c => c.hex === pPrimaryColor.hex)) {
-                        siblingColors.push({
-                            name: pPrimaryColor.name,
-                            hex: pPrimaryColor.hex,
-                            url: `/products/${p.handle}`,
-                            isCurrent: false,
-                            image: p.images?.edges?.[0]?.node?.url || ""
-                        });
-                    }
+                    siblingColors.push({
+                        name: pPrimaryColor.name,
+                        hex: pPrimaryColor.hex,
+                        url: `/products/${p.handle}`,
+                        isCurrent: false,
+                        image: p.images?.edges?.[0]?.node?.url || ""
+                    });
                 }
             }
         });
