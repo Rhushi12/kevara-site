@@ -63,6 +63,7 @@ export function OrderTrackingBlock({ order, email }: { order: any, email?: strin
         
         if (liveStatus.includes("delivered") && !liveStatus.includes("rto")) currentStepIndex = 3;
         else if (liveStatus.includes("transit") || liveStatus.includes("dispatched") || liveStatus.includes("picked up")) currentStepIndex = 2;
+        else if (liveStatus.includes("manifested") || liveStatus.includes("packed")) currentStepIndex = 1;
         
         const formatStatus = (status: string) => {
             if (!status) return "";

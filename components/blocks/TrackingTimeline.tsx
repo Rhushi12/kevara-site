@@ -74,7 +74,12 @@ export function TrackingTimeline({ scans }: { scans: Scan[] }) {
             <div className="absolute left-[27px] sm:left-[43px] top-6 bottom-6 w-px bg-slate-200" />
 
             <div className="space-y-8 relative z-10">
-                {scans.map((scanItem, idx) => {
+                {scans.filter((scanItem, idx, arr) => {
+                    if (idx === 0) return true;
+                    const currentStatus = formatStatus(scanItem.ScanDetail.Scan);
+                    const previousNewerStatus = formatStatus(arr[idx - 1].ScanDetail.Scan);
+                    return currentStatus !== previousNewerStatus;
+                }).map((scanItem, idx) => {
                     const detail = scanItem.ScanDetail;
                     const isLatest = idx === 0;
 
