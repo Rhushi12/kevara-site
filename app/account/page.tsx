@@ -20,14 +20,14 @@ interface Order {
 }
 
 export default function AccountPage() {
-    const { user, logout } = useAuth();
+    const { user, loading, logout } = useAuth();
     const router = useRouter();
     const [orders, setOrders] = useState<Order[]>([]);
     const [curatedProducts, setCuratedProducts] = useState<any[]>([]);
     const [allProducts, setAllProducts] = useState<any[]>([]);
 
     useEffect(() => {
-        if (!user) {
+        if (!loading && !user) {
             router.push("/login");
             return;
         }
@@ -85,6 +85,15 @@ export default function AccountPage() {
         }
     }, [orders, allProducts]);
 
+    if (loading) {
+        return (
+            <main className="min-h-screen bg-[#FDFBF7] flex flex-col pt-32 items-center">
+                <Navbar />
+                <div className="w-8 h-8 border-4 border-[#006D77]/20 border-t-[#006D77] rounded-full animate-spin mt-20" />
+            </main>
+        );
+    }
+    
     if (!user) return null;
 
     const initials = user.displayName

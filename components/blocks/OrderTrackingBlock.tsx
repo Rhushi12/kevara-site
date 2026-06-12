@@ -9,6 +9,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 export function OrderTrackingBlock({ order, email }: { order: any, email?: string }) {
     const router = useRouter();
     const [liveData, setLiveData] = useState<any>(null);
+    const [isTrackingLoaded, setIsTrackingLoaded] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
 
     useEffect(() => {
@@ -35,7 +36,10 @@ export function OrderTrackingBlock({ order, email }: { order: any, email?: strin
                     setLiveData(data.liveTracking.data.ShipmentData[0].Shipment);
                 }
             })
-            .catch(err => console.error("Tracking fetch error:", err));
+            .catch(err => console.error("Tracking fetch error:", err))
+            .finally(() => setIsTrackingLoaded(true));
+        } else {
+            setIsTrackingLoaded(true);
         }
     }, [order, email]);
     if (!order) return null;
@@ -50,20 +54,21 @@ export function OrderTrackingBlock({ order, email }: { order: any, email?: strin
     let currentStepIndex = 0;
     const baseStatus = order.fulfillmentStatus?.toUpperCase();
     
-    // Shopify base mapping
-    if (baseStatus === "DELIVERED") currentStepIndex = 3;
-    else if (baseStatus === "FULFILLED") currentStepIndex = 2;
-    else if (baseStatus === "PARTIAL") currentStepIndex = 1;
-    else if (baseStatus === "UNFULFILLED" || baseStatus === "PENDING") currentStepIndex = 1;
+    // Default mapped values
+    let targetStepIndex = 0;
+    if (baseStatus === "DELIVERED") targetStepIndex = 3;
+    else if (baseStatus === "FULFILLED") targetStepIndex = 2;
+    else if (baseStatus === "PARTIAL") targetStepIndex = 1;
+    else if (baseStatus === "UNFULFILLED" || baseStatus === "PENDING") targetStepIndex = 1;
 
     // Live Tracking Override
     let displayInfo = "ETA Pending";
     if (liveData) {
         const liveStatus = liveData.Status?.Status?.toLowerCase() || "";
         
-        if (liveStatus.includes("delivered") && !liveStatus.includes("rto")) currentStepIndex = 3;
-        else if (liveStatus.includes("transit") || liveStatus.includes("dispatched") || liveStatus.includes("picked up")) currentStepIndex = 2;
-        else if (liveStatus.includes("manifested") || liveStatus.includes("packed")) currentStepIndex = 1;
+        if (liveStatus.includes("delivered") && !liveStatus.includes("rto")) targetStepIndex = 3;
+        else if (liveStatus.includes("transit") || liveStatus.includes("dispatched") || liveStatus.includes("picked up")) targetStepIndex = 2;
+        else if (liveStatus.includes("manifested") || liveStatus.includes("packed")) targetStepIndex = 1;
         
         const formatStatus = (status: string) => {
             if (!status) return "";
@@ -90,6 +95,12 @@ export function OrderTrackingBlock({ order, email }: { order: any, email?: strin
         } else {
             displayInfo = formatStatus(liveData.Status?.Status || "Processing");
         }
+    }
+
+    if (isTrackingLoaded) {
+        currentStepIndex = targetStepIndex;
+    } else {
+        currentStepIndex = 0;
     }
 
     const handleTrack = () => {
