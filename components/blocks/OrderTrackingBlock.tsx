@@ -12,11 +12,19 @@ export function OrderTrackingBlock({ order, email }: { order: any, email?: strin
     const [isExpanded, setIsExpanded] = useState(false);
 
     useEffect(() => {
-        if (order?.orderNumber && email && (order.awbNumber || order.courier?.toLowerCase() === 'delhivery')) {
+        const shopifyTracking = order?.tracking?.[0];
+        const awb = order?.awbNumber || shopifyTracking?.number;
+        const courier = (order?.courier || shopifyTracking?.company || '').toLowerCase();
+
+        if (order?.orderNumber && email && awb) {
             fetch('/api/track', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderNumber: order.orderNumber, email })
+                body: JSON.stringify({ 
+                    orderNumber: order.orderNumber.toString().replace('#', ''), 
+                    email,
+                    awbNumber: awb 
+                })
             })
             .then(async res => {
                 const text = await res.text();
@@ -66,7 +74,10 @@ export function OrderTrackingBlock({ order, email }: { order: any, email?: strin
     }
 
     const handleTrack = () => {
-        const url = order.tracking?.[0]?.url;
+        const shopifyTracking = order.tracking?.[0];
+        const awb = order.awbNumber || shopifyTracking?.number;
+        const url = shopifyTracking?.url || (awb ? `https://www.delhivery.com/track/package/${awb}` : null);
+        
         if (url) {
             window.open(url, '_blank');
         } else {

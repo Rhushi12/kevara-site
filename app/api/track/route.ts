@@ -14,38 +14,40 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { orderNumber, email } = body;
+        const { orderNumber, email, awbNumber } = body;
 
         if (!orderNumber || !email) {
             return NextResponse.json({ error: 'Order number and email are required' }, { status: 400 });
         }
 
+        // Clean order number (e.g. #1011 -> 1011)
+        const parsedOrderNumber = parseInt(orderNumber.toString().replace('#', ''));
+
         // Query Firebase for the order
         const snapshot = await db.collection('orders')
-            .where('orderNumber', '==', parseInt(orderNumber))
+            .where('orderNumber', '==', parsedOrderNumber)
             .limit(5)
             .get();
 
-        if (snapshot.empty) {
-            return NextResponse.json({ error: 'Order not found. Please check your order number.' }, { status: 404 });
+        let order: any = null;
+        if (!snapshot.empty) {
+            // Find the order that matches the email
+            const matchingDoc = snapshot.docs.find(doc => {
+                const data = doc.data();
+                return data.customerInfo?.email?.toLowerCase() === email.toLowerCase();
+            });
+
+            if (matchingDoc) {
+                order = { id: matchingDoc.id, ...matchingDoc.data() };
+            }
         }
 
-        // Find the order that matches the email
-        const matchingDoc = snapshot.docs.find(doc => {
-            const data = doc.data();
-            return data.customerInfo?.email?.toLowerCase() === email.toLowerCase();
-        });
-
-        if (!matchingDoc) {
-            return NextResponse.json({ error: 'No order found matching that email and order number.' }, { status: 404 });
-        }
-
-        const order: any = { id: matchingDoc.id, ...matchingDoc.data() };
-
-        // If order has an AWB (Delhivery shipment), fetch live tracking
+        // If order has an AWB (Delhivery shipment) either from body or DB, fetch live tracking
         let liveTracking = null;
-        if (order.awbNumber && order.courier?.toLowerCase() === 'delhivery') {
-            const trackingResult = await trackDelhiveryShipment(order.awbNumber);
+        const finalAwb = awbNumber || order?.awbNumber;
+        
+        if (finalAwb) {
+            const trackingResult = await trackDelhiveryShipment(finalAwb);
             if (trackingResult.success) {
                 liveTracking = trackingResult;
 
@@ -70,6 +72,10 @@ export async function POST(req: Request) {
                     order.status = mappedStatus;
                 }
             }
+        }
+
+        if (!order && !liveTracking) {
+            return NextResponse.json({ error: 'No order or tracking data found.' }, { status: 404 });
         }
 
         return NextResponse.json({ success: true, order, liveTracking });
