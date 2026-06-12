@@ -134,7 +134,7 @@ export function OrderTrackingBlock({ order, email }: { order: any, email?: strin
                     <motion.div 
                         initial={{ width: 0 }}
                         animate={{ width: `${(currentStepIndex / (steps.length - 1)) * 100}%` }}
-                        transition={{ duration: 1, ease: "easeInOut" }}
+                        transition={{ duration: currentStepIndex > 0 ? currentStepIndex * 0.5 : 0, ease: "linear" }}
                         className="h-full bg-[#006D77]"
                     />
                 </div>
@@ -147,14 +147,28 @@ export function OrderTrackingBlock({ order, email }: { order: any, email?: strin
                         return (
                             <div key={step.key} className="flex flex-col items-center gap-4 relative z-10 w-24" aria-current={isCurrent ? "step" : undefined}>
                                 <motion.div 
-                                    className={`w-3 h-3 rounded-full transition-colors duration-500 border-2 border-white ring-2 ${
-                                        isCompleted ? 'bg-[#006D77] ring-[#006D77]/20 border-white' : 'bg-slate-200 ring-transparent border-white'
-                                    }`}
+                                    initial={{ backgroundColor: "#e2e8f0", borderColor: "#ffffff", boxShadow: "0 0 0 0px transparent" }}
+                                    animate={isCompleted ? { 
+                                        backgroundColor: "#006D77",
+                                        borderColor: "#ffffff",
+                                        boxShadow: "0 0 0 2px rgba(0, 109, 119, 0.2)"
+                                    } : { 
+                                        backgroundColor: "#e2e8f0",
+                                        borderColor: "#ffffff",
+                                        boxShadow: "0 0 0 0px transparent"
+                                    }}
+                                    transition={{ duration: 0.3, delay: isCompleted ? idx * 0.5 : 0 }}
+                                    className="w-3 h-3 rounded-full border-2"
                                     aria-label={step.label}
                                 />
-                                <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-widest text-center ${isCurrent ? 'text-[#006D77]' : 'text-slate-400'}`}>
+                                <motion.span 
+                                    initial={{ color: "#94a3b8" }}
+                                    animate={{ color: isCurrent ? "#006D77" : "#94a3b8" }}
+                                    transition={{ duration: 0.3, delay: isCurrent ? idx * 0.5 : 0 }}
+                                    className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-center"
+                                >
                                     {step.label}
-                                </span>
+                                </motion.span>
                             </div>
                         );
                     })}
