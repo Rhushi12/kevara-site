@@ -52,24 +52,26 @@ export async function POST(req: Request) {
                 liveTracking = trackingResult;
 
                 // Auto-update the order status in Firebase based on Delhivery's status
-                const delhiveryStatus = trackingResult.data?.status?.toLowerCase();
-                let mappedStatus = order.status;
+                if (order) {
+                    const delhiveryStatus = trackingResult.data?.status?.toLowerCase();
+                    let mappedStatus = order.status;
 
-                if (delhiveryStatus === 'delivered') {
-                    mappedStatus = 'delivered';
-                } else if (delhiveryStatus === 'in transit' || delhiveryStatus === 'dispatched') {
-                    mappedStatus = 'shipped';
-                } else if (delhiveryStatus === 'rto' || delhiveryStatus === 'returned') {
-                    mappedStatus = 'returned';
-                }
+                    if (delhiveryStatus === 'delivered') {
+                        mappedStatus = 'delivered';
+                    } else if (delhiveryStatus === 'in transit' || delhiveryStatus === 'dispatched') {
+                        mappedStatus = 'shipped';
+                    } else if (delhiveryStatus === 'rto' || delhiveryStatus === 'returned') {
+                        mappedStatus = 'returned';
+                    }
 
-                // Only update if status changed
-                if (mappedStatus !== order.status) {
-                    await db.collection('orders').doc(order.id).update({
-                        status: mappedStatus,
-                        updatedAt: new Date().toISOString(),
-                    });
-                    order.status = mappedStatus;
+                    // Only update if status changed
+                    if (mappedStatus !== order.status) {
+                        await db.collection('orders').doc(order.id).update({
+                            status: mappedStatus,
+                            updatedAt: new Date().toISOString(),
+                        });
+                        order.status = mappedStatus;
+                    }
                 }
             }
         }
