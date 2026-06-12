@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { LogOut, ChevronRight } from "lucide-react";
 import { OrderTrackingBlock } from "@/components/blocks/OrderTrackingBlock";
 import ProductCard from "@/components/ProductCard";
+import PremiumPreloader from "@/components/PremiumPreloader";
 
 interface Order {
     id: string;
@@ -86,12 +87,7 @@ export default function AccountPage() {
     }, [orders, allProducts]);
 
     if (loading) {
-        return (
-            <main className="min-h-screen bg-[#FDFBF7] flex flex-col pt-32 items-center">
-                <Navbar />
-                <div className="w-8 h-8 border-4 border-[#006D77]/20 border-t-[#006D77] rounded-full animate-spin mt-20" />
-            </main>
-        );
+        return <PremiumPreloader />;
     }
     
     if (!user) return null;

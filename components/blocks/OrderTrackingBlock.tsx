@@ -141,7 +141,7 @@ export function OrderTrackingBlock({ order, email }: { order: any, email?: strin
             </div>
 
             <div className="relative pt-6 pb-4" role="progressbar" aria-valuenow={currentStepIndex} aria-valuemin={0} aria-valuemax={3}>
-                <div className="absolute top-[28px] left-0 right-0 h-[1px] bg-slate-200 mx-[10%]">
+                <div className="absolute top-[28px] left-16 right-16 sm:left-[calc(10%+3rem)] sm:right-[calc(10%+3rem)] h-[1px] bg-slate-200">
                     <motion.div 
                         initial={{ width: 0 }}
                         animate={{ width: `${(currentStepIndex / (steps.length - 1)) * 100}%` }}
