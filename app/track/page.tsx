@@ -16,6 +16,7 @@ import {
     ShoppingBag,
     ArrowRight
 } from "lucide-react";
+import { TrackingTimeline } from "@/components/blocks/TrackingTimeline";
 
 interface TrackingOrder {
     id: string;
@@ -143,6 +144,11 @@ export default function TrackPage() {
     const OrderCard = ({ order }: { order: TrackingOrder }) => {
         const activeStep = getActiveStep(order.status);
         
+        // Extract Delhivery data safely
+        const delhiveryShipment = order.liveTracking?.data?.ShipmentData?.[0]?.Shipment;
+        const lastLocation = delhiveryShipment?.Status?.StatusLocation || order.liveTracking?.data?.data?.[0]?.status?.statusLocation;
+        const scans = delhiveryShipment?.Scans || [];
+        
         return (
             <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 {/* Header */}
@@ -243,11 +249,11 @@ export default function TrackPage() {
                                         <span className="font-mono font-medium text-slate-900">{order.awbNumber}</span>
                                     </div>
                                 )}
-                                {order.liveTracking?.data?.data?.[0]?.status?.statusLocation ? (
+                                {lastLocation ? (
                                     <div className="flex justify-between items-center border-b border-[#0E4D55]/10 pb-2">
                                         <span className="text-slate-500 font-medium">Last Location</span>
                                         <span className="font-medium text-slate-900 text-right">
-                                            {order.liveTracking.data.data[0].status.statusLocation}
+                                            {lastLocation}
                                         </span>
                                     </div>
                                 ) : (
@@ -299,6 +305,16 @@ export default function TrackPage() {
                         ))}
                     </div>
                 </div>
+
+                {/* Detailed Timeline */}
+                {scans.length > 0 && (
+                    <div className="mt-8 bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
+                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#0E4D55] mb-6 flex items-center gap-2">
+                            <Clock size={12} /> Detailed Journey History
+                        </h3>
+                        <TrackingTimeline scans={scans} />
+                    </div>
+                )}
             </div>
         );
     };

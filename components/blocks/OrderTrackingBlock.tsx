@@ -3,10 +3,13 @@
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { TrackingTimeline } from "./TrackingTimeline";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 export function OrderTrackingBlock({ order, email }: { order: any, email?: string }) {
     const router = useRouter();
     const [liveData, setLiveData] = useState<any>(null);
+    const [isExpanded, setIsExpanded] = useState(false);
 
     useEffect(() => {
         if (order?.orderNumber && email && (order.awbNumber || order.courier?.toLowerCase() === 'delhivery')) {
@@ -127,6 +130,28 @@ export function OrderTrackingBlock({ order, email }: { order: any, email?: strin
                     })}
                 </div>
             </div>
+
+            {/* Expandable Timeline Section */}
+            {liveData?.Scans && liveData.Scans.length > 0 && (
+                <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col items-center">
+                    <button 
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#006D77] hover:text-[#004e55] transition-colors mb-2"
+                    >
+                        {isExpanded ? (
+                            <>Hide Detailed History <ChevronUp size={14} /></>
+                        ) : (
+                            <>View Detailed History <ChevronDown size={14} /></>
+                        )}
+                    </button>
+                    
+                    {isExpanded && (
+                        <div className="w-full mt-4 bg-slate-50/50 rounded-xl p-4 sm:p-6 border border-slate-100/50">
+                            <TrackingTimeline scans={liveData.Scans} />
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
