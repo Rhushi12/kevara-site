@@ -33,6 +33,8 @@ export interface Product {
         relatedProducts?: string[];
         video?: string;
         status?: string;
+        variantImages?: Record<string, string[]>;
+        _colorVariant?: { name: string; hex: string; isExpanded: boolean };
     };
 }
 

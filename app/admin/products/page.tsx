@@ -9,7 +9,7 @@ import Link from 'next/link';
 import CreateProductModal from '@/components/admin/CreateProductModal';
 import BulkEditModal from '@/components/admin/BulkEditModal';
 import BulkUploadModal from '@/components/admin/BulkUploadModal';
-import { Loader2, CheckCircle, XCircle, Clock, Package, RefreshCw, Plus, Trash2, X, Check, Upload, AlertCircle, Edit, RotateCcw, RotateCw } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, Clock, Package, RefreshCw, Plus, Trash2, X, Check, Upload, AlertCircle, Edit, RotateCcw, RotateCw, Copy } from 'lucide-react';
 
 interface BulkUploadResult {
     row: number;
@@ -47,9 +47,22 @@ export default function AdminProductManager() {
     const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
     const [isShiftPressed, setIsShiftPressed] = useState(false);
 
+    // Duplication state
+    const [hoveredHandle, setHoveredHandle] = useState<string | null>(null);
+    const [clipboardHandle, setClipboardHandle] = useState<string | null>(null);
+    const [isDuplicating, setIsDuplicating] = useState<string | null>(null);
+
     // Undo/Redo State
     const [history, setHistory] = useState<HistoryAction[]>([]);
     const [redoStack, setRedoStack] = useState<HistoryAction[]>([]);
+
+    // Toast state
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+    const showToast = (msg: string) => {
+        setToastMessage(msg);
+        setTimeout(() => setToastMessage(null), 3000);
+    };
 
     // Bulk upload state
     const [showBulkModal, setShowBulkModal] = useState(false);
@@ -82,10 +95,31 @@ export default function AdminProductManager() {
         }
     }, [isAdmin]);
 
-    // Track Shift Key
+    // Track Shift Key and Keyboard Shortcuts
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Shift') setIsShiftPressed(true);
+
+            // Ignore shortcuts if user is typing in an input or textarea
+            const target = e.target as HTMLElement;
+            if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) {
+                return;
+            }
+
+            // Ctrl+C / Cmd+C
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
+                if (hoveredHandle) {
+                    setClipboardHandle(hoveredHandle);
+                    showToast('Product copied! Press Ctrl+V to paste/duplicate.');
+                }
+            }
+
+            // Ctrl+V / Cmd+V
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
+                if (clipboardHandle && !isDuplicating) {
+                    handleDuplicate(clipboardHandle);
+                }
+            }
         };
         const handleKeyUp = (e: KeyboardEvent) => {
             if (e.key === 'Shift') setIsShiftPressed(false);
@@ -97,7 +131,36 @@ export default function AdminProductManager() {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
         };
-    }, []);
+    }, [hoveredHandle, clipboardHandle, isDuplicating]);
+
+    const handleDuplicate = async (handle: string) => {
+        setIsDuplicating(handle);
+        try {
+            const { auth } = await import('@/lib/firebase');
+            const token = await auth.currentUser?.getIdToken();
+            
+            const res = await fetch('/api/products/duplicate', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    ...(token && { 'Authorization': `Bearer ${token}` })
+                },
+                body: JSON.stringify({ handle }),
+            });
+            if (res.ok) {
+                showToast('Product pasted/duplicated successfully!');
+                await fetchProducts();
+            } else {
+                const err = await res.json();
+                showToast(`Duplication failed: ${err.error}`);
+            }
+        } catch(error) {
+            console.error("Duplicate failed:", error);
+            showToast("Failed to duplicate product.");
+        } finally {
+            setIsDuplicating(null);
+        }
+    };
 
     // Listen for product updates to refresh list
     useEffect(() => {
@@ -106,19 +169,19 @@ export default function AdminProductManager() {
         return () => window.removeEventListener('refresh-products', handleRefresh);
     }, []);
 
-    const handleDelete = async (id: string, title: string) => {
+    const handleDelete = async (handle: string, title: string) => {
         if (!confirm(`Are you sure you want to delete "${title}"? This cannot be undone.`)) return;
 
-        setDeletingId(id);
+        setDeletingId(handle);
         try {
             const res = await fetch('/api/products/delete', {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id }),
+                body: JSON.stringify({ handle }),
             });
 
             if (!res.ok) throw new Error("Failed to delete product");
-            setLiveProducts(prev => prev.filter(p => p.node.id !== id));
+            setLiveProducts(prev => prev.filter(p => p.node.handle !== handle));
         } catch (error) {
             console.error("Delete failed:", error);
             alert("Failed to delete product.");
@@ -138,16 +201,16 @@ export default function AdminProductManager() {
         let successCount = 0;
         let failCount = 0;
 
-        for (const id of selectedProducts) {
+        for (const handle of selectedProducts) {
             try {
                 const res = await fetch('/api/products/delete', {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id }),
+                    body: JSON.stringify({ handle }),
                 });
 
                 if (res.ok) {
-                    setLiveProducts(prev => prev.filter(p => p.node.id !== id));
+                    setLiveProducts(prev => prev.filter(p => p.node.handle !== handle));
                     successCount++;
                 } else {
                     failCount++;
@@ -553,9 +616,13 @@ export default function AdminProductManager() {
                             {liveProducts.map((product: any) => (
                                 <div
                                     key={product.node.id}
-                                    className={`group bg-white rounded-xl overflow-hidden border transition-all duration-300 relative ${selectedProducts.has(product.node.handle) ? 'border-slate-900 ring-2 ring-slate-900' : 'border-gray-100 hover:shadow-md'}`}
+                                    className={`group bg-white rounded-xl overflow-hidden border transition-all duration-300 relative ${selectedProducts.has(product.node.handle) ? 'border-slate-900 ring-2 ring-slate-900' : 'border-gray-100 hover:shadow-md'} ${clipboardHandle === product.node.handle ? 'ring-2 ring-blue-500 border-blue-500' : ''}`}
                                     onClick={() => isSelectMode && toggleProductSelection(product.node.handle)}
-                                    onMouseEnter={() => handleHoverSelect(product.node.handle)}
+                                    onMouseEnter={() => {
+                                        handleHoverSelect(product.node.handle);
+                                        setHoveredHandle(product.node.handle);
+                                    }}
+                                    onMouseLeave={() => setHoveredHandle(null)}
                                 >
                                     {/* Selection Checkbox */}
                                     {isSelectMode && (
@@ -596,28 +663,48 @@ export default function AdminProductManager() {
                                         </div>
                                     </Link>
 
-                                    {/* Delete Button (only in non-select mode) */}
+                                    {/* Action Buttons (only in non-select mode) */}
                                     {!isSelectMode && (
-                                        <button
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                handleDelete(product.node.id, product.node.title);
-                                            }}
-                                            disabled={deletingId === product.node.id}
-                                            className="absolute top-2 right-2 p-2 bg-white/90 backdrop-blur-sm rounded-full text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm opacity-0 group-hover:opacity-100 focus:opacity-100 z-30"
-                                            title="Delete Product"
-                                        >
-                                            {deletingId === product.node.id ? (
-                                                <Loader2 size={16} className="animate-spin" />
-                                            ) : (
-                                                <XCircle size={18} />
-                                            )}
-                                        </button>
+                                        <div className="absolute top-2 right-2 flex flex-col gap-2 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    handleDuplicate(product.node.handle);
+                                                }}
+                                                disabled={isDuplicating === product.node.handle}
+                                                className="p-2 bg-white/90 backdrop-blur-sm rounded-full text-blue-500 hover:bg-blue-50 hover:text-blue-600 transition-colors shadow-sm"
+                                                title="Duplicate Product (Ctrl+C / Ctrl+V)"
+                                            >
+                                                {isDuplicating === product.node.handle ? (
+                                                    <Loader2 size={16} className="animate-spin" />
+                                                ) : (
+                                                    <Copy size={18} />
+                                                )}
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    handleDelete(product.node.handle, product.node.title);
+                                                }}
+                                                disabled={deletingId === product.node.handle}
+                                                className="p-2 bg-white/90 backdrop-blur-sm rounded-full text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm"
+                                                title="Delete Product"
+                                            >
+                                                {deletingId === product.node.handle ? (
+                                                    <Loader2 size={16} className="animate-spin" />
+                                                ) : (
+                                                    <XCircle size={18} />
+                                                )}
+                                            </button>
+                                        </div>
                                     )}
 
                                     <div className="p-4">
-                                        <h3 className="font-medium text-slate-900 truncate mb-1">{product.node.title}</h3>
+                                        <Link href={isSelectMode ? '#' : `/products/${product.node.slug || product.node.handle}`} onClick={(e) => { if(isSelectMode) e.preventDefault(); }}>
+                                            <h3 className="font-medium text-slate-900 truncate mb-1 hover:underline cursor-pointer">{product.node.title}</h3>
+                                        </Link>
                                         <div className="flex items-center justify-between">
                                             <p className="text-sm text-slate-500">
                                                 {(() => {
@@ -678,6 +765,14 @@ export default function AdminProductManager() {
                     fetchProducts();
                 }}
             />
+
+            {/* Toast Notification */}
+            {toastMessage && (
+                <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2 animate-in slide-in-from-bottom-5">
+                    <CheckCircle size={18} className="text-emerald-400" />
+                    <span className="text-sm font-medium">{toastMessage}</span>
+                </div>
+            )}
         </div>
     );
 }

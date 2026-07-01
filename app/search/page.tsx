@@ -10,6 +10,7 @@ import ProductCard from "@/components/ProductCard";
 import PremiumPreloader from "@/components/PremiumPreloader";
 import { Filter, Search, X } from "lucide-react";
 import MobileDrawer from "@/components/options/MobileDrawer";
+import { expandProductsByColor } from "@/lib/expandProductsByColor";
 
 function SearchPageContent() {
     const { isAdmin } = useAuth();
@@ -43,7 +44,8 @@ function SearchPageContent() {
                 const res = await fetch('/api/products');
                 if (res.ok) {
                     const data = await res.json();
-                    setProducts(data.products || []);
+                    const rawProducts = data.products || [];
+                    setProducts(expandProductsByColor(rawProducts));
                 }
             } catch (error) {
                 console.error("Failed to fetch products:", error);
@@ -286,13 +288,19 @@ function SearchPageContent() {
                         <div>
                             {displayedProducts.length > 0 ? (
                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 justify-center gap-4 md:gap-6">
-                                    {displayedProducts.map((product, index) => (
-                                        <ProductCard
-                                            key={product.node.id || index}
-                                            product={product}
-                                            imageAspectRatio="w-full h-[264px] md:h-[392px]"
-                                        />
-                                    ))}
+                                    {displayedProducts.map((product, index) => {
+                                        const colorVariant = (product.node as any)._colorVariant;
+                                        const key = colorVariant?.isExpanded
+                                            ? `${product.node.handle}-${colorVariant.name}`
+                                            : (product.node.id || index);
+                                        return (
+                                            <ProductCard
+                                                key={key}
+                                                product={product}
+                                                imageAspectRatio="w-full h-[264px] md:h-[392px]"
+                                            />
+                                        );
+                                    })}
                                 </div>
                             ) : (
                                 <div className="text-center py-16 bg-gray-50 rounded-lg">

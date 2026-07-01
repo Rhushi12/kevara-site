@@ -18,6 +18,7 @@ interface StickyProductBarProps {
         siblingColors?: { name: string; hex: string; url: string; isCurrent?: boolean; image?: string }[];
         stock?: number;
         variantStock?: Record<string, number>;
+        variantPrices?: Record<string, string>;
     };
 }
 
@@ -73,6 +74,11 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
 
     const isCurrentSelectionOutOfStock = selectedSize ? isSizeOutOfStock(selectedSize) : false;
 
+    let calculatedPrice = product.price;
+    if (selectedSize && product.variantPrices && product.variantPrices[selectedSize]) {
+        calculatedPrice = product.variantPrices[selectedSize];
+    }
+
     return (
         <AnimatePresence>
             {isVisible && (
@@ -103,8 +109,8 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
                                 {/* Hidden Price */}
                                 <span className="text-sm text-slate-900 font-bold hidden">
                                     {(() => {
-                                        if (typeof product.price === 'number') return `₹${product.price.toFixed(2)}`;
-                                        const p = product.price.toString();
+                                        if (typeof calculatedPrice === 'number') return `₹${calculatedPrice.toFixed(2)}`;
+                                        const p = calculatedPrice.toString();
                                         if (p.includes('-')) {
                                             const parts = p.split('-').map((s: string) => s.trim());
                                             if (parts.length === 2 && !isNaN(parseFloat(parts[0])) && !isNaN(parseFloat(parts[1]))) {
@@ -261,7 +267,7 @@ export default function StickyProductBar({ product }: StickyProductBarProps) {
                                     const mockVariantId = `${product.handle}-${selectedSize}-${selectedColorName}`;
                                     const existingIndex = items.findIndex((i: any) => i.merchandiseId === mockVariantId);
 
-                                    const numericPrice = typeof product.price === 'string' ? parseFloat(product.price.replace(/[^0-9.]/g, '')) : product.price;
+                                    const numericPrice = typeof calculatedPrice === 'string' ? parseFloat(calculatedPrice.toString().replace(/[^0-9.]/g, '')) : calculatedPrice;
 
                                     let newItems = [...items];
                                     if (existingIndex >= 0) {

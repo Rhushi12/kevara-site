@@ -17,6 +17,7 @@ interface CreateProductRequest {
     sizes?: string[];
     stock?: number;
     variantStock?: Record<string, number>; // Per-size stock map
+    variantPrices?: Record<string, string>; // Per-size price map
     returnDays?: number;     // Return window in days, defaults to 30
 }
 
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
         if (authError) return authError;
 
         const body: CreateProductRequest = await request.json();
-        const { title, price, description, imageUrls, videoUrl, colors, sizes, stock, variantStock, returnDays } = body;
+        const { title, price, description, imageUrls, videoUrl, colors, sizes, stock, variantStock, variantPrices, returnDays } = body;
 
         if (!title || !price) {
             return NextResponse.json({ error: "Title and Price are required" }, { status: 400 });
@@ -51,6 +52,7 @@ export async function POST(request: NextRequest) {
             sizes,
             stock,
             variantStock,
+            variantPrices,
             returnDays: returnDays ?? 30,
             status: "ACTIVE"
         });

@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Loader2, X, Plus, Pipette, Save, Hash, Users, FolderTree } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Loader2, X, Plus, Pipette, Save, Hash, Users, FolderTree, Image as ImageIcon, Upload, Trash2, GripVertical } from "lucide-react";
+import Image from "next/image";
+import { adminFetch } from "@/lib/admin-fetch";
 import { parseProductTitle } from "@/lib/productUtils";
 
 interface EditableProduct {
@@ -17,8 +19,18 @@ interface EditableProduct {
     };
     colors?: { name: string; hex: string }[];
     sizes?: string[];
+    variantPrices?: Record<string, string>;
     status?: string;
     returnDays?: number;
+    imageUrls?: string[];
+    variantImages?: Record<string, string[]>;
+}
+
+interface ImageItem {
+    id: string;
+    url: string;
+    file?: File;
+    isExisting: boolean;
 }
 
 interface ProductEditModalProps {
@@ -55,10 +67,28 @@ export default function ProductEditModal({ isOpen, onClose, onSuccess, product, 
     const [status, setStatus] = useState("ACTIVE");
     const [returnDays, setReturnDays] = useState(30);
     const [sizes, setSizes] = useState<string[]>([]);
+    const [variantPrices, setVariantPrices] = useState<Record<string, string>>({});
     const [colors, setColors] = useState<{ name: string; hex: string }[]>([]);
     const [tempColor, setTempColor] = useState({ name: "", hex: "#000000" });
     const [recentColors, setRecentColors] = useState<{ name: string; hex: string }[]>([]);
     const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const [variantImagesState, setVariantImagesState] = useState<Record<string, ImageItem[]>>({});
+    const [selectedColorForImages, setSelectedColorForImages] = useState<string | null>(null);
+
+    // Derived state for the currently selected color's images
+    const images = selectedColorForImages ? (variantImagesState[selectedColorForImages] || []) : [];
+
+    const setImages = (newImages: ImageItem[]) => {
+        if (!selectedColorForImages) return;
+        setVariantImagesState(prev => ({
+            ...prev,
+            [selectedColorForImages]: newImages
+        }));
+    };
 
     // In bulk mode, checkboxes control which fields get applied
     const [editFields, setEditFields] = useState({
@@ -69,7 +99,9 @@ export default function ProductEditModal({ isOpen, onClose, onSuccess, product, 
         status: false,
         returnDays: false,
         sizes: false,
+        variantPrices: false,
         colors: false,
+        images: false,
     });
 
     // Load recent colors from localStorage
@@ -96,7 +128,10 @@ export default function ProductEditModal({ isOpen, onClose, onSuccess, product, 
             setStatus("ACTIVE");
             setReturnDays(30);
             setSizes([]);
+            setVariantPrices({});
             setColors([]);
+            setVariantImagesState({});
+            setSelectedColorForImages(null);
             setEditFields({
                 title: false,
                 batchNumber: false,
@@ -105,7 +140,9 @@ export default function ProductEditModal({ isOpen, onClose, onSuccess, product, 
                 status: false,
                 returnDays: false,
                 sizes: false,
+                variantPrices: false,
                 colors: false,
+                images: false,
             });
             setSaveMessage(null);
         } else if (product) {
@@ -120,7 +157,36 @@ export default function ProductEditModal({ isOpen, onClose, onSuccess, product, 
             setStatus(product.status || "ACTIVE");
             setReturnDays(product.returnDays ?? 30);
             setSizes(product.sizes || []);
+            setVariantPrices(product.variantPrices || {});
             setColors(product.colors?.map(c => ({ ...c })) || []);
+            
+            // Build initial variantImagesState
+            const initialVariantImages: Record<string, ImageItem[]> = {};
+            if (product.variantImages && Object.keys(product.variantImages).length > 0) {
+                Object.entries(product.variantImages).forEach(([color, urls]) => {
+                    initialVariantImages[color] = urls.map((url, i) => ({
+                        id: `existing-${Date.now()}-${i}-${color}`,
+                        url,
+                        isExisting: true
+                    }));
+                });
+            } else if (product.imageUrls && product.imageUrls.length > 0 && product.colors && product.colors.length > 0) {
+                // Fallback for older products without variant_images map: map all existing images to the first color
+                const firstColor = product.colors[0].name;
+                initialVariantImages[firstColor] = product.imageUrls.map((url, i) => ({
+                    id: `legacy-${Date.now()}-${i}`,
+                    url,
+                    isExisting: true
+                }));
+            }
+            setVariantImagesState(initialVariantImages);
+            
+            // Auto-select the first color if available
+            if (product.colors && product.colors.length > 0) {
+                setSelectedColorForImages(product.colors[0].name);
+            } else {
+                setSelectedColorForImages(null);
+            }
             
             // In single mode all fields are always active
             setEditFields({
@@ -131,7 +197,9 @@ export default function ProductEditModal({ isOpen, onClose, onSuccess, product, 
                 status: true,
                 returnDays: true,
                 sizes: true,
+                variantPrices: true,
                 colors: true,
+                images: true,
             });
             setSaveMessage(null);
         }
@@ -150,6 +218,68 @@ export default function ProductEditModal({ isOpen, onClose, onSuccess, product, 
     }, [isOpen]);
 
     if (!isOpen || (!product && !isBulkMode)) return null;
+
+    // Image Handlers
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedFiles = Array.from(e.target.files || []);
+        if (selectedFiles.length > 0) {
+            const newItems: ImageItem[] = selectedFiles.map(file => ({
+                id: `new-${Date.now()}-${Math.random()}`,
+                url: URL.createObjectURL(file),
+                file,
+                isExisting: false
+            }));
+            setImages([...images, ...newItems]);
+        }
+    };
+
+    const removeImage = (index: number) => {
+        const newImages = [...images];
+        const removed = newImages.splice(index, 1)[0];
+        if (!removed.isExisting) {
+            URL.revokeObjectURL(removed.url);
+        }
+        setImages(newImages);
+    };
+
+    const handleDragStart = (index: number) => setDraggedIndex(index);
+
+    const handleDragOver = (e: React.DragEvent, index: number) => {
+        e.preventDefault();
+        if (draggedIndex === null || draggedIndex === index) return;
+        
+        const newImages = [...images];
+        const draggedItem = newImages[draggedIndex];
+        newImages.splice(draggedIndex, 1);
+        newImages.splice(index, 0, draggedItem);
+        
+        setImages(newImages);
+        setDraggedIndex(index);
+    };
+
+    const handleDragEnd = () => setDraggedIndex(null);
+
+    const handleDropOnColor = (e: React.DragEvent, targetColorName: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (draggedIndex === null || !selectedColorForImages || selectedColorForImages === targetColorName) return;
+
+        setVariantImagesState(prev => {
+            const currentImages = [...(prev[selectedColorForImages] || [])];
+            const movedImage = currentImages.splice(draggedIndex, 1)[0];
+            
+            const targetImages = [...(prev[targetColorName] || [])];
+            targetImages.push(movedImage);
+
+            return {
+                ...prev,
+                [selectedColorForImages]: currentImages,
+                [targetColorName]: targetImages
+            };
+        });
+
+        setDraggedIndex(null);
+    };
 
     // ---- SAVE HANDLER ----
     const handleSave = async () => {
@@ -170,7 +300,10 @@ export default function ProductEditModal({ isOpen, onClose, onSuccess, product, 
                 if (editFields.price && price) commonData.price = price;
                 if (editFields.status) commonData.status = status;
                 if (editFields.returnDays) commonData.returnDays = returnDays;
-                if (editFields.sizes) commonData.sizes = sizes;
+                if (editFields.sizes) {
+                    commonData.sizes = sizes;
+                    commonData.variantPrices = variantPrices;
+                }
                 if (editFields.colors) commonData.colors = colors;
 
                 if (Object.keys(commonData).length === 0) {
@@ -210,7 +343,10 @@ export default function ProductEditModal({ isOpen, onClose, onSuccess, product, 
                     if (commonData.price) item.price = commonData.price;
                     if (commonData.status) item.status = commonData.status;
                     if (commonData.returnDays !== undefined) item.returnDays = commonData.returnDays;
-                    if (commonData.sizes) item.sizes = commonData.sizes;
+                    if (commonData.sizes) {
+                        item.sizes = commonData.sizes;
+                        item.variantPrices = commonData.variantPrices;
+                    }
                     if (commonData.colors) item.colors = commonData.colors;
                     return item;
                 });
@@ -232,6 +368,72 @@ export default function ProductEditModal({ isOpen, onClose, onSuccess, product, 
                 // Single product mode
                 const payload: any = { handle: product!.handle };
 
+                // Handle image uploads if any new images
+                const finalVariantImages: Record<string, string[]> = {};
+                let imagesChanged = false;
+
+                const uploadFileToR2 = async (file: File, folder: string = "products"): Promise<string> => {
+                    const presignRes = await adminFetch("/api/r2/presign", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            filename: file.name,
+                            contentType: file.type,
+                            folder,
+                        }),
+                    });
+
+                    if (!presignRes.ok) {
+                        const err = await presignRes.json();
+                        throw new Error(err.error || "Failed to get upload URL");
+                    }
+
+                    const { uploadUrl, publicUrl } = await presignRes.json();
+
+                    const uploadRes = await fetch(uploadUrl, {
+                        method: "PUT",
+                        body: file,
+                        headers: { "Content-Type": file.type },
+                    });
+
+                    if (!uploadRes.ok) {
+                        throw new Error(`Failed to upload ${file.name} to storage`);
+                    }
+
+                    return publicUrl;
+                };
+
+                // Sync the current `images` back to `variantImagesState` for the active color before saving
+                const currentStateToSave = { ...variantImagesState };
+                if (selectedColorForImages) {
+                    currentStateToSave[selectedColorForImages] = images;
+                }
+
+                for (const [color, colorImages] of Object.entries(currentStateToSave)) {
+                    finalVariantImages[color] = [];
+                    for (let i = 0; i < colorImages.length; i++) {
+                        const item = colorImages[i];
+                        if (item.isExisting) {
+                            finalVariantImages[color].push(item.url);
+                        } else if (item.file) {
+                            setSaveMessage({ type: "success", text: `Uploading image for ${color}...` });
+                            const uploadedUrl = await uploadFileToR2(item.file);
+                            finalVariantImages[color].push(uploadedUrl);
+                            imagesChanged = true;
+                        }
+                    }
+                }
+
+                // Check if existing images were reordered or deleted
+                const originalVariantImages = product!.variantImages || {};
+                if (JSON.stringify(finalVariantImages) !== JSON.stringify(originalVariantImages)) {
+                    imagesChanged = true;
+                }
+
+                if (imagesChanged) {
+                    payload.variantImages = finalVariantImages;
+                }
+
                 const finalTitle = batchNumber.trim() ? `${title.trim()} (${batchNumber.trim()})` : title.trim();
                 if (finalTitle !== (product!.title || "")) payload.title = finalTitle;
 
@@ -242,6 +444,9 @@ export default function ProductEditModal({ isOpen, onClose, onSuccess, product, 
 
                 const origSizes = product!.sizes || [];
                 if (JSON.stringify(sizes) !== JSON.stringify(origSizes)) payload.sizes = sizes;
+
+                const origVariantPrices = product!.variantPrices || {};
+                if (JSON.stringify(variantPrices) !== JSON.stringify(origVariantPrices)) payload.variantPrices = variantPrices;
 
                 const origColors = product!.colors || [];
                 if (JSON.stringify(colors) !== JSON.stringify(origColors)) payload.colors = colors;
@@ -530,6 +735,8 @@ export default function ProductEditModal({ isOpen, onClose, onSuccess, product, 
                         />
                     )}
 
+
+
                     {/* Sizes */}
                     {renderFieldSection("sizes", isBulkMode ? "Sizes (Replaces existing)" : "Sizes",
                         <>
@@ -552,6 +759,26 @@ export default function ProductEditModal({ isOpen, onClose, onSuccess, product, 
                                 <p className="text-[10px] text-slate-400 mt-1">
                                     {sizes.length} size{sizes.length !== 1 ? "s" : ""} selected: {sizes.join(", ")}
                                 </p>
+                            )}
+
+                            {sizes.length > 0 && (
+                                <div className="mt-3 space-y-2">
+                                    <p className="text-xs font-semibold text-slate-600">Size-specific Prices (Optional)</p>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {sizes.map((size) => (
+                                            <div key={size} className="flex items-center gap-2">
+                                                <span className="w-12 text-xs font-medium text-slate-500 text-right">{size}</span>
+                                                <input
+                                                    type="text"
+                                                    value={variantPrices[size] || ""}
+                                                    onChange={(e) => setVariantPrices({ ...variantPrices, [size]: e.target.value })}
+                                                    placeholder="Default"
+                                                    className="flex-1 p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0E4D55] focus:border-transparent transition-all"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             )}
                         </>
                     )}
@@ -624,28 +851,40 @@ export default function ProductEditModal({ isOpen, onClose, onSuccess, product, 
                                     {colors.map((color, idx) => (
                                         <div
                                             key={idx}
-                                            className="flex items-center gap-2 pl-1.5 pr-1 py-1 bg-white border border-gray-200 rounded-full shadow-sm"
+                                            onClick={() => setSelectedColorForImages(color.name)}
+                                            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                            onDrop={(e) => handleDropOnColor(e, color.name)}
+                                            className={`flex items-center gap-2 pl-1.5 pr-1 py-1 bg-white border-2 rounded-full shadow-sm cursor-pointer transition-all ${selectedColorForImages === color.name ? 'border-[#0E4D55] ring-1 ring-[#0E4D55] scale-105' : 'border-gray-200 hover:border-gray-300'} ${draggedIndex !== null && selectedColorForImages !== color.name ? 'ring-2 ring-dashed ring-[#0E4D55]/50' : ''}`}
+                                            title="Click to edit images for this color. You can also drag images here to move them to this color."
                                         >
                                             <input
                                                 type="color"
                                                 value={color.hex}
                                                 onChange={(e) => updateColorHex(idx, e.target.value)}
+                                                onClick={(e) => e.stopPropagation()}
                                                 className="w-5 h-5 rounded-full border border-gray-100 cursor-pointer p-0 appearance-none overflow-hidden"
                                                 style={{ backgroundColor: color.hex }}
-                                                title="Change color"
                                             />
                                             <input
                                                 type="text"
                                                 value={color.name}
                                                 onChange={(e) => updateColorName(idx, e.target.value)}
+                                                onClick={(e) => e.stopPropagation()}
                                                 placeholder="Name..."
                                                 className="text-xs text-slate-900 font-medium bg-transparent border-none focus:ring-0 focus:outline-none p-0 w-20 placeholder:text-slate-400"
                                             />
                                             <button
-                                                onClick={() => removeColor(idx)}
-                                                className="p-1 hover:bg-red-50 rounded-full text-gray-400 hover:text-red-500 transition-colors"
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    removeColor(idx);
+                                                    if (selectedColorForImages === color.name) {
+                                                        setSelectedColorForImages(null);
+                                                    }
+                                                }}
+                                                className="p-1 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                                             >
-                                                <X size={12} />
+                                                <X size={14} />
                                             </button>
                                         </div>
                                     ))}
@@ -658,6 +897,84 @@ export default function ProductEditModal({ isOpen, onClose, onSuccess, product, 
                         </>
                     )}
                 </div>
+
+                {/* Images Section (Moved below colors) */}
+                {!isBulkMode && (
+                    <div className="px-6 pb-6 pt-2 shrink-0">
+                        {renderFieldSection("images", `Images for ${selectedColorForImages || 'Selected Color'}`,
+                            !selectedColorForImages ? (
+                                <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm text-center text-slate-500 italic">
+                                    Please select a color badge from the "Colors" section above to edit its images.
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                                        {images.map((item, index) => (
+                                            <div
+                                                key={item.id}
+                                                draggable
+                                                onDragStart={() => handleDragStart(index)}
+                                                onDragOver={(e) => handleDragOver(e, index)}
+                                                onDragEnd={handleDragEnd}
+                                                className={`relative group aspect-square rounded-lg overflow-hidden bg-gray-100 border-2 cursor-move transition-all duration-200 ${draggedIndex === index
+                                                    ? 'border-slate-900 scale-95 opacity-50'
+                                                    : 'border-gray-200 hover:border-slate-400'
+                                                    }`}
+                                            >
+                                                {/* Drag Handle */}
+                                                <div className="absolute top-1 left-1 p-1 bg-black/50 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+                                                    <GripVertical size={14} />
+                                                </div>
+
+                                                {/* Position Badge */}
+                                                <div className={`absolute bottom-1 left-1 px-2 py-0.5 text-[10px] font-bold rounded z-10 ${index === 0
+                                                    ? 'bg-emerald-500 text-white'
+                                                    : index === 1
+                                                        ? 'bg-blue-500 text-white'
+                                                        : 'bg-gray-700 text-white'
+                                                    }`}>
+                                                    {index === 0 ? 'DISPLAY' : index === 1 ? 'HOVER' : `#${index + 1}`}
+                                                </div>
+
+                                                <Image
+                                                    src={item.url}
+                                                    alt={`Image ${index + 1}`}
+                                                    fill
+                                                    className="object-cover pointer-events-none"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeImage(index)}
+                                                    className="absolute top-1 right-1 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600 z-10"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ))}
+
+                                        <button
+                                            type="button"
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className="aspect-square border-2 border-dashed border-gray-300 rounded-lg hover:border-slate-900 hover:bg-slate-50 transition-all duration-200 flex flex-col items-center justify-center gap-2 text-gray-500 hover:text-slate-900 group"
+                                        >
+                                            <Upload size={24} className="group-hover:scale-110 transition-transform duration-200" />
+                                            <span className="text-xs font-medium">Add More</span>
+                                        </button>
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            multiple
+                                            accept="image/*"
+                                            onChange={handleFileChange}
+                                            className="hidden"
+                                        />
+                                    </div>
+                                    <p className="text-xs text-gray-500">💡 Drag to reorder — 1st image is display, 2nd is hover effect</p>
+                                </div>
+                            )
+                        )}
+                    </div>
+                )}
 
                 {/* Footer */}
                 <div className="p-5 border-t border-gray-100 bg-gray-50/80 rounded-b-2xl shrink-0">

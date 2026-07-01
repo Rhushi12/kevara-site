@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
     Search,
     Trash2,
@@ -20,7 +21,8 @@ import {
     Pencil,
     ChevronDown,
     ChevronUp,
-    Save
+    Save,
+    CheckCircle
 } from "lucide-react";
 import ProductEditModal from "./ProductEditModal";
 import { parseProductTitle } from "@/lib/productUtils";
@@ -75,6 +77,17 @@ export default function ProductsTable({ onAddProduct }: ProductsTableProps) {
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [bulkEditingProducts, setBulkEditingProducts] = useState<Product[] | null>(null);
 
+    // Duplication & Toast state
+    const [hoveredHandle, setHoveredHandle] = useState<string | null>(null);
+    const [clipboardHandle, setClipboardHandle] = useState<string | null>(null);
+    const [isDuplicating, setIsDuplicating] = useState<string | null>(null);
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+    const showToast = (msg: string) => {
+        setToastMessage(msg);
+        setTimeout(() => setToastMessage(null), 3000);
+    };
+
     const PRESET_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '24', '26', '28', '30', '32', '34', '36', 'FREE SIZE'];
 
     useEffect(() => {
@@ -92,6 +105,65 @@ export default function ProductsTable({ onAddProduct }: ProductsTableProps) {
             console.error("Failed to fetch products:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Keyboard shortcuts for copy/paste
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Check if user is typing in an input/textarea
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+                return;
+            }
+
+            // Ctrl+C / Cmd+C
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
+                if (hoveredHandle) {
+                    setClipboardHandle(hoveredHandle);
+                    showToast('Product copied! Press Ctrl+V to paste/duplicate.');
+                }
+            }
+
+            // Ctrl+V / Cmd+V
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
+                if (clipboardHandle && !isDuplicating) {
+                    handleDuplicate(clipboardHandle);
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [hoveredHandle, clipboardHandle, isDuplicating]);
+
+    const handleDuplicate = async (handle: string) => {
+        setIsDuplicating(handle);
+        try {
+            const { auth } = await import('@/lib/firebase');
+            const token = await auth.currentUser?.getIdToken();
+            
+            const res = await fetch('/api/products/duplicate', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    ...(token && { 'Authorization': `Bearer ${token}` })
+                },
+                body: JSON.stringify({ handle }),
+            });
+            if (res.ok) {
+                showToast('Product pasted/duplicated successfully!');
+                await fetchProducts();
+            } else {
+                const err = await res.json();
+                showToast(`Duplication failed: ${err.error}`);
+            }
+        } catch(error) {
+            console.error("Duplicate failed:", error);
+            showToast("Failed to duplicate product.");
+        } finally {
+            setIsDuplicating(null);
         }
     };
 
@@ -401,7 +473,11 @@ export default function ProductsTable({ onAddProduct }: ProductsTableProps) {
                             ) : (
                                 filteredProducts.map((product, index) => (
                                     <React.Fragment key={`${product.id || 'prod'}-${index}`}>
-                                    <tr className="hover:bg-gray-50/50 transition-colors group">
+                                    <tr 
+                                        className={`hover:bg-gray-50/50 transition-colors group ${clipboardHandle === product.handle ? 'bg-blue-50/50' : ''}`}
+                                        onMouseEnter={() => setHoveredHandle(product.handle)}
+                                        onMouseLeave={() => setHoveredHandle(null)}
+                                    >
                                         <td className="p-4">
                                             <input
                                                 type="checkbox"
@@ -427,9 +503,11 @@ export default function ProductsTable({ onAddProduct }: ProductsTableProps) {
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-medium text-slate-900 line-clamp-1">
-                                                        {parseProductTitle(product.title).cleanTitle}
-                                                    </h4>
+                                                    <Link href={`/products/${product.handle}`}>
+                                                        <h4 className="font-medium text-slate-900 line-clamp-1 hover:underline cursor-pointer">
+                                                            {parseProductTitle(product.title).cleanTitle}
+                                                        </h4>
+                                                    </Link>
                                                     <div className="flex items-center gap-2 mt-1">
                                                         {parseProductTitle(product.title).batchNumber && (
                                                             <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#0E4D55]/10 text-[#0E4D55] uppercase tracking-wider">
@@ -655,9 +733,17 @@ export default function ProductsTable({ onAddProduct }: ProductsTableProps) {
                     }
                     fetchProducts();
                 }}
-                product={editingProduct}
-                bulkProducts={bulkEditingProducts || undefined}
+                product={editingProduct ? { ...editingProduct, imageUrls: editingProduct.images?.edges.map((e: any) => e.node.url), variantImages: (editingProduct as any).variantImages } : null}
+                bulkProducts={bulkEditingProducts ? bulkEditingProducts.map(p => ({ ...p, imageUrls: p.images?.edges.map((e: any) => e.node.url), variantImages: (p as any).variantImages })) : undefined}
             />
+
+            {/* Toast Notification */}
+            {toastMessage && (
+                <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2 animate-in slide-in-from-bottom-5">
+                    <CheckCircle size={18} className="text-emerald-400" />
+                    <span className="text-sm font-medium">{toastMessage}</span>
+                </div>
+            )}
         </div>
     );
 }

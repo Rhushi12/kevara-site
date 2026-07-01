@@ -58,3 +58,5 @@ build_log.txt
 # backup files
 /backups/
 /cordset/
+
+.vercel

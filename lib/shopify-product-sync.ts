@@ -163,6 +163,8 @@ export async function syncMetaobjectToShopifyProduct(customProductHandle: string
                 productOptionsInput.push({ name: "Color", values: [{ name: "Default Color" }] });
             }
 
+            const variantPrices: Record<string, any> = (customProduct.variantPrices as Record<string, any>) || {};
+
             for (const size of sizeList) {
                 for (const color of colorList) {
                     const optionValues: any[] = [];
@@ -172,7 +174,13 @@ export async function syncMetaobjectToShopifyProduct(customProductHandle: string
                     if (productOptionsInput.find((o: any) => o.name === "Color")) {
                         optionValues.push({ optionName: "Color", name: color });
                     }
-                    variantsInput.push({ price, optionValues, inventoryPolicy: "DENY" });
+                    
+                    let variantPrice = price;
+                    if (size !== "Default Size" && variantPrices[size as string]) {
+                        variantPrice = parsePrice(String(variantPrices[size as string]));
+                    }
+
+                    variantsInput.push({ price: variantPrice, optionValues, inventoryPolicy: "DENY" });
                 }
             }
         }

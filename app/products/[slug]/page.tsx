@@ -45,7 +45,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
         return notFound();
     }
 
-    const { title, priceRange, images, variants, descriptionHtml, colors: productColors, sizes: productSizes, video } = product;
+    const { title, priceRange, images, variants, descriptionHtml, colors: productColors, sizes: productSizes, video, variantImages } = product;
     const price = priceRange.minVariantPrice.amount;
     const currency = priceRange.minVariantPrice.currencyCode;
 
@@ -156,7 +156,8 @@ export default async function ProductPage({ params }: { params: { slug: string }
                     sizes: sizes,
                     handle: product.handle,
                     stock: product.stock,
-                    variantStock: product.variantStock
+                    variantStock: product.variantStock,
+                    variantPrices: product.variantPrices
                 }}
             />
             <SizeGuidePanel />
@@ -183,6 +184,8 @@ export default async function ProductPage({ params }: { params: { slug: string }
                         siblingColors, // Cross-product colors
                         stock: product.stock, // For Out of Stock checks
                         variantStock: product.variantStock, // Per-size stock
+                        variantPrices: product.variantPrices, // Per-size price
+                        variantImages: variantImages, // Per-color images
                         returnDays: product.returnDays ?? 30 // Return window
                     }}
                 />

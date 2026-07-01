@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Heart, Save, X, Plus, Trash2, Palette, Search, RotateCcw, ArrowRight, Box } from "lucide-react";
 import LiquidButton from "@/components/ui/LiquidButton";
 import { useSizeGuideStore } from "@/lib/store";
@@ -25,7 +26,10 @@ export interface EditableProductInfoProps {
     siblingColors?: { name: string; hex: string; url: string; isCurrent?: boolean; image?: string }[];
     stock?: number;
     variantStock?: Record<string, number>;
+    variantPrices?: Record<string, string>;
+    variantImages?: Record<string, string[]>;
     returnDays?: number;
+    onColorChange?: (colorName: string) => void;
 }
 
 const ALL_SIZES = ["24", "26", "28", "30", "32", "34", "36", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"];
@@ -60,13 +64,28 @@ export default function EditableProductInfo({
     siblingColors,
     stock = undefined,
     variantStock = {},
+    variantPrices = {},
+    variantImages = {},
     returnDays = 30,
+    onColorChange,
 }: EditableProductInfoProps) {
     const { isAdmin, user } = useAuth();
-    const [selectedColor, setSelectedColor] = useState(colors[0]?.name || "");
+    const searchParams = useSearchParams();
+    const urlColor = searchParams.get("color");
+    
+    // Initialize selected color from URL param or fall back to first color
+    const initialColor = (urlColor && colors.some(c => c.name === urlColor)) ? urlColor : (colors[0]?.name || "");
+    const [selectedColor, setSelectedColor] = useState(initialColor);
     const [selectedSize, setSelectedSize] = useState(sizes[0] || "");
     const { openSizeGuide } = useSizeGuideStore();
     const { openCart, setCart, items } = useCartStore();
+
+    // Trigger initial color change if a color is selected
+    useEffect(() => {
+        if (selectedColor && onColorChange) {
+            onColorChange(selectedColor);
+        }
+    }, []); // Only on mount
 
     // Edit mode state
     const [isEditMode, setIsEditMode] = useState(false);
@@ -123,10 +142,18 @@ export default function EditableProductInfo({
         }
     }, [imageUrls, isEditMode]);
 
+    // Calculate displayPrice considering variantPrices
+    let calculatedPrice = price;
+    if (!isEditMode && selectedSize && variantPrices[selectedSize]) {
+        calculatedPrice = variantPrices[selectedSize];
+    }
+    
     // Fix discount calculation for ranges
-    const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
-    const discountPercentage = (originalPrice && !isNaN(numericPrice))
-        ? Math.round(((originalPrice - numericPrice) / originalPrice) * 100)
+    const numericPrice = typeof calculatedPrice === 'string' ? parseFloat(calculatedPrice) : calculatedPrice;
+    const numericOriginalPrice = typeof originalPrice === 'string' ? parseFloat(originalPrice) : originalPrice;
+    
+    const discountPercentage = (numericOriginalPrice && !isNaN(numericPrice))
+        ? Math.round(((numericOriginalPrice - numericPrice) / numericOriginalPrice) * 100)
         : 0;
 
     const handleDirectCheckout = async () => {
@@ -288,9 +315,31 @@ export default function EditableProductInfo({
 
     // Current display values
     const displayTitle = isEditMode ? editedTitle : parseProductTitle(title).cleanTitle;
-    // Show raw string in edit mode, otherwise use price prop
-    const displayPrice = isEditMode ? editedPrice : price;
+    
+    // Show raw string in edit mode, otherwise use calculatedPrice
+    const displayPrice = isEditMode ? editedPrice : calculatedPrice;
     const displaySizes = isEditMode ? editedSizes : sizes;
+
+    // Build unified colors list to render (local colors + sibling colors)
+    const hasVariantImagesMap = variantImages && Object.keys(variantImages).length > 0;
+    
+    const validLocalColors = colors.map(color => {
+        let hasImages = true;
+        if (hasVariantImagesMap) {
+            hasImages = !!(variantImages[color.name] && variantImages[color.name].length > 0);
+        }
+        return { ...color, isLocal: true as const, url: "", isCurrent: false, hasImages };
+    });
+
+    const unifiedColors: any[] = [...validLocalColors];
+
+    if (siblingColors && siblingColors.length > 0) {
+        siblingColors.forEach(sc => {
+            if (!unifiedColors.find(c => `${c.hex}-${c.name}` === `${sc.hex}-${sc.name}`)) {
+                unifiedColors.push({ ...sc, isLocal: false, isCurrent: sc.isCurrent || false, hasImages: true });
+            }
+        });
+    }
 
     return (
         <div className="flex flex-col gap-6 sticky top-24 relative group">
@@ -619,39 +668,54 @@ export default function EditableProductInfo({
                             </div>
                         )}
                     </div>
-                ) : siblingColors && siblingColors.length > 0 ? (
+                ) : unifiedColors.length > 0 ? (
                     <div className="flex flex-wrap gap-3">
-                        {siblingColors.map((color, index) => (
-                            <a
-                                key={`${color.hex}-${color.name}-${index}`}
-                                href={color.url}
-                                title={color.name}
-                                className={`w-8 h-8 rounded-full border-2 transition-all relative flex items-center justify-center ${color.isCurrent
-                                    ? "border-slate-900 ring-1 ring-slate-900 ring-offset-1"
-                                    : "border-slate-200 hover:border-slate-400"
-                                    }`}
-                                style={{ backgroundColor: color.hex }}
-                            >
-                                <span className="sr-only">{color.name}</span>
-                            </a>
-                        ))}
-                    </div>
-                ) : colors.length > 0 ? (
-                    <div className="flex flex-wrap gap-3">
-                        {colors.map((color, index) => (
-                            <button
-                                key={`${color.hex}-${color.name || index}`}
-                                onClick={() => setSelectedColor(color.name)}
-                                title={color.name}
-                                className={`w-8 h-8 rounded-full border-2 transition-all relative flex items-center justify-center ${selectedColor === color.name
-                                    ? "border-slate-900 ring-1 ring-slate-900 ring-offset-1"
-                                    : "border-slate-200 hover:border-slate-400"
-                                    }`}
-                                style={{ backgroundColor: color.hex }}
-                            >
-                                <span className="sr-only">{color.name}</span>
-                            </button>
-                        ))}
+                        {unifiedColors.map((color, index) => {
+                            if (color.isLocal) {
+                                return (
+                                    <button
+                                        key={`${color.hex}-${color.name}-${index}`}
+                                        onClick={() => {
+                                            if (!color.hasImages) return;
+                                            setSelectedColor(color.name);
+                                            if (onColorChange) onColorChange(color.name);
+                                        }}
+                                        disabled={!color.hasImages}
+                                        title={color.hasImages ? color.name : `${color.name} (No images)`}
+                                        className={`w-8 h-8 rounded-full border-2 transition-all relative flex items-center justify-center ${
+                                            !color.hasImages 
+                                                ? "opacity-40 cursor-not-allowed border-slate-200" 
+                                                : selectedColor === color.name
+                                                    ? "border-slate-900 ring-1 ring-slate-900 ring-offset-1"
+                                                    : "border-slate-200 hover:border-slate-400"
+                                            }`}
+                                        style={{ backgroundColor: color.hex }}
+                                    >
+                                        <span className="sr-only">{color.name}</span>
+                                        {!color.hasImages && (
+                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                <div className="w-[120%] h-px bg-slate-900 rotate-45 border-t border-white shadow-sm"></div>
+                                            </div>
+                                        )}
+                                    </button>
+                                );
+                            } else {
+                                return (
+                                    <a
+                                        key={`${color.hex}-${color.name}-${index}`}
+                                        href={color.url}
+                                        title={color.name}
+                                        className={`w-8 h-8 rounded-full border-2 transition-all relative flex items-center justify-center ${color.isCurrent
+                                            ? "border-slate-900 ring-1 ring-slate-900 ring-offset-1"
+                                            : "border-slate-200 hover:border-slate-400"
+                                            }`}
+                                        style={{ backgroundColor: color.hex }}
+                                    >
+                                        <span className="sr-only">{color.name}</span>
+                                    </a>
+                                );
+                            }
+                        })}
                     </div>
                 ) : (
                     <p className="text-sm text-slate-500 italic">No colors available - click Edit to add colors</p>
@@ -780,7 +844,7 @@ export default function EditableProductInfo({
                                     title: title,
                                     variantTitle: `${selectedSize} / ${selectedColor || 'Default'}`,
                                     quantity: 1,
-                                    price: price.toString(),
+                                    price: calculatedPrice.toString(),
                                     image: (imageUrls && imageUrls.length > 0) ? imageUrls[0] : "",
                                     colorHex: selectedColorObj?.hex || (siblingColors?.find(c => c.isCurrent)?.hex), // Pass hex for cart UI
                                     handle: handle,

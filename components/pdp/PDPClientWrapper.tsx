@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import EditableProductGallery from "./EditableProductGallery";
 import EditableProductInfo from "./EditableProductInfo";
 
@@ -31,16 +32,26 @@ interface PDPClientWrapperProps {
         siblingColors?: { name: string; hex: string; url: string; isCurrent?: boolean }[];
         stock?: number;
         variantStock?: Record<string, number>;
+        variantPrices?: Record<string, string>;
+        variantImages?: Record<string, string[]>;
         returnDays?: number;
     };
 }
 
 export default function PDPClientWrapper({ product }: PDPClientWrapperProps) {
     const [isEditMode, setIsEditMode] = useState(false);
+    const searchParams = useSearchParams();
+    const urlColor = searchParams.get("color");
 
     // Get initial image URLs from product
     const initialImageUrls = product.images.edges.map(edge => edge.node.url);
-    const [imageUrls, setImageUrls] = useState<string[]>(initialImageUrls);
+    const [imageUrls, setImageUrls] = useState<string[]>(() => {
+        // If URL has a color param and that color has variant images, use those initially
+        if (urlColor && product.variantImages?.[urlColor]?.length) {
+            return product.variantImages[urlColor];
+        }
+        return initialImageUrls;
+    });
 
     const handleImagesChange = useCallback((newImageUrls: string[]) => {
         setImageUrls(newImageUrls);
@@ -50,6 +61,15 @@ export default function PDPClientWrapper({ product }: PDPClientWrapperProps) {
         setIsEditMode(editMode);
         // Reset images if exiting edit mode without save (handled in EditableProductInfo)
     }, []);
+
+    const handleColorChange = useCallback((colorName: string) => {
+        if (product.variantImages && product.variantImages[colorName] && product.variantImages[colorName].length > 0) {
+            setImageUrls(product.variantImages[colorName]);
+        } else {
+            // Fallback to original images
+            setImageUrls(initialImageUrls);
+        }
+    }, [product.variantImages, initialImageUrls]);
 
     // Create a mutable images object for the gallery
     const galleryImages = {
@@ -86,9 +106,12 @@ export default function PDPClientWrapper({ product }: PDPClientWrapperProps) {
                     siblingColors={product.siblingColors}
                     stock={product.stock}
                     variantStock={product.variantStock}
+                    variantPrices={product.variantPrices}
+                    variantImages={product.variantImages}
                     returnDays={product.returnDays}
                     onImagesChange={handleImagesChange}
                     onEditModeChange={handleEditModeChange}
+                    onColorChange={handleColorChange}
                 />
             </div>
         </div>

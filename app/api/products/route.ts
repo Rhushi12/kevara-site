@@ -21,10 +21,15 @@ export async function DELETE(request: Request) {
         const { id, ids } = await request.json();
 
         const { deleteCustomProduct } = await import('@/lib/custom-products');
+        const { removeProductFromAllPages } = await import('@/lib/remove-product-from-pages');
 
         if (ids && Array.isArray(ids)) {
             // Bulk Delete
-            const results = await Promise.allSettled(ids.map(id => deleteCustomProduct(id)));
+            const results = await Promise.allSettled(ids.map(async (handle) => {
+                const deletedId = await deleteCustomProduct(handle);
+                if (deletedId) await removeProductFromAllPages(deletedId);
+                return deletedId;
+            }));
             const failed = results.filter(r => r.status === 'rejected');
 
             if (failed.length > 0) {
@@ -34,7 +39,8 @@ export async function DELETE(request: Request) {
             return NextResponse.json({ success: true, deletedCount: ids.length - failed.length });
         } else if (id) {
             // Single Delete
-            await deleteCustomProduct(id);
+            const deletedId = await deleteCustomProduct(id);
+            if (deletedId) await removeProductFromAllPages(deletedId);
             return NextResponse.json({ success: true, deletedId: id });
         } else {
             return NextResponse.json({ error: "Product ID or IDs required" }, { status: 400 });

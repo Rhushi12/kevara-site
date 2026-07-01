@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Edit2 } from "lucide-react";
 import ProductCard from "./ProductCard";
 import ProductPicker from "@/components/admin/ProductPicker";
 import CarouselArrowButton from "@/components/ui/CarouselArrowButton";
+import { expandProductsByColor } from "@/lib/expandProductsByColor";
 
 interface CleanGridProps {
     data?: {
@@ -56,7 +57,7 @@ export default function CleanGrid({
                         filtered.find((p: any) => p.node.handle === handle)
                     ).filter(Boolean);
 
-                    setProducts(sorted);
+                    setProducts(expandProductsByColor(sorted));
                 }
             })
             .catch(err => console.error("Failed to fetch products", err))

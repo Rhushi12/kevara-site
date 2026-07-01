@@ -70,6 +70,8 @@ export interface CustomProductInput {
   status?: string;
   stock?: number;
   variantStock?: Record<string, number>; // Per-size/variant stock map
+  variantPrices?: Record<string, string>; // Per-size/variant price map
+  variantImages?: Record<string, string[]>; // Per-color variant images map
   returnDays?: number; // Return window in days, defaults to 30
 }
 
@@ -199,6 +201,22 @@ export async function createCustomProduct(data: CustomProductInput) {
     });
   }
 
+  // Add variant prices if provided
+  if (data.variantPrices && Object.keys(data.variantPrices).length > 0) {
+    fields.push({
+      key: "variant_prices",
+      value: JSON.stringify(data.variantPrices)
+    });
+  }
+
+  // Add variant images if provided
+  if (data.variantImages && Object.keys(data.variantImages).length > 0) {
+    fields.push({
+      key: "variant_images",
+      value: JSON.stringify(data.variantImages)
+    });
+  }
+
   // Add returnDays (default 30)
   fields.push({
     key: "return_days",
@@ -280,6 +298,7 @@ export async function createCustomProduct(data: CustomProductInput) {
     relatedProducts: [],
     video: null,
     status: data.status || "ACTIVE",
+    variantPrices: data.variantPrices || {},
     returnDays: data.returnDays ?? 30
   };
 }
@@ -474,6 +493,8 @@ function transformMetaobjectToProduct(metaobject: any) {
       status: fields.status,
       stock: fields.stock ? parseInt(fields.stock) : 0,
       variantStock: fields.variant_stock ? JSON.parse(fields.variant_stock) : {},
+      variantPrices: fields.variant_prices ? JSON.parse(fields.variant_prices) : {},
+      variantImages: fields.variant_images ? JSON.parse(fields.variant_images) : {},
       returnDays: fields.return_days ? parseInt(fields.return_days) : 30
     },
     // Attach internal params for getCustomProducts to use if needed
@@ -512,6 +533,8 @@ export interface UpdateCustomProductInput {
   imageUrls?: string[]; // Direct R2 URLs for product images
   stock?: number; // Inventory stock count
   variantStock?: Record<string, number>; // Per-size/variant stock map
+  variantPrices?: Record<string, string>; // Per-size/variant price map
+  variantImages?: Record<string, string[]>; // Per-color variant images map
   returnDays?: number; // Return window in days
 }
 
@@ -550,6 +573,12 @@ export async function updateCustomProduct(data: UpdateCustomProductInput) {
   if (data.variantStock !== undefined) {
     fields.push({ key: "variant_stock", value: JSON.stringify(data.variantStock) });
   }
+  if (data.variantPrices !== undefined) {
+    fields.push({ key: "variant_prices", value: JSON.stringify(data.variantPrices) });
+  }
+  if (data.variantImages !== undefined) {
+    fields.push({ key: "variant_images", value: JSON.stringify(data.variantImages) });
+  }
   if (data.returnDays !== undefined) {
     fields.push({ key: "return_days", value: String(data.returnDays) });
   }
@@ -577,27 +606,61 @@ export async function updateProductRelatedItems(handle: string, relatedIds: stri
   return metaobjectId;
 }
 
-// Delete a custom product by ID
-export async function deleteCustomProduct(id: string) {
-  const mutation = `
-    mutation metaobjectDelete($id: ID!) {
-      metaobjectDelete(id: $id) {
-        deletedId
-        userErrors {
-          field
-          message
+// Delete a custom product by handle (deletes both Metaobject and Shopify Shadow Product)
+export async function deleteCustomProduct(handle: string) {
+  let deletedMetaobjectId = null;
+
+  // 1. Delete Metaobject
+  try {
+    const metaQuery = `
+      query getMeta($handle: MetaobjectHandleInput!) {
+        metaobjectByHandle(handle: $handle) {
+          id
         }
       }
+    `;
+    const metaData = await shopifyFetch(metaQuery, { handle: { type: "custom_product", handle } });
+    
+    if (metaData?.metaobjectByHandle?.id) {
+      const metaMutation = `
+        mutation metaobjectDelete($id: ID!) {
+          metaobjectDelete(id: $id) {
+            deletedId
+            userErrors {
+              field
+              message
+            }
+          }
+        }
+      `;
+      const result = await shopifyFetch(metaMutation, { id: metaData.metaobjectByHandle.id });
+      if (result.metaobjectDelete?.userErrors?.length > 0) {
+        console.error("Error deleting metaobject:", result.metaobjectDelete.userErrors);
+      } else {
+        deletedMetaobjectId = result.metaobjectDelete?.deletedId;
+      }
     }
-  `;
-
-  const variables = { id };
-  const result = await shopifyFetch(mutation, variables);
-
-  if (result.metaobjectDelete.userErrors.length > 0) {
-    console.error("Error deleting product:", result.metaobjectDelete.userErrors);
-    throw new Error("Failed to delete product");
+  } catch (err) {
+    console.error("Failed to delete metaobject for handle:", handle, err);
   }
 
-  return result.metaobjectDelete.deletedId;
+  // 2. Delete Shopify Shadow Product
+  try {
+    const productQuery = `
+      query getProduct($handle: String!) {
+        productByHandle(handle: $handle) {
+          id
+        }
+      }
+    `;
+    const prodData = await shopifyFetch(productQuery, { handle });
+    if (prodData?.productByHandle?.id) {
+      const { deleteProduct } = await import('@/lib/shopify-admin');
+      await deleteProduct(prodData.productByHandle.id);
+    }
+  } catch (err) {
+    console.error("Failed to delete shadow product for handle:", handle, err);
+  }
+
+  return deletedMetaobjectId;
 }

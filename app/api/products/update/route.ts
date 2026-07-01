@@ -5,7 +5,7 @@ import { syncMetaobjectToShopifyProduct } from "@/lib/shopify-product-sync";
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { handle, title, description, price, currency, colors, sizes, status, imageUrls, stock, variantStock, returnDays } = body;
+        const { handle, title, description, price, currency, colors, sizes, status, imageUrls, stock, variantStock, variantPrices, returnDays, variantImages } = body;
 
         if (!handle) {
             return NextResponse.json(
@@ -27,7 +27,9 @@ export async function POST(request: Request) {
             imageUrls,
             stock,
             variantStock,
-            returnDays
+            variantPrices,
+            returnDays,
+            variantImages
         });
 
         // 2. Re-sync the shadow product so Shopify stays in sync

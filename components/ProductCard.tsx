@@ -49,15 +49,21 @@ export default function ProductCard({ product, imageAspectRatio = "aspect-[3/4]"
         return map[name] || "#000000";
     };
 
+    const colorVariant = (product.node as any)._colorVariant as { name: string; hex: string; isExpanded: boolean } | undefined;
     const productSlug = (slug && slug.length > 2) ? slug : (handle && handle.length > 2) ? handle : null;
+    const productLink = productSlug
+        ? colorVariant?.isExpanded
+            ? `/products/${productSlug}?color=${encodeURIComponent(colorVariant.name)}`
+            : `/products/${productSlug}`
+        : null;
 
-    if (!productSlug) return null;
+    if (!productLink) return null;
 
     return (
         <div className="group/card relative flex flex-col text-center h-auto">
             {/* Image/Video Container */}
             <div className={`relative w-full ${imageAspectRatio} mb-3 overflow-hidden bg-gray-100 rounded-sm`}>
-                <Link href={`/products/${productSlug}`} className="absolute inset-0 z-10 block">
+                <Link href={productLink} className="absolute inset-0 z-10 block">
 
                     {/* Video Layer */}
                     {video && (
@@ -120,7 +126,7 @@ export default function ProductCard({ product, imageAspectRatio = "aspect-[3/4]"
             </div>
 
             {/* Product Info */}
-            <Link href={`/products/${productSlug}`} className="w-full">
+            <Link href={productLink} className="w-full">
                 <h3 className="text-sm text-gray-900 font-medium line-clamp-1 md:text-base font-figtree">
                     {title}
                 </h3>
@@ -150,8 +156,8 @@ export default function ProductCard({ product, imageAspectRatio = "aspect-[3/4]"
                 </span>
             </div>
 
-            {/* Color Count */}
-            {colors.length > 0 && (
+            {/* Color Count — hide for expanded color variants since each card is already one color */}
+            {!colorVariant?.isExpanded && colors.length > 0 && (
                 <p className="text-xs text-gray-500 mt-1 md:text-sm font-figtree">
                     {colors.length} {colors.length === 1 ? 'color' : 'colors'} available
                 </p>
