@@ -5,6 +5,7 @@ import { Loader2, X, Plus, Pipette, Save, Hash, Users, FolderTree, Image as Imag
 import Image from "next/image";
 import { adminFetch } from "@/lib/admin-fetch";
 import { parseProductTitle } from "@/lib/productUtils";
+import { useToast } from "@/context/ToastContext";
 
 interface EditableProduct {
     id: string;
@@ -57,6 +58,8 @@ export default function ProductEditModal({ isOpen, onClose, onSuccess, product, 
     const effectiveProduct = isBulkMode ? bulkProducts![0] : product;
 
     const [loading, setLoading] = useState(false);
+    const { showToast } = useToast();
+    const [isUploadingBackground, setIsUploadingBackground] = useState(false);
     
     const [title, setTitle] = useState("");
     const [batchNumber, setBatchNumber] = useState(""); // Extracted from title
@@ -281,6 +284,102 @@ export default function ProductEditModal({ isOpen, onClose, onSuccess, product, 
         setDraggedIndex(null);
     };
 
+    const uploadFileToR2 = async (file: File, folder: string = "products"): Promise<string> => {
+        const presignRes = await adminFetch("/api/r2/presign", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                filename: file.name,
+                contentType: file.type,
+                folder,
+            }),
+        });
+
+        if (!presignRes.ok) {
+            const err = await presignRes.json();
+            throw new Error(err.error || "Failed to get upload URL");
+        }
+
+        const { uploadUrl, publicUrl } = await presignRes.json();
+
+        const uploadRes = await fetch(uploadUrl, {
+            method: "PUT",
+            body: file,
+            headers: { "Content-Type": file.type },
+        });
+
+        if (!uploadRes.ok) {
+            throw new Error(`Failed to upload ${file.name} to storage`);
+        }
+
+        return publicUrl;
+    };
+
+    const uploadPendingImages = async () => {
+        setIsUploadingBackground(true);
+        let totalToUpload = 0;
+        const pendingUploads: { color: string; id: string; file: File }[] = [];
+        
+        const stateToUpload = { ...variantImagesState };
+        if (selectedColorForImages) {
+            stateToUpload[selectedColorForImages] = images;
+        }
+
+        Object.entries(stateToUpload).forEach(([color, colorImages]) => {
+            colorImages.forEach(img => {
+                if (!img.isExisting && img.file) {
+                    pendingUploads.push({ color, id: img.id, file: img.file });
+                    totalToUpload++;
+                }
+            });
+        });
+
+        if (totalToUpload === 0) {
+            showToast("No pending images to upload.", "info");
+            setIsUploadingBackground(false);
+            return;
+        }
+
+        let completed = 0;
+        let hasErrors = false;
+        
+        for (const item of pendingUploads) {
+            try {
+                const msg = `Uploading image ${completed + 1} of ${totalToUpload} for ${item.color}...`;
+                setSaveMessage({ type: "success", text: msg });
+                showToast(msg, "info");
+                
+                const url = await uploadFileToR2(item.file);
+                
+                setVariantImagesState(prev => {
+                    const nextState = { ...prev };
+                    if (nextState[item.color]) {
+                        nextState[item.color] = nextState[item.color].map(img => 
+                            img.id === item.id ? { ...img, url, isExisting: true, file: undefined } : img
+                        );
+                    }
+                    return nextState;
+                });
+                
+                completed++;
+            } catch (err: any) {
+                console.error("Upload error:", err);
+                const errMsg = `Failed to upload an image for ${item.color}.`;
+                setSaveMessage({ type: "error", text: errMsg });
+                showToast(errMsg, "error");
+                hasErrors = true;
+            }
+        }
+
+        if (!hasErrors) {
+            const msg = `Successfully uploaded ${totalToUpload} image(s).`;
+            setSaveMessage({ type: "success", text: msg });
+            showToast(msg, "success");
+            setTimeout(() => setSaveMessage(null), 3000);
+        }
+        setIsUploadingBackground(false);
+    };
+
     // ---- SAVE HANDLER ----
     const handleSave = async () => {
         setLoading(true);
@@ -371,37 +470,6 @@ export default function ProductEditModal({ isOpen, onClose, onSuccess, product, 
                 // Handle image uploads if any new images
                 const finalVariantImages: Record<string, string[]> = {};
                 let imagesChanged = false;
-
-                const uploadFileToR2 = async (file: File, folder: string = "products"): Promise<string> => {
-                    const presignRes = await adminFetch("/api/r2/presign", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            filename: file.name,
-                            contentType: file.type,
-                            folder,
-                        }),
-                    });
-
-                    if (!presignRes.ok) {
-                        const err = await presignRes.json();
-                        throw new Error(err.error || "Failed to get upload URL");
-                    }
-
-                    const { uploadUrl, publicUrl } = await presignRes.json();
-
-                    const uploadRes = await fetch(uploadUrl, {
-                        method: "PUT",
-                        body: file,
-                        headers: { "Content-Type": file.type },
-                    });
-
-                    if (!uploadRes.ok) {
-                        throw new Error(`Failed to upload ${file.name} to storage`);
-                    }
-
-                    return publicUrl;
-                };
 
                 // Sync the current `images` back to `variantImagesState` for the active color before saving
                 const currentStateToSave = { ...variantImagesState };
@@ -969,7 +1037,18 @@ export default function ProductEditModal({ isOpen, onClose, onSuccess, product, 
                                             className="hidden"
                                         />
                                     </div>
-                                    <p className="text-xs text-gray-500">💡 Drag to reorder — 1st image is display, 2nd is hover effect</p>
+                                    <div className="flex items-center justify-between mt-4">
+                                        <p className="text-xs text-gray-500">💡 Drag to reorder — 1st image is display, 2nd is hover effect</p>
+                                        <button
+                                            type="button"
+                                            onClick={uploadPendingImages}
+                                            disabled={isUploadingBackground}
+                                            className="px-4 py-2 bg-[#0E4D55] text-white text-xs font-medium rounded-lg hover:bg-[#0A3A40] transition-colors disabled:opacity-50 flex items-center gap-2 shadow-sm"
+                                        >
+                                            {isUploadingBackground ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                                            Upload Background
+                                        </button>
+                                    </div>
                                 </div>
                             )
                         )}
